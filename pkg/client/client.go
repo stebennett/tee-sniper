@@ -11,7 +11,8 @@ import (
 )
 
 var (
-	loginUrl = "login.php"
+	loginUrl        = "login.php"
+	teeAvailability = "memberbooking/"
 )
 
 type WebClient struct {
@@ -33,6 +34,12 @@ func NewClient(u string) (*WebClient, error) {
 		baseUrl:    u,
 		httpClient: client,
 	}, nil
+}
+
+type TimeSlot struct {
+	Time        string
+	CanBook     bool
+	BookingForm map[string]string
 }
 
 func (w WebClient) Login(username string, password string) (bool, error) {
@@ -71,4 +78,60 @@ func (w WebClient) Login(username string, password string) (bool, error) {
 
 	pageTitle := doc.Find("title").Text()
 	return strings.HasPrefix(pageTitle, "Welcome"), nil
+}
+
+func (w WebClient) GetCourseAvailability(dateStr string) ([]TimeSlot, error) {
+	slots := []TimeSlot{}
+
+	url := fmt.Sprintf("%s%s", w.baseUrl, teeAvailability)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return slots, err
+	}
+
+	q := req.URL.Query()
+	q.Add("date", dateStr)
+	req.URL.RawQuery = q.Encode()
+
+	resp, err := w.httpClient.Do(req)
+	if err != nil {
+		return slots, err
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return slots, fmt.Errorf("invalid status code returned %d", resp.StatusCode)
+	}
+
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	if err != nil {
+		return slots, err
+	}
+
+	doc.Find("tr.canreserve,tr.cantreserve").Each(func(i int, s *goquery.Selection) {
+		bookingButton := s.Find("a.inlineBooking").Length() != 0
+		peopleBooked := s.Find("td.tbooked").Length() == 0
+		blocked := s.Find("td.tblocked").Length() != 0
+		time := s.Find("th").Text()
+
+		bookingForm := make(map[string]string)
+		s.Find("td form > input").Each(func(i int, q *goquery.Selection) {
+			name, nok := q.Attr("name")
+			value, vok := q.Attr("value")
+			if nok && vok {
+				bookingForm[name] = value
+			}
+		})
+
+		if peopleBooked && !blocked {
+			slots = append(slots, TimeSlot{
+				Time:        time,
+				BookingForm: bookingForm,
+				CanBook:     bookingButton,
+			})
+		}
+	})
+
+	return slots, nil
 }

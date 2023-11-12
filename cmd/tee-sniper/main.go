@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"time"
 
 	env "github.com/Netflix/go-env"
 	"github.com/stebennett/tee-sniper/pkg/client"
@@ -34,4 +35,16 @@ func main() {
 	}
 
 	log.Printf("login status: %t", ok)
+
+	nextBookableDate := time.Now().AddDate(0, 0, 8)
+	dateStr := nextBookableDate.Format("02-01-2006")
+
+	log.Printf("date: %s", dateStr)
+
+	availableTimes, err := wc.GetCourseAvailability(dateStr)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Printf("%v", availableTimes)
 }
