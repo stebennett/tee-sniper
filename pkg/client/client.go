@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -13,6 +14,7 @@ import (
 var (
 	loginUrl        = "login.php"
 	teeAvailability = "memberbooking/"
+	book            = "memberbooking/"
 )
 
 type WebClient struct {
@@ -124,7 +126,7 @@ func (w WebClient) GetCourseAvailability(dateStr string) ([]TimeSlot, error) {
 			}
 		})
 
-		if peopleBooked && !blocked {
+		if peopleBooked && !blocked && bookingButton {
 			slots = append(slots, TimeSlot{
 				Time:        time,
 				BookingForm: bookingForm,
@@ -134,4 +136,42 @@ func (w WebClient) GetCourseAvailability(dateStr string) ([]TimeSlot, error) {
 	})
 
 	return slots, nil
+}
+
+func (w WebClient) BookTimeSlot(timeSlot TimeSlot) (bool, error) {
+	url := fmt.Sprintf("%s%s", w.baseUrl, book)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return false, err
+	}
+
+	q := req.URL.Query()
+	q.Add("numslots", "4")
+
+	for k, v := range timeSlot.BookingForm {
+		q.Add(k, v)
+	}
+
+	req.URL.RawQuery = q.Encode()
+
+	resp, err := w.httpClient.Do(req)
+	if err != nil {
+		return false, err
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return false, fmt.Errorf("invalid status code returned %d", resp.StatusCode)
+	}
+
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	if err != nil {
+		return false, err
+	}
+
+	confirmation := doc.Find("#globalwrap > div.user-messages.alert.user-message-success.alert-success > ul > li > strong").Text()
+	log.Print(confirmation)
+
+	return true, nil
 }
