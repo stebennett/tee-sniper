@@ -2,7 +2,7 @@ name: Books a Tee-time - Schedule
 
 on:
     schedule:
-        - cron: '59 19 * * 0,6'
+        - cron: '59 19 * * 5,6'
 
 jobs:
     Book-A-Tee-Time:
