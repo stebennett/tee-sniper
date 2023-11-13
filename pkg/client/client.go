@@ -2,7 +2,6 @@ package client
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -166,7 +165,5 @@ func (w WebClient) BookTimeSlot(timeSlot models.TimeSlot) (bool, error) {
 	}
 
 	confirmation := doc.Find("#globalwrap > div.user-messages.alert.user-message-success.alert-success > ul > li > strong").Text()
-	log.Print(confirmation)
-
-	return true, nil
+	return strings.Compare(confirmation, "Now please enter the names of your playing partners.") == 0, nil
 }

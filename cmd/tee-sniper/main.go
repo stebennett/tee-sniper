@@ -32,14 +32,24 @@ func main() {
 
 	log.Printf("finding tee-times for date: %s", dateStr)
 
-	availableTimes, err := wc.GetCourseAvailability(dateStr)
-	if err != nil {
-		log.Fatal(err)
+	for {
+		availableTimes, err := wc.GetCourseAvailability(dateStr)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		availableTimes = teetimes.FilterByBookable(availableTimes)
+		availableTimes = teetimes.SortTimesAscending(availableTimes)
+		availableTimes = teetimes.FilterBetweenTimes(availableTimes, conf.TimeStart, conf.TimeEnd)
+
+		ok, err = wc.BookTimeSlot(availableTimes[0])
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if ok {
+			log.Printf("Successfully booked: %s on %s", availableTimes[0].Time, dateStr)
+			break
+		}
 	}
-
-	availableTimes = teetimes.SortTimesAscending(availableTimes)
-	//availableTimes = teetimes.FilterBookable(availableTimes)
-	//availableTimes = teetimes.FilterBetweenTimes(conf.StartTime, conf.EndTime)
-
-	log.Printf("%v", availableTimes)
 }
