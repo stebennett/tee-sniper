@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/stebennett/tee-sniper/pkg/client"
+	"github.com/stebennett/tee-sniper/pkg/clients"
 	"github.com/stebennett/tee-sniper/pkg/config"
 	"github.com/stebennett/tee-sniper/pkg/teetimes"
 )
@@ -15,7 +15,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	wc, err := client.NewClient(conf.BaseUrl)
+	wc, err := clients.NewBookingClient(conf.BaseUrl)
 	if err != nil {
 		log.Fatal(err)
 	}

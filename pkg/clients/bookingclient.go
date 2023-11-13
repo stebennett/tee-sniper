@@ -1,4 +1,4 @@
-package client
+package clients
 
 import (
 	"fmt"
@@ -17,12 +17,12 @@ var (
 	book            = "memberbooking/"
 )
 
-type WebClient struct {
+type BookingClient struct {
 	baseUrl    string
 	httpClient *http.Client
 }
 
-func NewClient(u string) (*WebClient, error) {
+func NewBookingClient(u string) (*BookingClient, error) {
 	jar, err := cookiejar.New(nil)
 	if err != nil {
 		return nil, err
@@ -32,13 +32,13 @@ func NewClient(u string) (*WebClient, error) {
 		Jar: jar,
 	}
 
-	return &WebClient{
+	return &BookingClient{
 		baseUrl:    u,
 		httpClient: client,
 	}, nil
 }
 
-func (w WebClient) Login(username string, password string) (bool, error) {
+func (w BookingClient) Login(username string, password string) (bool, error) {
 	form := url.Values{}
 	form.Add("task", "login")
 	form.Add("topmenu", "1")
@@ -76,7 +76,7 @@ func (w WebClient) Login(username string, password string) (bool, error) {
 	return strings.HasPrefix(pageTitle, "Welcome"), nil
 }
 
-func (w WebClient) GetCourseAvailability(dateStr string) ([]models.TimeSlot, error) {
+func (w BookingClient) GetCourseAvailability(dateStr string) ([]models.TimeSlot, error) {
 	slots := []models.TimeSlot{}
 
 	url := fmt.Sprintf("%s%s", w.baseUrl, teeAvailability)
@@ -132,7 +132,7 @@ func (w WebClient) GetCourseAvailability(dateStr string) ([]models.TimeSlot, err
 	return slots, nil
 }
 
-func (w WebClient) BookTimeSlot(timeSlot models.TimeSlot, dryRun bool) (bool, error) {
+func (w BookingClient) BookTimeSlot(timeSlot models.TimeSlot, dryRun bool) (bool, error) {
 	if dryRun {
 		return true, nil
 	}
