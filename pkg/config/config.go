@@ -15,6 +15,7 @@ type Config struct {
 	TimeStart string `short:"t" long:"timestart" required:"true" description:"The time after which a tee-time will be selected"`
 	TimeEnd   string `short:"e" long:"timeend" required:"true" description:"The time before which a tee-time will be selected"`
 	Retries   int    `short:"r" long:"retries" required:"true" default:"5" description:"The number of times to retry booking"`
+	DryRun    bool   `short:"x" long:"dryrun" description:"Run everything, but don't do the booking and assume it succeeds"`
 
 	Username string `short:"u" long:"username" required:"true" description:"The username to use for booking"`
 	Pin      string `short:"p" long:"pin" required:"true" description:"The pin associated with the username for booking"`

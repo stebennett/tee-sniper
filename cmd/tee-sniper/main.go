@@ -48,7 +48,7 @@ func main() {
 			continue
 		}
 
-		ok, err = wc.BookTimeSlot(availableTimes[0])
+		ok, err = wc.BookTimeSlot(availableTimes[0], conf.DryRun)
 		if err != nil {
 			log.Fatal(err)
 		}

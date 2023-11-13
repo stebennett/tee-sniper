@@ -132,7 +132,11 @@ func (w WebClient) GetCourseAvailability(dateStr string) ([]models.TimeSlot, err
 	return slots, nil
 }
 
-func (w WebClient) BookTimeSlot(timeSlot models.TimeSlot) (bool, error) {
+func (w WebClient) BookTimeSlot(timeSlot models.TimeSlot, dryRun bool) (bool, error) {
+	if dryRun {
+		return true, nil
+	}
+
 	url := fmt.Sprintf("%s%s", w.baseUrl, book)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
