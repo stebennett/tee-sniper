@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/stebennett/tee-sniper/pkg/models"
 )
 
 var (
@@ -36,12 +37,6 @@ func NewClient(u string) (*WebClient, error) {
 		baseUrl:    u,
 		httpClient: client,
 	}, nil
-}
-
-type TimeSlot struct {
-	Time        string
-	CanBook     bool
-	BookingForm map[string]string
 }
 
 func (w WebClient) Login(username string, password string) (bool, error) {
@@ -82,8 +77,8 @@ func (w WebClient) Login(username string, password string) (bool, error) {
 	return strings.HasPrefix(pageTitle, "Welcome"), nil
 }
 
-func (w WebClient) GetCourseAvailability(dateStr string) ([]TimeSlot, error) {
-	slots := []TimeSlot{}
+func (w WebClient) GetCourseAvailability(dateStr string) ([]models.TimeSlot, error) {
+	slots := []models.TimeSlot{}
 
 	url := fmt.Sprintf("%s%s", w.baseUrl, teeAvailability)
 	req, err := http.NewRequest("GET", url, nil)
@@ -127,7 +122,7 @@ func (w WebClient) GetCourseAvailability(dateStr string) ([]TimeSlot, error) {
 		})
 
 		if peopleBooked && !blocked && bookingButton {
-			slots = append(slots, TimeSlot{
+			slots = append(slots, models.TimeSlot{
 				Time:        time,
 				BookingForm: bookingForm,
 				CanBook:     bookingButton,
@@ -138,7 +133,7 @@ func (w WebClient) GetCourseAvailability(dateStr string) ([]TimeSlot, error) {
 	return slots, nil
 }
 
-func (w WebClient) BookTimeSlot(timeSlot TimeSlot) (bool, error) {
+func (w WebClient) BookTimeSlot(timeSlot models.TimeSlot) (bool, error) {
 	url := fmt.Sprintf("%s%s", w.baseUrl, book)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {

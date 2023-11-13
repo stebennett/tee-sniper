@@ -4,47 +4,42 @@ import (
 	"log"
 	"time"
 
-	env "github.com/Netflix/go-env"
 	"github.com/stebennett/tee-sniper/pkg/client"
+	"github.com/stebennett/tee-sniper/pkg/config"
+	"github.com/stebennett/tee-sniper/pkg/teetimes"
 )
 
-type Environment struct {
-	Username string `env:"TS_USERNAME,required=true"`
-	Pin      string `env:"TS_PIN,required=true"`
-	BaseUrl  string `env:"TS_BASEURL,required=true"`
-}
-
 func main() {
-	var environment Environment
-
-	_, err := env.UnmarshalFromEnviron(&environment)
+	conf, err := config.GetConfig()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Printf("%s", environment)
-
-	wc, err := client.NewClient(environment.BaseUrl)
+	wc, err := client.NewClient(conf.BaseUrl)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	ok, err := wc.Login(environment.Username, environment.Pin)
+	ok, err := wc.Login(conf.Username, conf.Pin)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	log.Printf("login status: %t", ok)
 
-	nextBookableDate := time.Now().AddDate(0, 0, 8)
+	nextBookableDate := time.Now().AddDate(0, 0, conf.DaysAhead)
 	dateStr := nextBookableDate.Format("02-01-2006")
 
-	log.Printf("date: %s", dateStr)
+	log.Printf("finding tee-times for date: %s", dateStr)
 
 	availableTimes, err := wc.GetCourseAvailability(dateStr)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	availableTimes = teetimes.SortTimesAscending(availableTimes)
+	//availableTimes = teetimes.FilterBookable(availableTimes)
+	//availableTimes = teetimes.FilterBetweenTimes(conf.StartTime, conf.EndTime)
 
 	log.Printf("%v", availableTimes)
 }
