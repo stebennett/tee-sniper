@@ -30,9 +30,9 @@ func main() {
 	nextBookableDate := time.Now().AddDate(0, 0, conf.DaysAhead)
 	dateStr := nextBookableDate.Format("02-01-2006")
 
-	log.Printf("finding tee-times for date: %s", dateStr)
+	log.Printf("finding tee times between %s and %s on date %s. retries %d", conf.TimeStart, conf.TimeEnd, dateStr, conf.Retries)
 
-	for {
+	for i := 0; i < conf.Retries; i++ {
 		availableTimes, err := wc.GetCourseAvailability(dateStr)
 		if err != nil {
 			log.Fatal(err)
@@ -42,6 +42,11 @@ func main() {
 		availableTimes = teetimes.SortTimesAscending(availableTimes)
 		availableTimes = teetimes.FilterBetweenTimes(availableTimes, conf.TimeStart, conf.TimeEnd)
 
+		if len(availableTimes) == 0 {
+			log.Printf("No tee times available between %s and %s on %s", conf.TimeStart, conf.TimeEnd, dateStr)
+			break
+		}
+
 		ok, err = wc.BookTimeSlot(availableTimes[0])
 		if err != nil {
 			log.Fatal(err)
@@ -50,6 +55,8 @@ func main() {
 		if ok {
 			log.Printf("Successfully booked: %s on %s", availableTimes[0].Time, dateStr)
 			break
+		} else {
+			log.Printf("Failed to complete booking: %s on %s", availableTimes[0].Time, dateStr)
 		}
 	}
 }
