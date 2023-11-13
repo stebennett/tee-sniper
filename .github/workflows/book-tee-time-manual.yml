@@ -1,4 +1,4 @@
-name: Books a Tee-time - Schedule
+name: Books a Tee-time - Manual
 
 on:
     workflow_dispatch:
