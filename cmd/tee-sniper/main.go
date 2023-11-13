@@ -44,7 +44,8 @@ func main() {
 
 		if len(availableTimes) == 0 {
 			log.Printf("No tee times available between %s and %s on %s", conf.TimeStart, conf.TimeEnd, dateStr)
-			break
+			time.Sleep(10 * time.Second)
+			continue
 		}
 
 		ok, err = wc.BookTimeSlot(availableTimes[0])
