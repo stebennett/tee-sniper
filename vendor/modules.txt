@@ -7,19 +7,69 @@ github.com/andybalholm/cascadia
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew
+# github.com/golang/mock v1.6.0
+## explicit; go 1.11
+github.com/golang/mock/gomock
 # github.com/jessevdk/go-flags v1.5.0
 ## explicit; go 1.15
 github.com/jessevdk/go-flags
-# github.com/kr/text v0.2.0
+# github.com/pkg/errors v0.9.1
 ## explicit
-# github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e
-## explicit; go 1.12
+github.com/pkg/errors
 # github.com/pmezard/go-difflib v1.0.0
 ## explicit
 github.com/pmezard/go-difflib/difflib
 # github.com/stretchr/testify v1.8.4
 ## explicit; go 1.20
 github.com/stretchr/testify/assert
+# github.com/twilio/twilio-go v1.15.1
+## explicit; go 1.16
+github.com/twilio/twilio-go
+github.com/twilio/twilio-go/client
+github.com/twilio/twilio-go/client/form
+github.com/twilio/twilio-go/rest/accounts/v1
+github.com/twilio/twilio-go/rest/api/v2010
+github.com/twilio/twilio-go/rest/autopilot/v1
+github.com/twilio/twilio-go/rest/bulkexports/v1
+github.com/twilio/twilio-go/rest/chat/v1
+github.com/twilio/twilio-go/rest/chat/v2
+github.com/twilio/twilio-go/rest/chat/v3
+github.com/twilio/twilio-go/rest/content/v1
+github.com/twilio/twilio-go/rest/conversations/v1
+github.com/twilio/twilio-go/rest/events/v1
+github.com/twilio/twilio-go/rest/flex/v1
+github.com/twilio/twilio-go/rest/flex/v2
+github.com/twilio/twilio-go/rest/frontline/v1
+github.com/twilio/twilio-go/rest/insights/v1
+github.com/twilio/twilio-go/rest/intelligence/v2
+github.com/twilio/twilio-go/rest/ip_messaging/v1
+github.com/twilio/twilio-go/rest/ip_messaging/v2
+github.com/twilio/twilio-go/rest/lookups/v1
+github.com/twilio/twilio-go/rest/lookups/v2
+github.com/twilio/twilio-go/rest/media/v1
+github.com/twilio/twilio-go/rest/messaging/v1
+github.com/twilio/twilio-go/rest/microvisor/v1
+github.com/twilio/twilio-go/rest/monitor/v1
+github.com/twilio/twilio-go/rest/notify/v1
+github.com/twilio/twilio-go/rest/numbers/v1
+github.com/twilio/twilio-go/rest/numbers/v2
+github.com/twilio/twilio-go/rest/oauth/v1
+github.com/twilio/twilio-go/rest/pricing/v1
+github.com/twilio/twilio-go/rest/pricing/v2
+github.com/twilio/twilio-go/rest/proxy/v1
+github.com/twilio/twilio-go/rest/routes/v2
+github.com/twilio/twilio-go/rest/serverless/v1
+github.com/twilio/twilio-go/rest/studio/v1
+github.com/twilio/twilio-go/rest/studio/v2
+github.com/twilio/twilio-go/rest/supersim/v1
+github.com/twilio/twilio-go/rest/sync/v1
+github.com/twilio/twilio-go/rest/taskrouter/v1
+github.com/twilio/twilio-go/rest/trunking/v1
+github.com/twilio/twilio-go/rest/trusthub/v1
+github.com/twilio/twilio-go/rest/verify/v2
+github.com/twilio/twilio-go/rest/video/v1
+github.com/twilio/twilio-go/rest/voice/v1
+github.com/twilio/twilio-go/rest/wireless/v1
 # golang.org/x/net v0.7.0
 ## explicit; go 1.17
 golang.org/x/net/html
@@ -27,8 +77,6 @@ golang.org/x/net/html/atom
 # golang.org/x/sys v0.14.0
 ## explicit; go 1.18
 golang.org/x/sys/unix
-# gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f
-## explicit
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3

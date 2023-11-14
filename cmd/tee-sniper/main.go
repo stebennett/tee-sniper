@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -20,6 +21,8 @@ func main() {
 		log.Fatal(err)
 	}
 
+	twilioClient := clients.NewTwilioClient()
+
 	ok, err := wc.Login(conf.Username, conf.Pin)
 	if err != nil {
 		log.Fatal(err)
@@ -30,7 +33,8 @@ func main() {
 	nextBookableDate := time.Now().AddDate(0, 0, conf.DaysAhead)
 	dateStr := nextBookableDate.Format("02-01-2006")
 
-	log.Printf("finding tee times between %s and %s on date %s. retries %d", conf.TimeStart, conf.TimeEnd, dateStr, conf.Retries)
+	log.Printf("Finding tee times between %s and %s on date %s. retries %d", conf.TimeStart, conf.TimeEnd, dateStr, conf.Retries)
+	booked := false
 
 	for i := 0; i < conf.Retries; i++ {
 		availableTimes, err := wc.GetCourseAvailability(dateStr)
@@ -43,7 +47,7 @@ func main() {
 		availableTimes = teetimes.FilterBetweenTimes(availableTimes, conf.TimeStart, conf.TimeEnd)
 
 		if len(availableTimes) == 0 {
-			log.Printf("No tee times available between %s and %s on %s", conf.TimeStart, conf.TimeEnd, dateStr)
+			log.Printf("No tee times available between %s and %s on %s. Retrying.", conf.TimeStart, conf.TimeEnd, dateStr)
 			time.Sleep(10 * time.Second)
 			continue
 		}
@@ -54,10 +58,20 @@ func main() {
 		}
 
 		if ok {
-			log.Printf("Successfully booked: %s on %s", availableTimes[0].Time, dateStr)
+			message := fmt.Sprintf("Successfully booked tee time: %s on %s", availableTimes[0].Time, dateStr)
+			_, err := twilioClient.SendSms(conf.FromNumber, conf.ToNumber, message)
+			if err != nil {
+				log.Printf("Failed to send SMS: %s", err.Error())
+			}
+			log.Println(message)
+			booked = true
 			break
 		} else {
-			log.Printf("Failed to complete booking: %s on %s", availableTimes[0].Time, dateStr)
+			log.Printf("Failed to complete booking: %s on %s. Retrying.", availableTimes[0].Time, dateStr)
 		}
+	}
+
+	if !booked {
+		log.Fatalf("Failed to book tee time on %s", dateStr)
 	}
 }

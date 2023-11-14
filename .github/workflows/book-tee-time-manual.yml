@@ -27,5 +27,8 @@ jobs:
               with:
                 go-version: '^1.17.13'
             - name: Book
-              run: go run cmd/tee-sniper/main.go -u ${{ secrets.Username }} -p ${{ secrets.Pin }} -b ${{ secrets.BaseUrl }} -d ${{ inputs.daysAhead }} -t ${{ inputs.timeStart }} -e ${{ inputs.timeEnd }} -r 10
+              run: go run cmd/tee-sniper/main.go -u ${{ secrets.Username }} -p ${{ secrets.Pin }} -b ${{ secrets.BaseUrl }} -d ${{ inputs.daysAhead }} -t ${{ inputs.timeStart }} -e ${{ inputs.timeEnd }} -r 10 -n ${{ secrets.ToNumber }} -f ${{ secrets.FromNumber}}
+              env:
+                TWILIO_ACCOUNT_SID: ${{ secrets.TwilioAccountSid }}
+                TWILIO_AUTH_TOKEN: ${{ secrets.TwilioAuthToken }}
         
