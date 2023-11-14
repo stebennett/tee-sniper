@@ -72,6 +72,11 @@ func main() {
 	}
 
 	if !booked {
-		log.Fatalf("Failed to book tee time on %s", dateStr)
+		message := fmt.Sprintf("Failed to book tee time on %s", dateStr)
+		_, err := twilioClient.SendSms(conf.FromNumber, conf.ToNumber, message)
+		if err != nil {
+			log.Printf("Failed to send SMS: %s", err.Error())
+		}
+		log.Fatal(message)
 	}
 }
