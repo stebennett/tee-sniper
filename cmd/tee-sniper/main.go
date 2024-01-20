@@ -52,13 +52,15 @@ func main() {
 			continue
 		}
 
-		ok, err = wc.BookTimeSlot(availableTimes[0], conf.DryRun)
+		timeToBook := teetimes.PickRandomTime(availableTimes)
+
+		ok, err = wc.BookTimeSlot(timeToBook, conf.DryRun)
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		if ok {
-			message := fmt.Sprintf("Successfully booked tee time: %s on %s", availableTimes[0].Time, dateStr)
+			message := fmt.Sprintf("Successfully booked tee time: %s on %s", timeToBook.Time, dateStr)
 			_, err := twilioClient.SendSms(conf.FromNumber, conf.ToNumber, message)
 			if err != nil {
 				log.Printf("Failed to send SMS: %s", err.Error())
@@ -67,7 +69,7 @@ func main() {
 			booked = true
 			break
 		} else {
-			log.Printf("Failed to complete booking: %s on %s. Retrying.", availableTimes[0].Time, dateStr)
+			log.Printf("Failed to complete booking: %s on %s. Retrying.", timeToBook.Time, dateStr)
 		}
 	}
 

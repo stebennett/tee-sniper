@@ -1,6 +1,7 @@
 package teetimes
 
 import (
+	"math/rand"
 	"sort"
 
 	"github.com/stebennett/tee-sniper/pkg/models"
@@ -30,4 +31,9 @@ func FilterBetweenTimes(slots []models.TimeSlot, startTime string, endTime strin
 		}
 	}
 	return
+}
+
+func PickRandomTime(slots []models.TimeSlot) models.TimeSlot {
+	index := rand.Intn(len(slots))
+	return slots[index]
 }
