@@ -2,6 +2,7 @@ package clients
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -107,12 +108,12 @@ func (w BookingClient) GetCourseAvailability(dateStr string) ([]models.TimeSlot,
 
 	doc.Find("tr.canreserve,tr.cantreserve").Each(func(i int, s *goquery.Selection) {
 		bookingButton := s.Find("a.inlineBooking").Length() != 0
-		peopleBooked := s.Find("td.tbooked").Length() == 0
-		blocked := s.Find("td.tblocked").Length() != 0
+		peopleBooked := s.Find("span.player-name").Length() != 0
+		blocked := s.Find("div.comp-item").Length() != 0
 		time := s.Find("th").Text()
 
 		bookingForm := make(map[string]string)
-		s.Find("td form > input").Each(func(i int, q *goquery.Selection) {
+		s.Find("td.slot-actions form input").Each(func(i int, q *goquery.Selection) {
 			name, nok := q.Attr("name")
 			value, vok := q.Attr("value")
 			if nok && vok {
@@ -120,7 +121,7 @@ func (w BookingClient) GetCourseAvailability(dateStr string) ([]models.TimeSlot,
 			}
 		})
 
-		if peopleBooked && !blocked && bookingButton {
+		if !peopleBooked && !blocked && bookingButton {
 			slots = append(slots, models.TimeSlot{
 				Time:        time,
 				BookingForm: bookingForm,
@@ -134,6 +135,7 @@ func (w BookingClient) GetCourseAvailability(dateStr string) ([]models.TimeSlot,
 
 func (w BookingClient) BookTimeSlot(timeSlot models.TimeSlot, dryRun bool) (bool, error) {
 	if dryRun {
+		log.Printf("DRY RUN: Would have booked time slot: %s", timeSlot.Time)
 		return true, nil
 	}
 
@@ -151,6 +153,8 @@ func (w BookingClient) BookTimeSlot(timeSlot models.TimeSlot, dryRun bool) (bool
 	}
 
 	req.URL.RawQuery = q.Encode()
+
+	log.Printf("Calling %s", req.URL.String())
 
 	resp, err := w.httpClient.Do(req)
 	if err != nil {

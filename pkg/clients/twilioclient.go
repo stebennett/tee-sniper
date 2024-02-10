@@ -1,6 +1,8 @@
 package clients
 
 import (
+	"log"
+
 	twilio "github.com/twilio/twilio-go"
 	twilioApi "github.com/twilio/twilio-go/rest/api/v2010"
 )
@@ -15,7 +17,12 @@ func NewTwilioClient() *TwilioClient {
 	}
 }
 
-func (t TwilioClient) SendSms(from string, to string, body string) (*twilioApi.ApiV2010Message, error) {
+func (t TwilioClient) SendSms(from string, to string, body string, dryRun bool) (*twilioApi.ApiV2010Message, error) {
+	if dryRun {
+		log.Printf("DRY RUN: Would have sent SMS from %s to %s with body: %s", from, to, body)
+		return nil, nil
+	}
+
 	params := &twilioApi.CreateMessageParams{}
 	params.SetTo(to)
 	params.SetFrom(from)
