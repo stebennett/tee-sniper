@@ -53,7 +53,6 @@ func main() {
 		}
 
 		log.Printf("Found %d available tee times between %s and %s on %s", len(availableTimes), conf.TimeStart, conf.TimeEnd, dateStr)
-		log.Printf("Available tee times: %v", availableTimes)
 
 		timeToBook := teetimes.PickRandomTime(availableTimes)
 
