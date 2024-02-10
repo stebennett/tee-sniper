@@ -14,7 +14,7 @@ Display help
 
 Run tee time booker
 ````
-# go run cmd/tee-sniper/main.go -u 2898 -p 1968 -b https://example.com/ -d 7 -t 15:00 -e 17:00 -n xxxxxxxx -f xxxxxxxxxx
+# go run cmd/tee-sniper/main.go -u 1234 -p 1234 -b https://example.com/ -d 7 -t 15:00 -e 17:00 -n xxxxxxxx -f xxxxxxxxxx
 ````
 
 ````
