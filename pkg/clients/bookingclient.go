@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -133,20 +135,22 @@ func (w BookingClient) GetCourseAvailability(dateStr string) ([]models.TimeSlot,
 	return slots, nil
 }
 
-func (w BookingClient) BookTimeSlot(timeSlot models.TimeSlot, dryRun bool) (bool, error) {
+func (w BookingClient) BookTimeSlot(timeSlot models.TimeSlot, playingPartners []string, dryRun bool) (string, error) {
+	numSlots := len(playingPartners) + 1 // +1 for the main player
+	
 	if dryRun {
-		log.Printf("DRY RUN: Would have booked time slot: %s", timeSlot.Time)
-		return true, nil
+		log.Printf("DRY RUN: Would have booked time slot: %s for %d people", timeSlot.Time, numSlots)
+		return "dryrun-booking-id", nil
 	}
 
 	url := fmt.Sprintf("%s%s", w.baseUrl, book)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return false, err
+		return "", err
 	}
 
 	q := req.URL.Query()
-	q.Add("numslots", "3")
+	q.Add("numslots", strconv.Itoa(numSlots))
 
 	for k, v := range timeSlot.BookingForm {
 		q.Add(k, v)
@@ -158,20 +162,73 @@ func (w BookingClient) BookTimeSlot(timeSlot models.TimeSlot, dryRun bool) (bool
 
 	resp, err := w.httpClient.Do(req)
 	if err != nil {
-		return false, err
+		return "", err
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return false, fmt.Errorf("invalid status code returned %d", resp.StatusCode)
+		return "", fmt.Errorf("invalid status code returned %d", resp.StatusCode)
 	}
 
 	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
-		return false, err
+		return "", err
 	}
 
 	confirmation := doc.Find("#globalwrap > div.user-messages.alert.user-message-success.alert-success > ul > li > strong").Text()
-	return strings.Compare(confirmation, "Now please enter the names of your playing partners.") == 0, nil
+	if strings.Compare(confirmation, "Now please enter the names of your playing partners.") != 0 {
+		return "", fmt.Errorf("booking failed: unexpected confirmation message: %s", confirmation)
+	}
+
+	// Extract booking ID from the current URL
+	bookingID, err := w.extractBookingID(resp.Request.URL.String())
+	if err != nil {
+		return "", fmt.Errorf("failed to extract booking ID: %v", err)
+	}
+
+	return bookingID, nil
+}
+
+func (w BookingClient) extractBookingID(urlStr string) (string, error) {
+	// Extract booking ID from URL like hostname/memberbooking/?edit=<bookingid>&...
+	re := regexp.MustCompile(`[?&]edit=([^&]+)`)
+	matches := re.FindStringSubmatch(urlStr)
+	if len(matches) < 2 {
+		return "", fmt.Errorf("booking ID not found in URL: %s", urlStr)
+	}
+	return matches[1], nil
+}
+
+func (w BookingClient) AddPlayingPartner(bookingID, partnerID string, slotNumber int, dryRun bool) error {
+	if dryRun {
+		log.Printf("DRY RUN: Would have added partner %s to slot %d for booking %s", partnerID, slotNumber, bookingID)
+		return nil
+	}
+
+	url := fmt.Sprintf("%s%s", w.baseUrl, book)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return err
+	}
+
+	q := req.URL.Query()
+	q.Add("edit", bookingID)
+	q.Add("addpartner", partnerID)
+	q.Add("partnerslot", strconv.Itoa(slotNumber))
+	req.URL.RawQuery = q.Encode()
+
+	log.Printf("Adding partner: %s", req.URL.String())
+
+	resp, err := w.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("failed to add partner: status code %d", resp.StatusCode)
+	}
+
+	return nil
 }

@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"strings"
 
 	flags "github.com/jessevdk/go-flags"
 )
@@ -21,8 +22,9 @@ type Config struct {
 	Pin      string `short:"p" long:"pin" required:"true" description:"The pin associated with the username for booking"`
 	BaseUrl  string `short:"b" long:"baseurl" required:"true" description:"The host for the booking website"`
 
-	FromNumber string `short:"f" long:"fromnumber" required:"true" description:"The number to send the confirmation SMS from"`
-	ToNumber   string `short:"n" long:"tonumber" required:"true" description:"The number to send the confirmation SMS to"`
+	FromNumber      string `short:"f" long:"fromnumber" required:"true" description:"The number to send the confirmation SMS from"`
+	ToNumber        string `short:"n" long:"tonumber" required:"true" description:"The number to send the confirmation SMS to"`
+	PlayingPartners string `short:"s" long:"partners" description:"Comma-separated list of playing partner IDs"`
 }
 
 func GetConfig() (Config, error) {
@@ -38,6 +40,17 @@ func GetConfig() (Config, error) {
 	}
 
 	return c, nil
+}
+
+func (c Config) GetPlayingPartnersList() []string {
+	if c.PlayingPartners == "" {
+		return []string{}
+	}
+	parts := strings.Split(c.PlayingPartners, ",")
+	for i, part := range parts {
+		parts[i] = strings.TrimSpace(part)
+	}
+	return parts
 }
 
 func isErrHelp(err error) bool {
