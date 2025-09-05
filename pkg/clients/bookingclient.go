@@ -146,7 +146,7 @@ func (w BookingClient) BookTimeSlot(timeSlot models.TimeSlot, dryRun bool) (bool
 	}
 
 	q := req.URL.Query()
-	q.Add("numslots", "4")
+	q.Add("numslots", "3")
 
 	for k, v := range timeSlot.BookingForm {
 		q.Add(k, v)
