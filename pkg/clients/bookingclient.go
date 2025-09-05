@@ -137,11 +137,6 @@ func (w BookingClient) GetCourseAvailability(dateStr string) ([]models.TimeSlot,
 
 func (w BookingClient) BookTimeSlot(timeSlot models.TimeSlot, playingPartners []string, dryRun bool) (string, error) {
 	numSlots := len(playingPartners) + 1 // +1 for the main player
-	
-	if dryRun {
-		log.Printf("DRY RUN: Would have booked time slot: %s for %d people", timeSlot.Time, numSlots)
-		return "dryrun-booking-id", nil
-	}
 
 	url := fmt.Sprintf("%s%s", w.baseUrl, book)
 	req, err := http.NewRequest("GET", url, nil)
@@ -150,15 +145,22 @@ func (w BookingClient) BookTimeSlot(timeSlot models.TimeSlot, playingPartners []
 	}
 
 	q := req.URL.Query()
-	q.Add("numslots", strconv.Itoa(numSlots))
 
+	// First add all booking form parameters
 	for k, v := range timeSlot.BookingForm {
 		q.Add(k, v)
 	}
 
+	// Then set/override the numslots parameter
+	q.Set("numslots", strconv.Itoa(numSlots))
+
 	req.URL.RawQuery = q.Encode()
 
 	log.Printf("Calling %s", req.URL.String())
+	if dryRun {
+		log.Printf("DRY RUN: Would have booked time slot: %s for %d people", timeSlot.Time, numSlots)
+		return "dryrun-booking-id", nil
+	}
 
 	resp, err := w.httpClient.Do(req)
 	if err != nil {
@@ -201,11 +203,6 @@ func (w BookingClient) extractBookingID(urlStr string) (string, error) {
 }
 
 func (w BookingClient) AddPlayingPartner(bookingID, partnerID string, slotNumber int, dryRun bool) error {
-	if dryRun {
-		log.Printf("DRY RUN: Would have added partner %s to slot %d for booking %s", partnerID, slotNumber, bookingID)
-		return nil
-	}
-
 	url := fmt.Sprintf("%s%s", w.baseUrl, book)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -219,6 +216,10 @@ func (w BookingClient) AddPlayingPartner(bookingID, partnerID string, slotNumber
 	req.URL.RawQuery = q.Encode()
 
 	log.Printf("Adding partner: %s", req.URL.String())
+	if dryRun {
+		log.Printf("DRY RUN: Would have added partner %s to slot %d for booking %s", partnerID, slotNumber, bookingID)
+		return nil
+	}
 
 	resp, err := w.httpClient.Do(req)
 	if err != nil {
