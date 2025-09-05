@@ -3,12 +3,14 @@ package clients
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/stebennett/tee-sniper/pkg/models"
@@ -18,11 +20,19 @@ var (
 	loginUrl        = "login.php"
 	teeAvailability = "memberbooking/"
 	book            = "memberbooking/"
+	userAgents      = []string{
+		"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+		"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+		"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15",
+		"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0",
+		"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+	}
 )
 
 type BookingClient struct {
-	baseUrl    string
+	baseUrl   string
 	httpClient *http.Client
+	userAgent string
 }
 
 func NewBookingClient(u string) (*BookingClient, error) {
@@ -35,10 +45,24 @@ func NewBookingClient(u string) (*BookingClient, error) {
 		Jar: jar,
 	}
 
+	// Select a random user agent for this session
+	rand.Seed(time.Now().UnixNano())
+	selectedUserAgent := userAgents[rand.Intn(len(userAgents))]
+
 	return &BookingClient{
-		baseUrl:    u,
+		baseUrl:   u,
 		httpClient: client,
+		userAgent: selectedUserAgent,
 	}, nil
+}
+
+func (w *BookingClient) addBrowserHeaders(req *http.Request) {
+	req.Header.Set("User-Agent", w.userAgent)
+	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+	req.Header.Set("Accept-Language", "en-US,en;q=0.5")
+	req.Header.Set("Accept-Encoding", "gzip, deflate")
+	req.Header.Set("Connection", "keep-alive")
+	req.Header.Set("Upgrade-Insecure-Requests", "1")
 }
 
 func (w BookingClient) Login(username string, password string) (bool, error) {
@@ -57,7 +81,8 @@ func (w BookingClient) Login(username string, password string) (bool, error) {
 		return false, err
 	}
 
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	w.addBrowserHeaders(req)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	resp, err := w.httpClient.Do(req)
 	if err != nil {
@@ -88,6 +113,7 @@ func (w BookingClient) GetCourseAvailability(dateStr string) ([]models.TimeSlot,
 		return slots, err
 	}
 
+	w.addBrowserHeaders(req)
 	q := req.URL.Query()
 	q.Add("date", dateStr)
 	req.URL.RawQuery = q.Encode()
@@ -144,6 +170,7 @@ func (w BookingClient) BookTimeSlot(timeSlot models.TimeSlot, playingPartners []
 		return "", err
 	}
 
+	w.addBrowserHeaders(req)
 	q := req.URL.Query()
 
 	// First add all booking form parameters
@@ -209,6 +236,7 @@ func (w BookingClient) AddPlayingPartner(bookingID, partnerID string, slotNumber
 		return err
 	}
 
+	w.addBrowserHeaders(req)
 	q := req.URL.Query()
 	q.Add("edit", bookingID)
 	q.Add("addpartner", partnerID)

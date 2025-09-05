@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"time"
 
 	"github.com/stebennett/tee-sniper/pkg/clients"
@@ -10,7 +11,22 @@ import (
 	"github.com/stebennett/tee-sniper/pkg/teetimes"
 )
 
+// getRandomRetryDelay returns a random delay between min and max seconds with jitter
+func getRandomRetryDelay(minSeconds, maxSeconds int) time.Duration {
+	// Base delay between min and max
+	baseDelay := minSeconds + rand.Intn(maxSeconds-minSeconds+1)
+	
+	// Add jitter of +/- 20% (in milliseconds)
+	jitterRange := float64(baseDelay) * 0.2
+	jitterMs := (rand.Float64() - 0.5) * jitterRange * 1000
+	
+	totalMs := float64(baseDelay)*1000 + jitterMs
+	return time.Duration(totalMs) * time.Millisecond
+}
+
 func main() {
+	// Initialize random seed
+	rand.Seed(time.Now().UnixNano())
 	conf, err := config.GetConfig()
 	if err != nil {
 		log.Fatal(err)
@@ -48,7 +64,10 @@ func main() {
 
 		if len(availableTimes) == 0 {
 			log.Printf("No tee times available between %s and %s on %s. Retrying.", conf.TimeStart, conf.TimeEnd, dateStr)
-			time.Sleep(10 * time.Second)
+			// Random delay between 5-15 seconds with jitter
+			retryDelay := getRandomRetryDelay(5, 15)
+			log.Printf("Waiting %v before retry", retryDelay)
+			time.Sleep(retryDelay)
 			continue
 		}
 
@@ -62,6 +81,10 @@ func main() {
 		bookingID, err := wc.BookTimeSlot(timeToBook, playingPartners, conf.DryRun)
 		if err != nil {
 			log.Printf("Failed to book time slot: %s", err.Error())
+			// Random delay between 3-8 seconds after failed booking
+			retryDelay := getRandomRetryDelay(3, 8)
+			log.Printf("Waiting %v before retry", retryDelay)
+			time.Sleep(retryDelay)
 			continue
 		}
 
@@ -89,6 +112,10 @@ func main() {
 			break
 		} else {
 			log.Printf("Failed to complete booking: %s on %s. Retrying.", timeToBook.Time, dateStr)
+			// Random delay between 4-10 seconds after incomplete booking
+			retryDelay := getRandomRetryDelay(4, 10)
+			log.Printf("Waiting %v before retry", retryDelay)
+			time.Sleep(retryDelay)
 		}
 	}
 
