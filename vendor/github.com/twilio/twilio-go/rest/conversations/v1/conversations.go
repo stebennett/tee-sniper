@@ -106,7 +106,9 @@ func (c *ApiService) CreateConversation(params *CreateConversationParams) (*Conv
 	path := "/v1/Conversations"
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.FriendlyName != nil {
 		data.Set("FriendlyName", *params.FriendlyName)
@@ -127,7 +129,7 @@ func (c *ApiService) CreateConversation(params *CreateConversationParams) (*Conv
 		data.Set("Attributes", *params.Attributes)
 	}
 	if params != nil && params.State != nil {
-		data.Set("State", *params.State)
+		data.Set("State", fmt.Sprint(*params.State))
 	}
 	if params != nil && params.TimersInactive != nil {
 		data.Set("Timers.Inactive", *params.TimersInactive)
@@ -145,7 +147,6 @@ func (c *ApiService) CreateConversation(params *CreateConversationParams) (*Conv
 	if params != nil && params.XTwilioWebhookEnabled != nil {
 		headers["X-Twilio-Webhook-Enabled"] = *params.XTwilioWebhookEnabled
 	}
-
 	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)
 	if err != nil {
 		return nil, err
@@ -178,12 +179,13 @@ func (c *ApiService) DeleteConversation(Sid string, params *DeleteConversationPa
 	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.XTwilioWebhookEnabled != nil {
 		headers["X-Twilio-Webhook-Enabled"] = *params.XTwilioWebhookEnabled
 	}
-
 	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers)
 	if err != nil {
 		return err
@@ -200,7 +202,9 @@ func (c *ApiService) FetchConversation(Sid string) (*ConversationsV1Conversation
 	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
 	if err != nil {
@@ -219,13 +223,13 @@ func (c *ApiService) FetchConversation(Sid string) (*ConversationsV1Conversation
 
 // Optional parameters for the method 'ListConversation'
 type ListConversationParams struct {
-	// Start date or time in ISO8601 format for filtering list of Conversations. If a date is provided, the start time of the date is used (YYYY-MM-DDT00:00:00Z). Can be combined with other filters.
+	// Specifies the beginning of the date range for filtering Conversations based on their creation date. Conversations that were created on or after this date will be included in the results. The date must be in ISO8601 format, specifically starting at the beginning of the specified date (YYYY-MM-DDT00:00:00Z), for precise filtering. This parameter can be combined with other filters. If this filter is used, the returned list is sorted by latest conversation creation date in descending order.
 	StartDate *string `json:"StartDate,omitempty"`
-	// End date or time in ISO8601 format for filtering list of Conversations. If a date is provided, the end time of the date is used (YYYY-MM-DDT23:59:59Z). Can be combined with other filters.
+	// Defines the end of the date range for filtering conversations by their creation date. Only conversations that were created on or before this date will appear in the results.  The date must be in ISO8601 format, specifically capturing up to the end of the specified date (YYYY-MM-DDT23:59:59Z), to ensure that conversations from the entire end day are included. This parameter can be combined with other filters. If this filter is used, the returned list is sorted by latest conversation creation date in descending order.
 	EndDate *string `json:"EndDate,omitempty"`
 	// State for sorting and filtering list of Conversations. Can be `active`, `inactive` or `closed`
 	State *string `json:"State,omitempty"`
-	// How many resources to return in each list page. The default is 50, and the maximum is 1000.
+	// How many resources to return in each list page. The default is 50, and the maximum is 100.
 	PageSize *int `json:"PageSize,omitempty"`
 	// Max number of records to return.
 	Limit *int `json:"limit,omitempty"`
@@ -257,7 +261,9 @@ func (c *ApiService) PageConversation(params *ListConversationParams, pageToken,
 	path := "/v1/Conversations"
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.StartDate != nil {
 		data.Set("StartDate", *params.StartDate)
@@ -266,7 +272,7 @@ func (c *ApiService) PageConversation(params *ListConversationParams, pageToken,
 		data.Set("EndDate", *params.EndDate)
 	}
 	if params != nil && params.State != nil {
-		data.Set("State", *params.State)
+		data.Set("State", fmt.Sprint(*params.State))
 	}
 	if params != nil && params.PageSize != nil {
 		data.Set("PageSize", fmt.Sprint(*params.PageSize))
@@ -463,7 +469,9 @@ func (c *ApiService) UpdateConversation(Sid string, params *UpdateConversationPa
 	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.FriendlyName != nil {
 		data.Set("FriendlyName", *params.FriendlyName)
@@ -481,7 +489,7 @@ func (c *ApiService) UpdateConversation(Sid string, params *UpdateConversationPa
 		data.Set("MessagingServiceSid", *params.MessagingServiceSid)
 	}
 	if params != nil && params.State != nil {
-		data.Set("State", *params.State)
+		data.Set("State", fmt.Sprint(*params.State))
 	}
 	if params != nil && params.TimersInactive != nil {
 		data.Set("Timers.Inactive", *params.TimersInactive)
@@ -502,7 +510,6 @@ func (c *ApiService) UpdateConversation(Sid string, params *UpdateConversationPa
 	if params != nil && params.XTwilioWebhookEnabled != nil {
 		headers["X-Twilio-Webhook-Enabled"] = *params.XTwilioWebhookEnabled
 	}
-
 	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)
 	if err != nil {
 		return nil, err

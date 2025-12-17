@@ -32,7 +32,9 @@ func (c *ApiService) FetchServiceConversationMessageReceipt(ChatServiceSid strin
 	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
 	if err != nil {
@@ -51,7 +53,7 @@ func (c *ApiService) FetchServiceConversationMessageReceipt(ChatServiceSid strin
 
 // Optional parameters for the method 'ListServiceConversationMessageReceipt'
 type ListServiceConversationMessageReceiptParams struct {
-	// How many resources to return in each list page. The default is 50, and the maximum is 1000.
+	// How many resources to return in each list page. The default is 50, and the maximum is 50.
 	PageSize *int `json:"PageSize,omitempty"`
 	// Max number of records to return.
 	Limit *int `json:"limit,omitempty"`
@@ -75,7 +77,9 @@ func (c *ApiService) PageServiceConversationMessageReceipt(ChatServiceSid string
 	path = strings.Replace(path, "{"+"MessageSid"+"}", MessageSid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.PageSize != nil {
 		data.Set("PageSize", fmt.Sprint(*params.PageSize))

@@ -88,7 +88,9 @@ func (c *ApiService) CreateComposition(params *CreateCompositionParams) (*VideoV
 	path := "/v1/Compositions"
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.RoomSid != nil {
 		data.Set("RoomSid", *params.RoomSid)
@@ -116,7 +118,7 @@ func (c *ApiService) CreateComposition(params *CreateCompositionParams) (*VideoV
 		data.Set("Resolution", *params.Resolution)
 	}
 	if params != nil && params.Format != nil {
-		data.Set("Format", *params.Format)
+		data.Set("Format", fmt.Sprint(*params.Format))
 	}
 	if params != nil && params.StatusCallback != nil {
 		data.Set("StatusCallback", *params.StatusCallback)
@@ -149,7 +151,9 @@ func (c *ApiService) DeleteComposition(Sid string) error {
 	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers)
 	if err != nil {
@@ -167,7 +171,9 @@ func (c *ApiService) FetchComposition(Sid string) (*VideoV1Composition, error) {
 	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
 	if err != nil {
@@ -194,7 +200,7 @@ type ListCompositionParams struct {
 	DateCreatedBefore *time.Time `json:"DateCreatedBefore,omitempty"`
 	// Read only Composition resources with this Room SID.
 	RoomSid *string `json:"RoomSid,omitempty"`
-	// How many resources to return in each list page. The default is 50, and the maximum is 1000.
+	// How many resources to return in each list page.
 	PageSize *int `json:"PageSize,omitempty"`
 	// Max number of records to return.
 	Limit *int `json:"limit,omitempty"`
@@ -230,10 +236,12 @@ func (c *ApiService) PageComposition(params *ListCompositionParams, pageToken, p
 	path := "/v1/Compositions"
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.Status != nil {
-		data.Set("Status", *params.Status)
+		data.Set("Status", fmt.Sprint(*params.Status))
 	}
 	if params != nil && params.DateCreatedAfter != nil {
 		data.Set("DateCreatedAfter", fmt.Sprint((*params.DateCreatedAfter).Format(time.RFC3339)))

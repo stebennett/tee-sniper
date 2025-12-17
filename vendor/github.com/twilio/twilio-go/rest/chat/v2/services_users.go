@@ -64,7 +64,9 @@ func (c *ApiService) CreateUser(ServiceSid string, params *CreateUserParams) (*C
 	path = strings.Replace(path, "{"+"ServiceSid"+"}", ServiceSid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.Identity != nil {
 		data.Set("Identity", *params.Identity)
@@ -82,7 +84,6 @@ func (c *ApiService) CreateUser(ServiceSid string, params *CreateUserParams) (*C
 	if params != nil && params.XTwilioWebhookEnabled != nil {
 		headers["X-Twilio-Webhook-Enabled"] = *params.XTwilioWebhookEnabled
 	}
-
 	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)
 	if err != nil {
 		return nil, err
@@ -105,7 +106,9 @@ func (c *ApiService) DeleteUser(ServiceSid string, Sid string) error {
 	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers)
 	if err != nil {
@@ -124,7 +127,9 @@ func (c *ApiService) FetchUser(ServiceSid string, Sid string) (*ChatV2User, erro
 	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
 	if err != nil {
@@ -143,7 +148,7 @@ func (c *ApiService) FetchUser(ServiceSid string, Sid string) (*ChatV2User, erro
 
 // Optional parameters for the method 'ListUser'
 type ListUserParams struct {
-	// How many resources to return in each list page. The default is 50, and the maximum is 1000.
+	// How many resources to return in each list page. The default is 50, and the maximum is 100.
 	PageSize *int `json:"PageSize,omitempty"`
 	// Max number of records to return.
 	Limit *int `json:"limit,omitempty"`
@@ -165,7 +170,9 @@ func (c *ApiService) PageUser(ServiceSid string, params *ListUserParams, pageTok
 	path = strings.Replace(path, "{"+"ServiceSid"+"}", ServiceSid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.PageSize != nil {
 		data.Set("PageSize", fmt.Sprint(*params.PageSize))
@@ -315,7 +322,9 @@ func (c *ApiService) UpdateUser(ServiceSid string, Sid string, params *UpdateUse
 	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.RoleSid != nil {
 		data.Set("RoleSid", *params.RoleSid)
@@ -330,7 +339,6 @@ func (c *ApiService) UpdateUser(ServiceSid string, Sid string, params *UpdateUse
 	if params != nil && params.XTwilioWebhookEnabled != nil {
 		headers["X-Twilio-Webhook-Enabled"] = *params.XTwilioWebhookEnabled
 	}
-
 	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)
 	if err != nil {
 		return nil, err

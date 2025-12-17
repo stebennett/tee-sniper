@@ -59,7 +59,9 @@ func (c *ApiService) CreateSyncListItem(ServiceSid string, ListSid string, param
 	path = strings.Replace(path, "{"+"ListSid"+"}", ListSid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.Data != nil {
 		v, err := json.Marshal(params.Data)
@@ -114,12 +116,13 @@ func (c *ApiService) DeleteSyncListItem(ServiceSid string, ListSid string, Index
 	path = strings.Replace(path, "{"+"Index"+"}", fmt.Sprint(Index), -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.IfMatch != nil {
 		headers["If-Match"] = *params.IfMatch
 	}
-
 	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers)
 	if err != nil {
 		return err
@@ -138,7 +141,9 @@ func (c *ApiService) FetchSyncListItem(ServiceSid string, ListSid string, Index 
 	path = strings.Replace(path, "{"+"Index"+"}", fmt.Sprint(Index), -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
 	if err != nil {
@@ -163,7 +168,7 @@ type ListSyncListItemParams struct {
 	From *string `json:"From,omitempty"`
 	// Whether to include the List Item referenced by the `from` parameter. Can be: `inclusive` to include the List Item referenced by the `from` parameter or `exclusive` to start with the next List Item. The default value is `inclusive`.
 	Bounds *string `json:"Bounds,omitempty"`
-	// How many resources to return in each list page. The default is 50, and the maximum is 1000.
+	// How many resources to return in each list page. The default is 50, and the maximum is 100.
 	PageSize *int `json:"PageSize,omitempty"`
 	// Max number of records to return.
 	Limit *int `json:"limit,omitempty"`
@@ -198,16 +203,18 @@ func (c *ApiService) PageSyncListItem(ServiceSid string, ListSid string, params 
 	path = strings.Replace(path, "{"+"ListSid"+"}", ListSid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.Order != nil {
-		data.Set("Order", *params.Order)
+		data.Set("Order", fmt.Sprint(*params.Order))
 	}
 	if params != nil && params.From != nil {
 		data.Set("From", *params.From)
 	}
 	if params != nil && params.Bounds != nil {
-		data.Set("Bounds", *params.Bounds)
+		data.Set("Bounds", fmt.Sprint(*params.Bounds))
 	}
 	if params != nil && params.PageSize != nil {
 		data.Set("PageSize", fmt.Sprint(*params.PageSize))
@@ -364,7 +371,9 @@ func (c *ApiService) UpdateSyncListItem(ServiceSid string, ListSid string, Index
 	path = strings.Replace(path, "{"+"Index"+"}", fmt.Sprint(Index), -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.Data != nil {
 		v, err := json.Marshal(params.Data)
@@ -388,7 +397,6 @@ func (c *ApiService) UpdateSyncListItem(ServiceSid string, ListSid string, Index
 	if params != nil && params.IfMatch != nil {
 		headers["If-Match"] = *params.IfMatch
 	}
-
 	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)
 	if err != nil {
 		return nil, err

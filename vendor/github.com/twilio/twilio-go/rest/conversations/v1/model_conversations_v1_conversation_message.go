@@ -27,7 +27,7 @@ type ConversationsV1ConversationMessage struct {
 	// A 34 character string that uniquely identifies this resource.
 	Sid *string `json:"sid,omitempty"`
 	// The index of the message within the [Conversation](https://www.twilio.com/docs/conversations/api/conversation-resource).  Indices may skip numbers, but will always be in order of when the message was received.
-	Index *int `json:"index,omitempty"`
+	Index int `json:"index,omitempty"`
 	// The channel specific identifier of the message's author. Defaults to `system`.
 	Author *string `json:"author,omitempty"`
 	// The content of the message, can be up to 1,600 characters long.
@@ -48,6 +48,6 @@ type ConversationsV1ConversationMessage struct {
 	Delivery *interface{} `json:"delivery,omitempty"`
 	// Contains an absolute API resource URL to access the delivery & read receipts of this message.
 	Links *map[string]interface{} `json:"links,omitempty"`
-	// The unique ID of the multi-channel [Rich Content](https://www.twilio.com/docs/content-api) template.
+	// The unique ID of the multi-channel [Rich Content](https://www.twilio.com/docs/content) template.
 	ContentSid *string `json:"content_sid,omitempty"`
 }

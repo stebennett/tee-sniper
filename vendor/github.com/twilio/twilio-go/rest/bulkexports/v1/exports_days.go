@@ -30,7 +30,9 @@ func (c *ApiService) FetchDay(ResourceType string, Day string) (*BulkexportsV1Da
 	path = strings.Replace(path, "{"+"Day"+"}", Day, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
 	if err != nil {
@@ -49,7 +51,7 @@ func (c *ApiService) FetchDay(ResourceType string, Day string) (*BulkexportsV1Da
 
 // Optional parameters for the method 'ListDay'
 type ListDayParams struct {
-	// How many resources to return in each list page. The default is 50, and the maximum is 1000.
+	// How many resources to return in each list page. The default is 50, and the maximum is 400.
 	PageSize *int `json:"PageSize,omitempty"`
 	// Max number of records to return.
 	Limit *int `json:"limit,omitempty"`
@@ -71,7 +73,9 @@ func (c *ApiService) PageDay(ResourceType string, params *ListDayParams, pageTok
 	path = strings.Replace(path, "{"+"ResourceType"+"}", ResourceType, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.PageSize != nil {
 		data.Set("PageSize", fmt.Sprint(*params.PageSize))

@@ -41,7 +41,7 @@ type CreateServiceParams struct {
 	Psd2Enabled *bool `json:"Psd2Enabled,omitempty"`
 	// Whether to add a security warning at the end of an SMS verification body. Disabled by default and applies only to SMS. Example SMS body: `Your AppName verification code is: 1234. Don’t share this code with anyone; our employees will never ask for the code`
 	DoNotShareWarningEnabled *bool `json:"DoNotShareWarningEnabled,omitempty"`
-	// Whether to allow sending verifications with a custom code instead of a randomly generated one. Not available for all customers.
+	// Whether to allow sending verifications with a custom code instead of a randomly generated one.
 	CustomCodeEnabled *bool `json:"CustomCodeEnabled,omitempty"`
 	// Optional configuration for the Push factors. If true, include the date in the Challenge's response. Otherwise, the date is omitted from the response. See [Challenge](https://www.twilio.com/docs/verify/api/challenge) resource’s details parameter for more info. Default: false. **Deprecated** do not use this parameter. This timestamp value is the same one as the one found in `date_created`, please use that one instead.
 	PushIncludeDate *bool `json:"Push.IncludeDate,omitempty"`
@@ -59,6 +59,24 @@ type CreateServiceParams struct {
 	TotpSkew *int `json:"Totp.Skew,omitempty"`
 	// The default message [template](https://www.twilio.com/docs/verify/api/templates). Will be used for all SMS verifications unless explicitly overriden. SMS channel only.
 	DefaultTemplateSid *string `json:"DefaultTemplateSid,omitempty"`
+	// The SID of the Messaging Service containing WhatsApp Sender(s) that Verify will use to send WhatsApp messages to your users.
+	WhatsappMsgServiceSid *string `json:"Whatsapp.MsgServiceSid,omitempty"`
+	// The number to use as the WhatsApp Sender that Verify will use to send WhatsApp messages to your users.This WhatsApp Sender must be associated with a Messaging Service SID.
+	WhatsappFrom *string `json:"Whatsapp.From,omitempty"`
+	// The Relying Party ID for Passkeys. This is the domain of your application, e.g. `example.com`. It is used to identify your application when creating Passkeys.
+	PasskeysRelyingPartyId *string `json:"Passkeys.RelyingParty.Id,omitempty"`
+	// The Relying Party Name for Passkeys. This is the name of your application, e.g. `Example App`. It is used to identify your application when creating Passkeys.
+	PasskeysRelyingPartyName *string `json:"Passkeys.RelyingParty.Name,omitempty"`
+	// The Relying Party Origins for Passkeys. This is the origin of your application, e.g. `login.example.com,www.example.com`. It is used to identify your application when creating Passkeys, it can have multiple origins split by `,`.
+	PasskeysRelyingPartyOrigins *string `json:"Passkeys.RelyingParty.Origins,omitempty"`
+	// The Authenticator Attachment for Passkeys. This is the type of authenticator that will be used to create Passkeys. It can be empty or it can have the values `platform`, `cross-platform` or `any`.
+	PasskeysAuthenticatorAttachment *string `json:"Passkeys.AuthenticatorAttachment,omitempty"`
+	// Indicates whether credentials must be discoverable by the authenticator. It can be empty or it can have the values `required`, `preferred` or `discouraged`.
+	PasskeysDiscoverableCredentials *string `json:"Passkeys.DiscoverableCredentials,omitempty"`
+	// The User Verification for Passkeys. This is the type of user verification that will be used to create Passkeys. It can be empty or it can have the values `required`, `preferred` or `discouraged`.
+	PasskeysUserVerification *string `json:"Passkeys.UserVerification,omitempty"`
+	// Whether to allow verifications from the service to reach the stream-events sinks if configured
+	VerifyEventSubscriptionEnabled *bool `json:"VerifyEventSubscriptionEnabled,omitempty"`
 }
 
 func (params *CreateServiceParams) SetFriendlyName(FriendlyName string) *CreateServiceParams {
@@ -129,13 +147,51 @@ func (params *CreateServiceParams) SetDefaultTemplateSid(DefaultTemplateSid stri
 	params.DefaultTemplateSid = &DefaultTemplateSid
 	return params
 }
+func (params *CreateServiceParams) SetWhatsappMsgServiceSid(WhatsappMsgServiceSid string) *CreateServiceParams {
+	params.WhatsappMsgServiceSid = &WhatsappMsgServiceSid
+	return params
+}
+func (params *CreateServiceParams) SetWhatsappFrom(WhatsappFrom string) *CreateServiceParams {
+	params.WhatsappFrom = &WhatsappFrom
+	return params
+}
+func (params *CreateServiceParams) SetPasskeysRelyingPartyId(PasskeysRelyingPartyId string) *CreateServiceParams {
+	params.PasskeysRelyingPartyId = &PasskeysRelyingPartyId
+	return params
+}
+func (params *CreateServiceParams) SetPasskeysRelyingPartyName(PasskeysRelyingPartyName string) *CreateServiceParams {
+	params.PasskeysRelyingPartyName = &PasskeysRelyingPartyName
+	return params
+}
+func (params *CreateServiceParams) SetPasskeysRelyingPartyOrigins(PasskeysRelyingPartyOrigins string) *CreateServiceParams {
+	params.PasskeysRelyingPartyOrigins = &PasskeysRelyingPartyOrigins
+	return params
+}
+func (params *CreateServiceParams) SetPasskeysAuthenticatorAttachment(PasskeysAuthenticatorAttachment string) *CreateServiceParams {
+	params.PasskeysAuthenticatorAttachment = &PasskeysAuthenticatorAttachment
+	return params
+}
+func (params *CreateServiceParams) SetPasskeysDiscoverableCredentials(PasskeysDiscoverableCredentials string) *CreateServiceParams {
+	params.PasskeysDiscoverableCredentials = &PasskeysDiscoverableCredentials
+	return params
+}
+func (params *CreateServiceParams) SetPasskeysUserVerification(PasskeysUserVerification string) *CreateServiceParams {
+	params.PasskeysUserVerification = &PasskeysUserVerification
+	return params
+}
+func (params *CreateServiceParams) SetVerifyEventSubscriptionEnabled(VerifyEventSubscriptionEnabled bool) *CreateServiceParams {
+	params.VerifyEventSubscriptionEnabled = &VerifyEventSubscriptionEnabled
+	return params
+}
 
 // Create a new Verification Service.
 func (c *ApiService) CreateService(params *CreateServiceParams) (*VerifyV2Service, error) {
 	path := "/v2/Services"
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.FriendlyName != nil {
 		data.Set("FriendlyName", *params.FriendlyName)
@@ -188,6 +244,33 @@ func (c *ApiService) CreateService(params *CreateServiceParams) (*VerifyV2Servic
 	if params != nil && params.DefaultTemplateSid != nil {
 		data.Set("DefaultTemplateSid", *params.DefaultTemplateSid)
 	}
+	if params != nil && params.WhatsappMsgServiceSid != nil {
+		data.Set("Whatsapp.MsgServiceSid", *params.WhatsappMsgServiceSid)
+	}
+	if params != nil && params.WhatsappFrom != nil {
+		data.Set("Whatsapp.From", *params.WhatsappFrom)
+	}
+	if params != nil && params.PasskeysRelyingPartyId != nil {
+		data.Set("Passkeys.RelyingParty.Id", *params.PasskeysRelyingPartyId)
+	}
+	if params != nil && params.PasskeysRelyingPartyName != nil {
+		data.Set("Passkeys.RelyingParty.Name", *params.PasskeysRelyingPartyName)
+	}
+	if params != nil && params.PasskeysRelyingPartyOrigins != nil {
+		data.Set("Passkeys.RelyingParty.Origins", *params.PasskeysRelyingPartyOrigins)
+	}
+	if params != nil && params.PasskeysAuthenticatorAttachment != nil {
+		data.Set("Passkeys.AuthenticatorAttachment", *params.PasskeysAuthenticatorAttachment)
+	}
+	if params != nil && params.PasskeysDiscoverableCredentials != nil {
+		data.Set("Passkeys.DiscoverableCredentials", *params.PasskeysDiscoverableCredentials)
+	}
+	if params != nil && params.PasskeysUserVerification != nil {
+		data.Set("Passkeys.UserVerification", *params.PasskeysUserVerification)
+	}
+	if params != nil && params.VerifyEventSubscriptionEnabled != nil {
+		data.Set("VerifyEventSubscriptionEnabled", fmt.Sprint(*params.VerifyEventSubscriptionEnabled))
+	}
 
 	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)
 	if err != nil {
@@ -210,7 +293,9 @@ func (c *ApiService) DeleteService(Sid string) error {
 	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers)
 	if err != nil {
@@ -228,7 +313,9 @@ func (c *ApiService) FetchService(Sid string) (*VerifyV2Service, error) {
 	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
 	if err != nil {
@@ -267,7 +354,9 @@ func (c *ApiService) PageService(params *ListServiceParams, pageToken, pageNumbe
 	path := "/v2/Services"
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.PageSize != nil {
 		data.Set("PageSize", fmt.Sprint(*params.PageSize))
@@ -399,7 +488,7 @@ type UpdateServiceParams struct {
 	Psd2Enabled *bool `json:"Psd2Enabled,omitempty"`
 	// Whether to add a privacy warning at the end of an SMS. **Disabled by default and applies only for SMS.**
 	DoNotShareWarningEnabled *bool `json:"DoNotShareWarningEnabled,omitempty"`
-	// Whether to allow sending verifications with a custom code instead of a randomly generated one. Not available for all customers.
+	// Whether to allow sending verifications with a custom code instead of a randomly generated one.
 	CustomCodeEnabled *bool `json:"CustomCodeEnabled,omitempty"`
 	// Optional configuration for the Push factors. If true, include the date in the Challenge's response. Otherwise, the date is omitted from the response. See [Challenge](https://www.twilio.com/docs/verify/api/challenge) resource’s details parameter for more info. Default: false. **Deprecated** do not use this parameter.
 	PushIncludeDate *bool `json:"Push.IncludeDate,omitempty"`
@@ -417,6 +506,24 @@ type UpdateServiceParams struct {
 	TotpSkew *int `json:"Totp.Skew,omitempty"`
 	// The default message [template](https://www.twilio.com/docs/verify/api/templates). Will be used for all SMS verifications unless explicitly overriden. SMS channel only.
 	DefaultTemplateSid *string `json:"DefaultTemplateSid,omitempty"`
+	// The SID of the [Messaging Service](https://www.twilio.com/docs/messaging/services) to associate with the Verification Service.
+	WhatsappMsgServiceSid *string `json:"Whatsapp.MsgServiceSid,omitempty"`
+	// The WhatsApp number to use as the sender of the verification messages. This number must be associated with the WhatsApp Message Service.
+	WhatsappFrom *string `json:"Whatsapp.From,omitempty"`
+	// The Relying Party ID for Passkeys. This is the domain of your application, e.g. `example.com`. It is used to identify your application when creating Passkeys.
+	PasskeysRelyingPartyId *string `json:"Passkeys.RelyingParty.Id,omitempty"`
+	// The Relying Party Name for Passkeys. This is the name of your application, e.g. `Example App`. It is used to identify your application when creating Passkeys.
+	PasskeysRelyingPartyName *string `json:"Passkeys.RelyingParty.Name,omitempty"`
+	// The Relying Party Origins for Passkeys. This is the origin of your application, e.g. `login.example.com,www.example.com`. It is used to identify your application when creating Passkeys, it can have multiple origins split by `,`.
+	PasskeysRelyingPartyOrigins *string `json:"Passkeys.RelyingParty.Origins,omitempty"`
+	// The Authenticator Attachment for Passkeys. This is the type of authenticator that will be used to create Passkeys. It can be empty or it can have the values `platform`, `cross-platform` or `any`.
+	PasskeysAuthenticatorAttachment *string `json:"Passkeys.AuthenticatorAttachment,omitempty"`
+	// Indicates whether credentials must be discoverable by the authenticator. It can be empty or it can have the values `required`, `preferred` or `discouraged`.
+	PasskeysDiscoverableCredentials *string `json:"Passkeys.DiscoverableCredentials,omitempty"`
+	// The User Verification for Passkeys. This is the type of user verification that will be used to create Passkeys. It can be empty or it can have the values `required`, `preferred` or `discouraged`.
+	PasskeysUserVerification *string `json:"Passkeys.UserVerification,omitempty"`
+	// Whether to allow verifications from the service to reach the stream-events sinks if configured
+	VerifyEventSubscriptionEnabled *bool `json:"VerifyEventSubscriptionEnabled,omitempty"`
 }
 
 func (params *UpdateServiceParams) SetFriendlyName(FriendlyName string) *UpdateServiceParams {
@@ -487,6 +594,42 @@ func (params *UpdateServiceParams) SetDefaultTemplateSid(DefaultTemplateSid stri
 	params.DefaultTemplateSid = &DefaultTemplateSid
 	return params
 }
+func (params *UpdateServiceParams) SetWhatsappMsgServiceSid(WhatsappMsgServiceSid string) *UpdateServiceParams {
+	params.WhatsappMsgServiceSid = &WhatsappMsgServiceSid
+	return params
+}
+func (params *UpdateServiceParams) SetWhatsappFrom(WhatsappFrom string) *UpdateServiceParams {
+	params.WhatsappFrom = &WhatsappFrom
+	return params
+}
+func (params *UpdateServiceParams) SetPasskeysRelyingPartyId(PasskeysRelyingPartyId string) *UpdateServiceParams {
+	params.PasskeysRelyingPartyId = &PasskeysRelyingPartyId
+	return params
+}
+func (params *UpdateServiceParams) SetPasskeysRelyingPartyName(PasskeysRelyingPartyName string) *UpdateServiceParams {
+	params.PasskeysRelyingPartyName = &PasskeysRelyingPartyName
+	return params
+}
+func (params *UpdateServiceParams) SetPasskeysRelyingPartyOrigins(PasskeysRelyingPartyOrigins string) *UpdateServiceParams {
+	params.PasskeysRelyingPartyOrigins = &PasskeysRelyingPartyOrigins
+	return params
+}
+func (params *UpdateServiceParams) SetPasskeysAuthenticatorAttachment(PasskeysAuthenticatorAttachment string) *UpdateServiceParams {
+	params.PasskeysAuthenticatorAttachment = &PasskeysAuthenticatorAttachment
+	return params
+}
+func (params *UpdateServiceParams) SetPasskeysDiscoverableCredentials(PasskeysDiscoverableCredentials string) *UpdateServiceParams {
+	params.PasskeysDiscoverableCredentials = &PasskeysDiscoverableCredentials
+	return params
+}
+func (params *UpdateServiceParams) SetPasskeysUserVerification(PasskeysUserVerification string) *UpdateServiceParams {
+	params.PasskeysUserVerification = &PasskeysUserVerification
+	return params
+}
+func (params *UpdateServiceParams) SetVerifyEventSubscriptionEnabled(VerifyEventSubscriptionEnabled bool) *UpdateServiceParams {
+	params.VerifyEventSubscriptionEnabled = &VerifyEventSubscriptionEnabled
+	return params
+}
 
 // Update a specific Verification Service.
 func (c *ApiService) UpdateService(Sid string, params *UpdateServiceParams) (*VerifyV2Service, error) {
@@ -494,7 +637,9 @@ func (c *ApiService) UpdateService(Sid string, params *UpdateServiceParams) (*Ve
 	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.FriendlyName != nil {
 		data.Set("FriendlyName", *params.FriendlyName)
@@ -546,6 +691,33 @@ func (c *ApiService) UpdateService(Sid string, params *UpdateServiceParams) (*Ve
 	}
 	if params != nil && params.DefaultTemplateSid != nil {
 		data.Set("DefaultTemplateSid", *params.DefaultTemplateSid)
+	}
+	if params != nil && params.WhatsappMsgServiceSid != nil {
+		data.Set("Whatsapp.MsgServiceSid", *params.WhatsappMsgServiceSid)
+	}
+	if params != nil && params.WhatsappFrom != nil {
+		data.Set("Whatsapp.From", *params.WhatsappFrom)
+	}
+	if params != nil && params.PasskeysRelyingPartyId != nil {
+		data.Set("Passkeys.RelyingParty.Id", *params.PasskeysRelyingPartyId)
+	}
+	if params != nil && params.PasskeysRelyingPartyName != nil {
+		data.Set("Passkeys.RelyingParty.Name", *params.PasskeysRelyingPartyName)
+	}
+	if params != nil && params.PasskeysRelyingPartyOrigins != nil {
+		data.Set("Passkeys.RelyingParty.Origins", *params.PasskeysRelyingPartyOrigins)
+	}
+	if params != nil && params.PasskeysAuthenticatorAttachment != nil {
+		data.Set("Passkeys.AuthenticatorAttachment", *params.PasskeysAuthenticatorAttachment)
+	}
+	if params != nil && params.PasskeysDiscoverableCredentials != nil {
+		data.Set("Passkeys.DiscoverableCredentials", *params.PasskeysDiscoverableCredentials)
+	}
+	if params != nil && params.PasskeysUserVerification != nil {
+		data.Set("Passkeys.UserVerification", *params.PasskeysUserVerification)
+	}
+	if params != nil && params.VerifyEventSubscriptionEnabled != nil {
+		data.Set("VerifyEventSubscriptionEnabled", fmt.Sprint(*params.VerifyEventSubscriptionEnabled))
 	}
 
 	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)

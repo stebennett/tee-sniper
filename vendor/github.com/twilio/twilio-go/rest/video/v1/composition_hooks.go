@@ -94,7 +94,9 @@ func (c *ApiService) CreateCompositionHook(params *CreateCompositionHookParams) 
 	path := "/v1/CompositionHooks"
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.FriendlyName != nil {
 		data.Set("FriendlyName", *params.FriendlyName)
@@ -125,7 +127,7 @@ func (c *ApiService) CreateCompositionHook(params *CreateCompositionHookParams) 
 		data.Set("Resolution", *params.Resolution)
 	}
 	if params != nil && params.Format != nil {
-		data.Set("Format", *params.Format)
+		data.Set("Format", fmt.Sprint(*params.Format))
 	}
 	if params != nil && params.StatusCallback != nil {
 		data.Set("StatusCallback", *params.StatusCallback)
@@ -158,7 +160,9 @@ func (c *ApiService) DeleteCompositionHook(Sid string) error {
 	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers)
 	if err != nil {
@@ -176,7 +180,9 @@ func (c *ApiService) FetchCompositionHook(Sid string) (*VideoV1CompositionHook, 
 	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
 	if err != nil {
@@ -239,7 +245,9 @@ func (c *ApiService) PageCompositionHook(params *ListCompositionHookParams, page
 	path := "/v1/CompositionHooks"
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.Enabled != nil {
 		data.Set("Enabled", fmt.Sprint(*params.Enabled))
@@ -436,7 +444,9 @@ func (c *ApiService) UpdateCompositionHook(Sid string, params *UpdateComposition
 	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.FriendlyName != nil {
 		data.Set("FriendlyName", *params.FriendlyName)
@@ -467,7 +477,7 @@ func (c *ApiService) UpdateCompositionHook(Sid string, params *UpdateComposition
 		data.Set("Trim", fmt.Sprint(*params.Trim))
 	}
 	if params != nil && params.Format != nil {
-		data.Set("Format", *params.Format)
+		data.Set("Format", fmt.Sprint(*params.Format))
 	}
 	if params != nil && params.Resolution != nil {
 		data.Set("Resolution", *params.Resolution)

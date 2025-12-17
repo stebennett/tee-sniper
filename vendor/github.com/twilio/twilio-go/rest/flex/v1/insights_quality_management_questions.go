@@ -69,7 +69,9 @@ func (c *ApiService) CreateInsightsQuestionnairesQuestion(params *CreateInsights
 	path := "/v1/Insights/QualityManagement/Questions"
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.CategorySid != nil {
 		data.Set("CategorySid", *params.CategorySid)
@@ -90,7 +92,6 @@ func (c *ApiService) CreateInsightsQuestionnairesQuestion(params *CreateInsights
 	if params != nil && params.Authorization != nil {
 		headers["Authorization"] = *params.Authorization
 	}
-
 	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)
 	if err != nil {
 		return nil, err
@@ -123,12 +124,13 @@ func (c *ApiService) DeleteInsightsQuestionnairesQuestion(QuestionSid string, pa
 	path = strings.Replace(path, "{"+"QuestionSid"+"}", QuestionSid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.Authorization != nil {
 		headers["Authorization"] = *params.Authorization
 	}
-
 	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers)
 	if err != nil {
 		return err
@@ -173,7 +175,9 @@ func (c *ApiService) PageInsightsQuestionnairesQuestion(params *ListInsightsQues
 	path := "/v1/Insights/QualityManagement/Questions"
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.CategorySid != nil {
 		for _, item := range *params.CategorySid {
@@ -339,7 +343,9 @@ func (c *ApiService) UpdateInsightsQuestionnairesQuestion(QuestionSid string, pa
 	path = strings.Replace(path, "{"+"QuestionSid"+"}", QuestionSid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.AllowNa != nil {
 		data.Set("AllowNa", fmt.Sprint(*params.AllowNa))
@@ -360,7 +366,6 @@ func (c *ApiService) UpdateInsightsQuestionnairesQuestion(QuestionSid string, pa
 	if params != nil && params.Authorization != nil {
 		headers["Authorization"] = *params.Authorization
 	}
-
 	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)
 	if err != nil {
 		return nil, err

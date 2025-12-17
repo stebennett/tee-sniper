@@ -31,7 +31,7 @@ type CreateServiceParams struct {
 	ApnCredentialSid *string `json:"ApnCredentialSid,omitempty"`
 	// The SID of the [Credential](https://www.twilio.com/docs/notify/api/credential-resource) to use for GCM Bindings.
 	GcmCredentialSid *string `json:"GcmCredentialSid,omitempty"`
-	// The SID of the [Messaging Service](https://www.twilio.com/docs/sms/send-messages#messaging-services) to use for SMS Bindings. This parameter must be set in order to send SMS notifications.
+	// The SID of the [Messaging Service](https://www.twilio.com/docs/sms/quickstart#messaging-services) to use for SMS Bindings. This parameter must be set in order to send SMS notifications.
 	MessagingServiceSid *string `json:"MessagingServiceSid,omitempty"`
 	// Deprecated.
 	FacebookMessengerPageId *string `json:"FacebookMessengerPageId,omitempty"`
@@ -117,7 +117,9 @@ func (c *ApiService) CreateService(params *CreateServiceParams) (*NotifyV1Servic
 	path := "/v1/Services"
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.FriendlyName != nil {
 		data.Set("FriendlyName", *params.FriendlyName)
@@ -183,7 +185,9 @@ func (c *ApiService) DeleteService(Sid string) error {
 	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers)
 	if err != nil {
@@ -201,7 +205,9 @@ func (c *ApiService) FetchService(Sid string) (*NotifyV1Service, error) {
 	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
 	if err != nil {
@@ -246,7 +252,9 @@ func (c *ApiService) PageService(params *ListServiceParams, pageToken, pageNumbe
 	path := "/v1/Services"
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.FriendlyName != nil {
 		data.Set("FriendlyName", *params.FriendlyName)
@@ -371,7 +379,7 @@ type UpdateServiceParams struct {
 	ApnCredentialSid *string `json:"ApnCredentialSid,omitempty"`
 	// The SID of the [Credential](https://www.twilio.com/docs/notify/api/credential-resource) to use for GCM Bindings.
 	GcmCredentialSid *string `json:"GcmCredentialSid,omitempty"`
-	// The SID of the [Messaging Service](https://www.twilio.com/docs/sms/send-messages#messaging-services) to use for SMS Bindings. This parameter must be set in order to send SMS notifications.
+	// The SID of the [Messaging Service](https://www.twilio.com/docs/sms/quickstart#messaging-services) to use for SMS Bindings. This parameter must be set in order to send SMS notifications.
 	MessagingServiceSid *string `json:"MessagingServiceSid,omitempty"`
 	// Deprecated.
 	FacebookMessengerPageId *string `json:"FacebookMessengerPageId,omitempty"`
@@ -458,7 +466,9 @@ func (c *ApiService) UpdateService(Sid string, params *UpdateServiceParams) (*No
 	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.FriendlyName != nil {
 		data.Set("FriendlyName", *params.FriendlyName)

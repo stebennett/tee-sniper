@@ -57,7 +57,9 @@ func (c *ApiService) CreateEsimProfile(params *CreateEsimProfileParams) (*Supers
 	path := "/v1/ESimProfiles"
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.CallbackUrl != nil {
 		data.Set("CallbackUrl", *params.CallbackUrl)
@@ -93,7 +95,9 @@ func (c *ApiService) FetchEsimProfile(Sid string) (*SupersimV1EsimProfile, error
 	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
 	if err != nil {
@@ -114,7 +118,7 @@ func (c *ApiService) FetchEsimProfile(Sid string) (*SupersimV1EsimProfile, error
 type ListEsimProfileParams struct {
 	// List the eSIM Profiles that have been associated with an EId.
 	Eid *string `json:"Eid,omitempty"`
-	// Find the eSIM Profile resource related to a [Sim](https://www.twilio.com/docs/iot/wireless/api/sim-resource) resource by providing the SIM SID. Will always return an array with either 1 or 0 records.
+	// Find the eSIM Profile resource related to a [Sim](https://www.twilio.com/docs/iot/supersim/api/sim-resource) resource by providing the SIM SID. Will always return an array with either 1 or 0 records.
 	SimSid *string `json:"SimSid,omitempty"`
 	// List the eSIM Profiles that are in a given status.
 	Status *string `json:"Status,omitempty"`
@@ -150,7 +154,9 @@ func (c *ApiService) PageEsimProfile(params *ListEsimProfileParams, pageToken, p
 	path := "/v1/ESimProfiles"
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.Eid != nil {
 		data.Set("Eid", *params.Eid)
@@ -159,7 +165,7 @@ func (c *ApiService) PageEsimProfile(params *ListEsimProfileParams, pageToken, p
 		data.Set("SimSid", *params.SimSid)
 	}
 	if params != nil && params.Status != nil {
-		data.Set("Status", *params.Status)
+		data.Set("Status", fmt.Sprint(*params.Status))
 	}
 	if params != nil && params.PageSize != nil {
 		data.Set("PageSize", fmt.Sprint(*params.PageSize))

@@ -14,19 +14,15 @@
 
 package openapi
 
-import (
-	"time"
-)
-
 // OauthV1Token struct for OauthV1Token
 type OauthV1Token struct {
 	// Token which carries the necessary information to access a Twilio resource directly.
 	AccessToken *string `json:"access_token,omitempty"`
 	// Token which carries the information necessary to get a new access token.
 	RefreshToken *string `json:"refresh_token,omitempty"`
-	IdToken      *string `json:"id_token,omitempty"`
-	// The date and time in GMT when the refresh token expires in [RFC 2822](https://www.ietf.org/rfc/rfc2822.txt) format.
-	RefreshTokenExpiresAt *time.Time `json:"refresh_token_expires_at,omitempty"`
-	// The date and time in GMT when the refresh token expires in [RFC 2822](https://www.ietf.org/rfc/rfc2822.txt) format.
-	AccessTokenExpiresAt *time.Time `json:"access_token_expires_at,omitempty"`
+	// Token which carries the information necessary of user profile.
+	IdToken *string `json:"id_token,omitempty"`
+	// Token type
+	TokenType *string `json:"token_type,omitempty"`
+	ExpiresIn *int64  `json:"expires_in,omitempty"`
 }

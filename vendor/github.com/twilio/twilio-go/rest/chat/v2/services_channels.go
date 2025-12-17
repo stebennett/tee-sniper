@@ -83,7 +83,9 @@ func (c *ApiService) CreateChannel(ServiceSid string, params *CreateChannelParam
 	path = strings.Replace(path, "{"+"ServiceSid"+"}", ServiceSid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.FriendlyName != nil {
 		data.Set("FriendlyName", *params.FriendlyName)
@@ -95,7 +97,7 @@ func (c *ApiService) CreateChannel(ServiceSid string, params *CreateChannelParam
 		data.Set("Attributes", *params.Attributes)
 	}
 	if params != nil && params.Type != nil {
-		data.Set("Type", *params.Type)
+		data.Set("Type", fmt.Sprint(*params.Type))
 	}
 	if params != nil && params.DateCreated != nil {
 		data.Set("DateCreated", fmt.Sprint((*params.DateCreated).Format(time.RFC3339)))
@@ -110,7 +112,6 @@ func (c *ApiService) CreateChannel(ServiceSid string, params *CreateChannelParam
 	if params != nil && params.XTwilioWebhookEnabled != nil {
 		headers["X-Twilio-Webhook-Enabled"] = *params.XTwilioWebhookEnabled
 	}
-
 	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)
 	if err != nil {
 		return nil, err
@@ -144,12 +145,13 @@ func (c *ApiService) DeleteChannel(ServiceSid string, Sid string, params *Delete
 	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.XTwilioWebhookEnabled != nil {
 		headers["X-Twilio-Webhook-Enabled"] = *params.XTwilioWebhookEnabled
 	}
-
 	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers)
 	if err != nil {
 		return err
@@ -167,7 +169,9 @@ func (c *ApiService) FetchChannel(ServiceSid string, Sid string) (*ChatV2Channel
 	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
 	if err != nil {
@@ -188,7 +192,7 @@ func (c *ApiService) FetchChannel(ServiceSid string, Sid string) (*ChatV2Channel
 type ListChannelParams struct {
 	// The visibility of the Channels to read. Can be: `public` or `private` and defaults to `public`.
 	Type *[]string `json:"Type,omitempty"`
-	// How many resources to return in each list page. The default is 50, and the maximum is 1000.
+	// How many resources to return in each list page. The default is 50, and the maximum is 100.
 	PageSize *int `json:"PageSize,omitempty"`
 	// Max number of records to return.
 	Limit *int `json:"limit,omitempty"`
@@ -214,7 +218,9 @@ func (c *ApiService) PageChannel(ServiceSid string, params *ListChannelParams, p
 	path = strings.Replace(path, "{"+"ServiceSid"+"}", ServiceSid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.Type != nil {
 		for _, item := range *params.Type {
@@ -387,7 +393,9 @@ func (c *ApiService) UpdateChannel(ServiceSid string, Sid string, params *Update
 	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.FriendlyName != nil {
 		data.Set("FriendlyName", *params.FriendlyName)
@@ -411,7 +419,6 @@ func (c *ApiService) UpdateChannel(ServiceSid string, Sid string, params *Update
 	if params != nil && params.XTwilioWebhookEnabled != nil {
 		headers["X-Twilio-Webhook-Enabled"] = *params.XTwilioWebhookEnabled
 	}
-
 	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)
 	if err != nil {
 		return nil, err

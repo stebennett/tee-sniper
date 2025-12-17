@@ -31,7 +31,9 @@ func (c *ApiService) FetchTaskReservation(WorkspaceSid string, TaskSid string, S
 	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
 	if err != nil {
@@ -85,10 +87,12 @@ func (c *ApiService) PageTaskReservation(WorkspaceSid string, TaskSid string, pa
 	path = strings.Replace(path, "{"+"TaskSid"+"}", TaskSid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.ReservationStatus != nil {
-		data.Set("ReservationStatus", *params.ReservationStatus)
+		data.Set("ReservationStatus", fmt.Sprint(*params.ReservationStatus))
 	}
 	if params != nil && params.WorkerSid != nil {
 		data.Set("WorkerSid", *params.WorkerSid)
@@ -297,7 +301,7 @@ type UpdateTaskReservationParams struct {
 	ConferenceRecordingStatusCallback *string `json:"ConferenceRecordingStatusCallback,omitempty"`
 	// The HTTP method we should use to call `conference_recording_status_callback`. Can be: `GET` or `POST` and defaults to `POST`.
 	ConferenceRecordingStatusCallbackMethod *string `json:"ConferenceRecordingStatusCallbackMethod,omitempty"`
-	// The [region](https://support.twilio.com/hc/en-us/articles/223132167-How-global-low-latency-routing-and-region-selection-work-for-conferences-and-Client-calls) where we should mix the recorded audio. Can be:`us1`, `ie1`, `de1`, `sg1`, `br1`, `au1`, or `jp1`.
+	// The [region](https://support.twilio.com/hc/en-us/articles/223132167-How-global-low-latency-routing-and-region-selection-work-for-conferences-and-Client-calls) where we should mix the recorded audio. Can be:`us1`, `us2`, `ie1`, `de1`, `sg1`, `br1`, `au1`, or `jp1`.
 	Region *string `json:"Region,omitempty"`
 	// The SIP username used for authentication.
 	SipAuthUsername *string `json:"SipAuthUsername,omitempty"`
@@ -315,6 +319,8 @@ type UpdateTaskReservationParams struct {
 	EndConferenceOnCustomerExit *bool `json:"EndConferenceOnCustomerExit,omitempty"`
 	// Whether to play a notification beep when the customer joins.
 	BeepOnCustomerEntrance *bool `json:"BeepOnCustomerEntrance,omitempty"`
+	// The jitter buffer size for conference. Can be: `small`, `medium`, `large`, `off`.
+	JitterBufferSize *string `json:"JitterBufferSize,omitempty"`
 }
 
 func (params *UpdateTaskReservationParams) SetIfMatch(IfMatch string) *UpdateTaskReservationParams {
@@ -533,6 +539,10 @@ func (params *UpdateTaskReservationParams) SetBeepOnCustomerEntrance(BeepOnCusto
 	params.BeepOnCustomerEntrance = &BeepOnCustomerEntrance
 	return params
 }
+func (params *UpdateTaskReservationParams) SetJitterBufferSize(JitterBufferSize string) *UpdateTaskReservationParams {
+	params.JitterBufferSize = &JitterBufferSize
+	return params
+}
 
 //
 func (c *ApiService) UpdateTaskReservation(WorkspaceSid string, TaskSid string, Sid string, params *UpdateTaskReservationParams) (*TaskrouterV1TaskReservation, error) {
@@ -542,10 +552,12 @@ func (c *ApiService) UpdateTaskReservation(WorkspaceSid string, TaskSid string, 
 	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.ReservationStatus != nil {
-		data.Set("ReservationStatus", *params.ReservationStatus)
+		data.Set("ReservationStatus", fmt.Sprint(*params.ReservationStatus))
 	}
 	if params != nil && params.WorkerActivitySid != nil {
 		data.Set("WorkerActivitySid", *params.WorkerActivitySid)
@@ -698,7 +710,7 @@ func (c *ApiService) UpdateTaskReservation(WorkspaceSid string, TaskSid string, 
 		data.Set("PostWorkActivitySid", *params.PostWorkActivitySid)
 	}
 	if params != nil && params.SupervisorMode != nil {
-		data.Set("SupervisorMode", *params.SupervisorMode)
+		data.Set("SupervisorMode", fmt.Sprint(*params.SupervisorMode))
 	}
 	if params != nil && params.Supervisor != nil {
 		data.Set("Supervisor", *params.Supervisor)
@@ -709,11 +721,13 @@ func (c *ApiService) UpdateTaskReservation(WorkspaceSid string, TaskSid string, 
 	if params != nil && params.BeepOnCustomerEntrance != nil {
 		data.Set("BeepOnCustomerEntrance", fmt.Sprint(*params.BeepOnCustomerEntrance))
 	}
+	if params != nil && params.JitterBufferSize != nil {
+		data.Set("JitterBufferSize", *params.JitterBufferSize)
+	}
 
 	if params != nil && params.IfMatch != nil {
 		headers["If-Match"] = *params.IfMatch
 	}
-
 	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)
 	if err != nil {
 		return nil, err

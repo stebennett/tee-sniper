@@ -31,7 +31,9 @@ func (c *ApiService) DeleteUserConversation(UserSid string, ConversationSid stri
 	path = strings.Replace(path, "{"+"ConversationSid"+"}", ConversationSid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers)
 	if err != nil {
@@ -50,7 +52,9 @@ func (c *ApiService) FetchUserConversation(UserSid string, ConversationSid strin
 	path = strings.Replace(path, "{"+"ConversationSid"+"}", ConversationSid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
 	if err != nil {
@@ -69,7 +73,7 @@ func (c *ApiService) FetchUserConversation(UserSid string, ConversationSid strin
 
 // Optional parameters for the method 'ListUserConversation'
 type ListUserConversationParams struct {
-	// How many resources to return in each list page. The default is 50, and the maximum is 1000.
+	// How many resources to return in each list page. The default is 50, and the maximum is 50.
 	PageSize *int `json:"PageSize,omitempty"`
 	// Max number of records to return.
 	Limit *int `json:"limit,omitempty"`
@@ -91,7 +95,9 @@ func (c *ApiService) PageUserConversation(UserSid string, params *ListUserConver
 	path = strings.Replace(path, "{"+"UserSid"+"}", UserSid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.PageSize != nil {
 		data.Set("PageSize", fmt.Sprint(*params.PageSize))
@@ -235,10 +241,12 @@ func (c *ApiService) UpdateUserConversation(UserSid string, ConversationSid stri
 	path = strings.Replace(path, "{"+"ConversationSid"+"}", ConversationSid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.NotificationLevel != nil {
-		data.Set("NotificationLevel", *params.NotificationLevel)
+		data.Set("NotificationLevel", fmt.Sprint(*params.NotificationLevel))
 	}
 	if params != nil && params.LastReadTimestamp != nil {
 		data.Set("LastReadTimestamp", fmt.Sprint((*params.LastReadTimestamp).Format(time.RFC3339)))
