@@ -31,7 +31,7 @@ type CreateUsageTriggerParams struct {
 	CallbackUrl *string `json:"CallbackUrl,omitempty"`
 	// The usage value at which the trigger should fire.  For convenience, you can use an offset value such as `+30` to specify a trigger_value that is 30 units more than the current usage value. Be sure to urlencode a `+` as `%2B`.
 	TriggerValue *string `json:"TriggerValue,omitempty"`
-	//
+	// The usage category that the trigger should watch.  Use one of the supported [usage categories](https://www.twilio.com/docs/usage/api/usage-record#usage-categories) for this value.
 	UsageCategory *string `json:"UsageCategory,omitempty"`
 	// The HTTP method we should use to call `callback_url`. Can be: `GET` or `POST` and the default is `POST`.
 	CallbackMethod *string `json:"CallbackMethod,omitempty"`
@@ -86,7 +86,9 @@ func (c *ApiService) CreateUsageTrigger(params *CreateUsageTriggerParams) (*ApiV
 	}
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.CallbackUrl != nil {
 		data.Set("CallbackUrl", *params.CallbackUrl)
@@ -104,10 +106,10 @@ func (c *ApiService) CreateUsageTrigger(params *CreateUsageTriggerParams) (*ApiV
 		data.Set("FriendlyName", *params.FriendlyName)
 	}
 	if params != nil && params.Recurring != nil {
-		data.Set("Recurring", *params.Recurring)
+		data.Set("Recurring", fmt.Sprint(*params.Recurring))
 	}
 	if params != nil && params.TriggerBy != nil {
-		data.Set("TriggerBy", *params.TriggerBy)
+		data.Set("TriggerBy", fmt.Sprint(*params.TriggerBy))
 	}
 
 	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)
@@ -147,7 +149,9 @@ func (c *ApiService) DeleteUsageTrigger(Sid string, params *DeleteUsageTriggerPa
 	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers)
 	if err != nil {
@@ -181,7 +185,9 @@ func (c *ApiService) FetchUsageTrigger(Sid string, params *FetchUsageTriggerPara
 	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
 	if err != nil {
@@ -250,13 +256,15 @@ func (c *ApiService) PageUsageTrigger(params *ListUsageTriggerParams, pageToken,
 	}
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.Recurring != nil {
-		data.Set("Recurring", *params.Recurring)
+		data.Set("Recurring", fmt.Sprint(*params.Recurring))
 	}
 	if params != nil && params.TriggerBy != nil {
-		data.Set("TriggerBy", *params.TriggerBy)
+		data.Set("TriggerBy", fmt.Sprint(*params.TriggerBy))
 	}
 	if params != nil && params.UsageCategory != nil {
 		data.Set("UsageCategory", *params.UsageCategory)
@@ -413,7 +421,9 @@ func (c *ApiService) UpdateUsageTrigger(Sid string, params *UpdateUsageTriggerPa
 	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.CallbackMethod != nil {
 		data.Set("CallbackMethod", *params.CallbackMethod)

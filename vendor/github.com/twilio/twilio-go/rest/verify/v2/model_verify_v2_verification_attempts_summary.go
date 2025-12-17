@@ -14,50 +14,15 @@
 
 package openapi
 
-import (
-	"encoding/json"
-
-	"github.com/twilio/twilio-go/client"
-)
-
 // VerifyV2VerificationAttemptsSummary struct for VerifyV2VerificationAttemptsSummary
 type VerifyV2VerificationAttemptsSummary struct {
 	// Total of attempts made according to the provided filters
-	TotalAttempts *int `json:"total_attempts,omitempty"`
+	TotalAttempts int `json:"total_attempts,omitempty"`
 	// Total of  attempts made that were confirmed by the end user, according to the provided filters.
-	TotalConverted *int `json:"total_converted,omitempty"`
+	TotalConverted int `json:"total_converted,omitempty"`
 	// Total of attempts made that were not confirmed by the end user, according to the provided filters.
-	TotalUnconverted *int `json:"total_unconverted,omitempty"`
+	TotalUnconverted int `json:"total_unconverted,omitempty"`
 	// Percentage of the confirmed messages over the total, defined by (total_converted/total_attempts)*100.
-	ConversionRatePercentage *float32 `json:"conversion_rate_percentage,omitempty"`
-	Url                      *string  `json:"url,omitempty"`
-}
-
-func (response *VerifyV2VerificationAttemptsSummary) UnmarshalJSON(bytes []byte) (err error) {
-	raw := struct {
-		TotalAttempts            *int         `json:"total_attempts"`
-		TotalConverted           *int         `json:"total_converted"`
-		TotalUnconverted         *int         `json:"total_unconverted"`
-		ConversionRatePercentage *interface{} `json:"conversion_rate_percentage"`
-		Url                      *string      `json:"url"`
-	}{}
-
-	if err = json.Unmarshal(bytes, &raw); err != nil {
-		return err
-	}
-
-	*response = VerifyV2VerificationAttemptsSummary{
-		TotalAttempts:    raw.TotalAttempts,
-		TotalConverted:   raw.TotalConverted,
-		TotalUnconverted: raw.TotalUnconverted,
-		Url:              raw.Url,
-	}
-
-	responseConversionRatePercentage, err := client.UnmarshalFloat32(raw.ConversionRatePercentage)
-	if err != nil {
-		return err
-	}
-	response.ConversionRatePercentage = responseConversionRatePercentage
-
-	return
+	ConversionRatePercentage *string `json:"conversion_rate_percentage,omitempty"`
+	Url                      *string `json:"url,omitempty"`
 }

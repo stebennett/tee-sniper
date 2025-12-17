@@ -16,6 +16,7 @@ package openapi
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/url"
 	"strings"
 )
@@ -52,8 +53,12 @@ type CreateVerificationParams struct {
 	TemplateCustomSubstitutions *string `json:"TemplateCustomSubstitutions,omitempty"`
 	// Strongly encouraged if using the auto channel. The IP address of the client's device. If provided, it has to be a valid IPv4 or IPv6 address.
 	DeviceIp *string `json:"DeviceIp,omitempty"`
+	// An optional Boolean value to indicate the requirement of sna client token in the SNA URL invocation response for added security. This token must match in the Verification Check request to confirm phone number verification.
+	EnableSnaClientToken *bool `json:"EnableSnaClientToken,omitempty"`
 	//
 	RiskCheck *string `json:"RiskCheck,omitempty"`
+	// A string containing a JSON map of key value pairs of tags to be recorded as metadata for the message. The object may contain up to 10 tags. Keys and values can each be up to 128 characters in length.
+	Tags *string `json:"Tags,omitempty"`
 }
 
 func (params *CreateVerificationParams) SetTo(To string) *CreateVerificationParams {
@@ -116,8 +121,16 @@ func (params *CreateVerificationParams) SetDeviceIp(DeviceIp string) *CreateVeri
 	params.DeviceIp = &DeviceIp
 	return params
 }
+func (params *CreateVerificationParams) SetEnableSnaClientToken(EnableSnaClientToken bool) *CreateVerificationParams {
+	params.EnableSnaClientToken = &EnableSnaClientToken
+	return params
+}
 func (params *CreateVerificationParams) SetRiskCheck(RiskCheck string) *CreateVerificationParams {
 	params.RiskCheck = &RiskCheck
+	return params
+}
+func (params *CreateVerificationParams) SetTags(Tags string) *CreateVerificationParams {
+	params.Tags = &Tags
 	return params
 }
 
@@ -127,7 +140,9 @@ func (c *ApiService) CreateVerification(ServiceSid string, params *CreateVerific
 	path = strings.Replace(path, "{"+"ServiceSid"+"}", ServiceSid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.To != nil {
 		data.Set("To", *params.To)
@@ -186,8 +201,14 @@ func (c *ApiService) CreateVerification(ServiceSid string, params *CreateVerific
 	if params != nil && params.DeviceIp != nil {
 		data.Set("DeviceIp", *params.DeviceIp)
 	}
+	if params != nil && params.EnableSnaClientToken != nil {
+		data.Set("EnableSnaClientToken", fmt.Sprint(*params.EnableSnaClientToken))
+	}
 	if params != nil && params.RiskCheck != nil {
-		data.Set("RiskCheck", *params.RiskCheck)
+		data.Set("RiskCheck", fmt.Sprint(*params.RiskCheck))
+	}
+	if params != nil && params.Tags != nil {
+		data.Set("Tags", *params.Tags)
 	}
 
 	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)
@@ -212,7 +233,9 @@ func (c *ApiService) FetchVerification(ServiceSid string, Sid string) (*VerifyV2
 	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
 	if err != nil {
@@ -247,10 +270,12 @@ func (c *ApiService) UpdateVerification(ServiceSid string, Sid string, params *U
 	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.Status != nil {
-		data.Set("Status", *params.Status)
+		data.Set("Status", fmt.Sprint(*params.Status))
 	}
 
 	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)

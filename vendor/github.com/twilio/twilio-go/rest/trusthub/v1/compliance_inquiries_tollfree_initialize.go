@@ -16,18 +16,228 @@ package openapi
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/url"
-	"strings"
 )
 
 // Optional parameters for the method 'CreateComplianceTollfreeInquiry'
 type CreateComplianceTollfreeInquiryParams struct {
 	// The Tollfree phone number to be verified
-	Did *string `json:"Did,omitempty"`
+	TollfreePhoneNumber *string `json:"TollfreePhoneNumber,omitempty"`
+	// The email address to receive the notification about the verification result.
+	NotificationEmail *string `json:"NotificationEmail,omitempty"`
+	// The Customer Profile Sid associated with the Account.
+	CustomerProfileSid *string `json:"CustomerProfileSid,omitempty"`
+	// The name of the business or organization using the Tollfree number.
+	BusinessName *string `json:"BusinessName,omitempty"`
+	// The website of the business or organization using the Tollfree number.
+	BusinessWebsite *string `json:"BusinessWebsite,omitempty"`
+	// The category of the use case for the Tollfree Number. List as many are applicable..
+	UseCaseCategories *[]string `json:"UseCaseCategories,omitempty"`
+	// Use this to further explain how messaging is used by the business or organization.
+	UseCaseSummary *string `json:"UseCaseSummary,omitempty"`
+	// An example of message content, i.e. a sample message.
+	ProductionMessageSample *string `json:"ProductionMessageSample,omitempty"`
+	// Link to an image that shows the opt-in workflow. Multiple images allowed and must be a publicly hosted URL.
+	OptInImageUrls *[]string `json:"OptInImageUrls,omitempty"`
+	//
+	OptInType *string `json:"OptInType,omitempty"`
+	// Estimate monthly volume of messages from the Tollfree Number.
+	MessageVolume *string `json:"MessageVolume,omitempty"`
+	// The address of the business or organization using the Tollfree number.
+	BusinessStreetAddress *string `json:"BusinessStreetAddress,omitempty"`
+	// The address of the business or organization using the Tollfree number.
+	BusinessStreetAddress2 *string `json:"BusinessStreetAddress2,omitempty"`
+	// The city of the business or organization using the Tollfree number.
+	BusinessCity *string `json:"BusinessCity,omitempty"`
+	// The state/province/region of the business or organization using the Tollfree number.
+	BusinessStateProvinceRegion *string `json:"BusinessStateProvinceRegion,omitempty"`
+	// The postal code of the business or organization using the Tollfree number.
+	BusinessPostalCode *string `json:"BusinessPostalCode,omitempty"`
+	// The country of the business or organization using the Tollfree number.
+	BusinessCountry *string `json:"BusinessCountry,omitempty"`
+	// Additional information to be provided for verification.
+	AdditionalInformation *string `json:"AdditionalInformation,omitempty"`
+	// The first name of the contact for the business or organization using the Tollfree number.
+	BusinessContactFirstName *string `json:"BusinessContactFirstName,omitempty"`
+	// The last name of the contact for the business or organization using the Tollfree number.
+	BusinessContactLastName *string `json:"BusinessContactLastName,omitempty"`
+	// The email address of the contact for the business or organization using the Tollfree number.
+	BusinessContactEmail *string `json:"BusinessContactEmail,omitempty"`
+	// The phone number of the contact for the business or organization using the Tollfree number.
+	BusinessContactPhone *string `json:"BusinessContactPhone,omitempty"`
+	// Theme id for styling the inquiry form.
+	ThemeSetId *string `json:"ThemeSetId,omitempty"`
+	// Skip the messaging use case screen of the inquiry form.
+	SkipMessagingUseCase *bool `json:"SkipMessagingUseCase,omitempty"`
+	// The Business Registration Number of the business or organization.
+	BusinessRegistrationNumber *string `json:"BusinessRegistrationNumber,omitempty"`
+	// The Business Registration Authority of the business or organization.
+	BusinessRegistrationAuthority *string `json:"BusinessRegistrationAuthority,omitempty"`
+	// The Business Registration Country of the business or organization.
+	BusinessRegistrationCountry *string `json:"BusinessRegistrationCountry,omitempty"`
+	//
+	BusinessType *string `json:"BusinessType,omitempty"`
+	// Trade name, sub entity, or downstream business name of business being submitted for verification.
+	DoingBusinessAs *string `json:"DoingBusinessAs,omitempty"`
+	// The confirmation message sent to users when they opt in to receive messages.
+	OptInConfirmationMessage *string `json:"OptInConfirmationMessage,omitempty"`
+	// A sample help message provided to users.
+	HelpMessageSample *string `json:"HelpMessageSample,omitempty"`
+	// The URL to the privacy policy for the business or organization.
+	PrivacyPolicyUrl *string `json:"PrivacyPolicyUrl,omitempty"`
+	// The URL to the terms and conditions for the business or organization.
+	TermsAndConditionsUrl *string `json:"TermsAndConditionsUrl,omitempty"`
+	// Indicates if the content is age gated.
+	AgeGatedContent *bool `json:"AgeGatedContent,omitempty"`
+	// A legally recognized business registration number.
+	ExternalReferenceId *string `json:"ExternalReferenceId,omitempty"`
+	// List of keywords that users can text in to opt in to receive messages.
+	OptInKeywords *[]string `json:"OptInKeywords,omitempty"`
 }
 
-func (params *CreateComplianceTollfreeInquiryParams) SetDid(Did string) *CreateComplianceTollfreeInquiryParams {
-	params.Did = &Did
+func (params *CreateComplianceTollfreeInquiryParams) SetTollfreePhoneNumber(TollfreePhoneNumber string) *CreateComplianceTollfreeInquiryParams {
+	params.TollfreePhoneNumber = &TollfreePhoneNumber
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetNotificationEmail(NotificationEmail string) *CreateComplianceTollfreeInquiryParams {
+	params.NotificationEmail = &NotificationEmail
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetCustomerProfileSid(CustomerProfileSid string) *CreateComplianceTollfreeInquiryParams {
+	params.CustomerProfileSid = &CustomerProfileSid
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetBusinessName(BusinessName string) *CreateComplianceTollfreeInquiryParams {
+	params.BusinessName = &BusinessName
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetBusinessWebsite(BusinessWebsite string) *CreateComplianceTollfreeInquiryParams {
+	params.BusinessWebsite = &BusinessWebsite
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetUseCaseCategories(UseCaseCategories []string) *CreateComplianceTollfreeInquiryParams {
+	params.UseCaseCategories = &UseCaseCategories
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetUseCaseSummary(UseCaseSummary string) *CreateComplianceTollfreeInquiryParams {
+	params.UseCaseSummary = &UseCaseSummary
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetProductionMessageSample(ProductionMessageSample string) *CreateComplianceTollfreeInquiryParams {
+	params.ProductionMessageSample = &ProductionMessageSample
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetOptInImageUrls(OptInImageUrls []string) *CreateComplianceTollfreeInquiryParams {
+	params.OptInImageUrls = &OptInImageUrls
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetOptInType(OptInType string) *CreateComplianceTollfreeInquiryParams {
+	params.OptInType = &OptInType
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetMessageVolume(MessageVolume string) *CreateComplianceTollfreeInquiryParams {
+	params.MessageVolume = &MessageVolume
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetBusinessStreetAddress(BusinessStreetAddress string) *CreateComplianceTollfreeInquiryParams {
+	params.BusinessStreetAddress = &BusinessStreetAddress
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetBusinessStreetAddress2(BusinessStreetAddress2 string) *CreateComplianceTollfreeInquiryParams {
+	params.BusinessStreetAddress2 = &BusinessStreetAddress2
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetBusinessCity(BusinessCity string) *CreateComplianceTollfreeInquiryParams {
+	params.BusinessCity = &BusinessCity
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetBusinessStateProvinceRegion(BusinessStateProvinceRegion string) *CreateComplianceTollfreeInquiryParams {
+	params.BusinessStateProvinceRegion = &BusinessStateProvinceRegion
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetBusinessPostalCode(BusinessPostalCode string) *CreateComplianceTollfreeInquiryParams {
+	params.BusinessPostalCode = &BusinessPostalCode
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetBusinessCountry(BusinessCountry string) *CreateComplianceTollfreeInquiryParams {
+	params.BusinessCountry = &BusinessCountry
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetAdditionalInformation(AdditionalInformation string) *CreateComplianceTollfreeInquiryParams {
+	params.AdditionalInformation = &AdditionalInformation
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetBusinessContactFirstName(BusinessContactFirstName string) *CreateComplianceTollfreeInquiryParams {
+	params.BusinessContactFirstName = &BusinessContactFirstName
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetBusinessContactLastName(BusinessContactLastName string) *CreateComplianceTollfreeInquiryParams {
+	params.BusinessContactLastName = &BusinessContactLastName
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetBusinessContactEmail(BusinessContactEmail string) *CreateComplianceTollfreeInquiryParams {
+	params.BusinessContactEmail = &BusinessContactEmail
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetBusinessContactPhone(BusinessContactPhone string) *CreateComplianceTollfreeInquiryParams {
+	params.BusinessContactPhone = &BusinessContactPhone
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetThemeSetId(ThemeSetId string) *CreateComplianceTollfreeInquiryParams {
+	params.ThemeSetId = &ThemeSetId
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetSkipMessagingUseCase(SkipMessagingUseCase bool) *CreateComplianceTollfreeInquiryParams {
+	params.SkipMessagingUseCase = &SkipMessagingUseCase
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetBusinessRegistrationNumber(BusinessRegistrationNumber string) *CreateComplianceTollfreeInquiryParams {
+	params.BusinessRegistrationNumber = &BusinessRegistrationNumber
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetBusinessRegistrationAuthority(BusinessRegistrationAuthority string) *CreateComplianceTollfreeInquiryParams {
+	params.BusinessRegistrationAuthority = &BusinessRegistrationAuthority
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetBusinessRegistrationCountry(BusinessRegistrationCountry string) *CreateComplianceTollfreeInquiryParams {
+	params.BusinessRegistrationCountry = &BusinessRegistrationCountry
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetBusinessType(BusinessType string) *CreateComplianceTollfreeInquiryParams {
+	params.BusinessType = &BusinessType
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetDoingBusinessAs(DoingBusinessAs string) *CreateComplianceTollfreeInquiryParams {
+	params.DoingBusinessAs = &DoingBusinessAs
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetOptInConfirmationMessage(OptInConfirmationMessage string) *CreateComplianceTollfreeInquiryParams {
+	params.OptInConfirmationMessage = &OptInConfirmationMessage
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetHelpMessageSample(HelpMessageSample string) *CreateComplianceTollfreeInquiryParams {
+	params.HelpMessageSample = &HelpMessageSample
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetPrivacyPolicyUrl(PrivacyPolicyUrl string) *CreateComplianceTollfreeInquiryParams {
+	params.PrivacyPolicyUrl = &PrivacyPolicyUrl
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetTermsAndConditionsUrl(TermsAndConditionsUrl string) *CreateComplianceTollfreeInquiryParams {
+	params.TermsAndConditionsUrl = &TermsAndConditionsUrl
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetAgeGatedContent(AgeGatedContent bool) *CreateComplianceTollfreeInquiryParams {
+	params.AgeGatedContent = &AgeGatedContent
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetExternalReferenceId(ExternalReferenceId string) *CreateComplianceTollfreeInquiryParams {
+	params.ExternalReferenceId = &ExternalReferenceId
+	return params
+}
+func (params *CreateComplianceTollfreeInquiryParams) SetOptInKeywords(OptInKeywords []string) *CreateComplianceTollfreeInquiryParams {
+	params.OptInKeywords = &OptInKeywords
 	return params
 }
 
@@ -36,48 +246,123 @@ func (c *ApiService) CreateComplianceTollfreeInquiry(params *CreateComplianceTol
 	path := "/v1/ComplianceInquiries/Tollfree/Initialize"
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
-
-	if params != nil && params.Did != nil {
-		data.Set("Did", *params.Did)
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
 	}
 
-	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)
-	if err != nil {
-		return nil, err
+	if params != nil && params.TollfreePhoneNumber != nil {
+		data.Set("TollfreePhoneNumber", *params.TollfreePhoneNumber)
 	}
-
-	defer resp.Body.Close()
-
-	ps := &TrusthubV1ComplianceTollfreeInquiry{}
-	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
-		return nil, err
+	if params != nil && params.NotificationEmail != nil {
+		data.Set("NotificationEmail", *params.NotificationEmail)
 	}
-
-	return ps, err
-}
-
-// Optional parameters for the method 'UpdateComplianceTollfreeInquiry'
-type UpdateComplianceTollfreeInquiryParams struct {
-	// The Tollfree phone number to be verified
-	Did *string `json:"Did,omitempty"`
-}
-
-func (params *UpdateComplianceTollfreeInquiryParams) SetDid(Did string) *UpdateComplianceTollfreeInquiryParams {
-	params.Did = &Did
-	return params
-}
-
-// Resume a specific Compliance Tollfree Verification Inquiry that has expired, or re-open a rejected Compliance Tollfree Verification Inquiry for editing.
-func (c *ApiService) UpdateComplianceTollfreeInquiry(TollfreeId string, params *UpdateComplianceTollfreeInquiryParams) (*TrusthubV1ComplianceTollfreeInquiry, error) {
-	path := "/v1/ComplianceInquiries/Tollfree/{TollfreeId}/Initialize"
-	path = strings.Replace(path, "{"+"TollfreeId"+"}", TollfreeId, -1)
-
-	data := url.Values{}
-	headers := make(map[string]interface{})
-
-	if params != nil && params.Did != nil {
-		data.Set("Did", *params.Did)
+	if params != nil && params.CustomerProfileSid != nil {
+		data.Set("CustomerProfileSid", *params.CustomerProfileSid)
+	}
+	if params != nil && params.BusinessName != nil {
+		data.Set("BusinessName", *params.BusinessName)
+	}
+	if params != nil && params.BusinessWebsite != nil {
+		data.Set("BusinessWebsite", *params.BusinessWebsite)
+	}
+	if params != nil && params.UseCaseCategories != nil {
+		for _, item := range *params.UseCaseCategories {
+			data.Add("UseCaseCategories", item)
+		}
+	}
+	if params != nil && params.UseCaseSummary != nil {
+		data.Set("UseCaseSummary", *params.UseCaseSummary)
+	}
+	if params != nil && params.ProductionMessageSample != nil {
+		data.Set("ProductionMessageSample", *params.ProductionMessageSample)
+	}
+	if params != nil && params.OptInImageUrls != nil {
+		for _, item := range *params.OptInImageUrls {
+			data.Add("OptInImageUrls", item)
+		}
+	}
+	if params != nil && params.OptInType != nil {
+		data.Set("OptInType", fmt.Sprint(*params.OptInType))
+	}
+	if params != nil && params.MessageVolume != nil {
+		data.Set("MessageVolume", *params.MessageVolume)
+	}
+	if params != nil && params.BusinessStreetAddress != nil {
+		data.Set("BusinessStreetAddress", *params.BusinessStreetAddress)
+	}
+	if params != nil && params.BusinessStreetAddress2 != nil {
+		data.Set("BusinessStreetAddress2", *params.BusinessStreetAddress2)
+	}
+	if params != nil && params.BusinessCity != nil {
+		data.Set("BusinessCity", *params.BusinessCity)
+	}
+	if params != nil && params.BusinessStateProvinceRegion != nil {
+		data.Set("BusinessStateProvinceRegion", *params.BusinessStateProvinceRegion)
+	}
+	if params != nil && params.BusinessPostalCode != nil {
+		data.Set("BusinessPostalCode", *params.BusinessPostalCode)
+	}
+	if params != nil && params.BusinessCountry != nil {
+		data.Set("BusinessCountry", *params.BusinessCountry)
+	}
+	if params != nil && params.AdditionalInformation != nil {
+		data.Set("AdditionalInformation", *params.AdditionalInformation)
+	}
+	if params != nil && params.BusinessContactFirstName != nil {
+		data.Set("BusinessContactFirstName", *params.BusinessContactFirstName)
+	}
+	if params != nil && params.BusinessContactLastName != nil {
+		data.Set("BusinessContactLastName", *params.BusinessContactLastName)
+	}
+	if params != nil && params.BusinessContactEmail != nil {
+		data.Set("BusinessContactEmail", *params.BusinessContactEmail)
+	}
+	if params != nil && params.BusinessContactPhone != nil {
+		data.Set("BusinessContactPhone", *params.BusinessContactPhone)
+	}
+	if params != nil && params.ThemeSetId != nil {
+		data.Set("ThemeSetId", *params.ThemeSetId)
+	}
+	if params != nil && params.SkipMessagingUseCase != nil {
+		data.Set("SkipMessagingUseCase", fmt.Sprint(*params.SkipMessagingUseCase))
+	}
+	if params != nil && params.BusinessRegistrationNumber != nil {
+		data.Set("BusinessRegistrationNumber", *params.BusinessRegistrationNumber)
+	}
+	if params != nil && params.BusinessRegistrationAuthority != nil {
+		data.Set("BusinessRegistrationAuthority", *params.BusinessRegistrationAuthority)
+	}
+	if params != nil && params.BusinessRegistrationCountry != nil {
+		data.Set("BusinessRegistrationCountry", *params.BusinessRegistrationCountry)
+	}
+	if params != nil && params.BusinessType != nil {
+		data.Set("BusinessType", fmt.Sprint(*params.BusinessType))
+	}
+	if params != nil && params.DoingBusinessAs != nil {
+		data.Set("DoingBusinessAs", *params.DoingBusinessAs)
+	}
+	if params != nil && params.OptInConfirmationMessage != nil {
+		data.Set("OptInConfirmationMessage", *params.OptInConfirmationMessage)
+	}
+	if params != nil && params.HelpMessageSample != nil {
+		data.Set("HelpMessageSample", *params.HelpMessageSample)
+	}
+	if params != nil && params.PrivacyPolicyUrl != nil {
+		data.Set("PrivacyPolicyUrl", *params.PrivacyPolicyUrl)
+	}
+	if params != nil && params.TermsAndConditionsUrl != nil {
+		data.Set("TermsAndConditionsUrl", *params.TermsAndConditionsUrl)
+	}
+	if params != nil && params.AgeGatedContent != nil {
+		data.Set("AgeGatedContent", fmt.Sprint(*params.AgeGatedContent))
+	}
+	if params != nil && params.ExternalReferenceId != nil {
+		data.Set("ExternalReferenceId", *params.ExternalReferenceId)
+	}
+	if params != nil && params.OptInKeywords != nil {
+		for _, item := range *params.OptInKeywords {
+			data.Add("OptInKeywords", item)
+		}
 	}
 
 	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)

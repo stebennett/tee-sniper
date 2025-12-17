@@ -33,7 +33,7 @@ type IntelligenceV2Transcript struct {
 	Status      *string    `json:"status,omitempty"`
 	// Media Channel describing Transcript Source and Participant Mapping
 	Channel *interface{} `json:"channel,omitempty"`
-	// Data logging allows Twilio to improve the quality of the speech recognition through using customer data to refine its speech recognition models.
+	// Data logging allows Twilio to improve the quality of the speech recognition & language understanding services through using customer data to refine, fine tune and evaluate machine learning models. Note: Data logging cannot be activated via API, only via www.twilio.com, as it requires additional consent.
 	DataLogging *bool `json:"data_logging,omitempty"`
 	// The default language code of the audio.
 	LanguageCode *string `json:"language_code,omitempty"`
@@ -41,10 +41,12 @@ type IntelligenceV2Transcript struct {
 	// The date that this Transcript's media was started, given in ISO 8601 format.
 	MediaStartTime *time.Time `json:"media_start_time,omitempty"`
 	// The duration of this Transcript's source
-	Duration *int `json:"duration,omitempty"`
+	Duration int `json:"duration,omitempty"`
 	// The URL of this resource.
 	Url *string `json:"url,omitempty"`
 	// If the transcript has been redacted, a redacted alternative of the transcript will be available.
-	Redaction *bool                   `json:"redaction,omitempty"`
-	Links     *map[string]interface{} `json:"links,omitempty"`
+	Redaction *bool `json:"redaction,omitempty"`
+	// The unique SID identifier of the Public Key resource used to encrypt the sentences and operator results.
+	EncryptionCredentialSid *string                 `json:"encryption_credential_sid,omitempty"`
+	Links                   *map[string]interface{} `json:"links,omitempty"`
 }

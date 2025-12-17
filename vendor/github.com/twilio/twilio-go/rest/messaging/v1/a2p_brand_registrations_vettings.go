@@ -46,10 +46,12 @@ func (c *ApiService) CreateBrandVetting(BrandSid string, params *CreateBrandVett
 	path = strings.Replace(path, "{"+"BrandSid"+"}", BrandSid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.VettingProvider != nil {
-		data.Set("VettingProvider", *params.VettingProvider)
+		data.Set("VettingProvider", fmt.Sprint(*params.VettingProvider))
 	}
 	if params != nil && params.VettingId != nil {
 		data.Set("VettingId", *params.VettingId)
@@ -77,7 +79,9 @@ func (c *ApiService) FetchBrandVetting(BrandSid string, BrandVettingSid string) 
 	path = strings.Replace(path, "{"+"BrandVettingSid"+"}", BrandVettingSid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
 	if err != nil {
@@ -98,22 +102,22 @@ func (c *ApiService) FetchBrandVetting(BrandSid string, BrandVettingSid string) 
 type ListBrandVettingParams struct {
 	// The third-party provider of the vettings to read
 	VettingProvider *string `json:"VettingProvider,omitempty"`
-	// How many resources to return in each list page. The default is 50, and the maximum is 1000.
-	PageSize *int `json:"PageSize,omitempty"`
 	// Max number of records to return.
 	Limit *int `json:"limit,omitempty"`
+	// Max number of records to return in a page
+	PageSize *int `json:"PageSize,omitempty"`
 }
 
 func (params *ListBrandVettingParams) SetVettingProvider(VettingProvider string) *ListBrandVettingParams {
 	params.VettingProvider = &VettingProvider
 	return params
 }
-func (params *ListBrandVettingParams) SetPageSize(PageSize int) *ListBrandVettingParams {
-	params.PageSize = &PageSize
-	return params
-}
 func (params *ListBrandVettingParams) SetLimit(Limit int) *ListBrandVettingParams {
 	params.Limit = &Limit
+	return params
+}
+func (params *ListBrandVettingParams) SetPageSize(PageSize int) *ListBrandVettingParams {
+	params.PageSize = &PageSize
 	return params
 }
 
@@ -124,10 +128,12 @@ func (c *ApiService) PageBrandVetting(BrandSid string, params *ListBrandVettingP
 	path = strings.Replace(path, "{"+"BrandSid"+"}", BrandSid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.VettingProvider != nil {
-		data.Set("VettingProvider", *params.VettingProvider)
+		data.Set("VettingProvider", fmt.Sprint(*params.VettingProvider))
 	}
 	if params != nil && params.PageSize != nil {
 		data.Set("PageSize", fmt.Sprint(*params.PageSize))

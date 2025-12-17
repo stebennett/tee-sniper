@@ -63,7 +63,9 @@ func (c *ApiService) CreateInsightsQuestionnaires(params *CreateInsightsQuestion
 	path := "/v1/Insights/QualityManagement/Questionnaires"
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.Name != nil {
 		data.Set("Name", *params.Name)
@@ -83,7 +85,6 @@ func (c *ApiService) CreateInsightsQuestionnaires(params *CreateInsightsQuestion
 	if params != nil && params.Authorization != nil {
 		headers["Authorization"] = *params.Authorization
 	}
-
 	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)
 	if err != nil {
 		return nil, err
@@ -116,12 +117,13 @@ func (c *ApiService) DeleteInsightsQuestionnaires(QuestionnaireSid string, param
 	path = strings.Replace(path, "{"+"QuestionnaireSid"+"}", QuestionnaireSid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.Authorization != nil {
 		headers["Authorization"] = *params.Authorization
 	}
-
 	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers)
 	if err != nil {
 		return err
@@ -149,12 +151,13 @@ func (c *ApiService) FetchInsightsQuestionnaires(QuestionnaireSid string, params
 	path = strings.Replace(path, "{"+"QuestionnaireSid"+"}", QuestionnaireSid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.Authorization != nil {
 		headers["Authorization"] = *params.Authorization
 	}
-
 	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
 	if err != nil {
 		return nil, err
@@ -204,7 +207,9 @@ func (c *ApiService) PageInsightsQuestionnaires(params *ListInsightsQuestionnair
 	path := "/v1/Insights/QualityManagement/Questionnaires"
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.IncludeInactive != nil {
 		data.Set("IncludeInactive", fmt.Sprint(*params.IncludeInactive))
@@ -362,7 +367,9 @@ func (c *ApiService) UpdateInsightsQuestionnaires(QuestionnaireSid string, param
 	path = strings.Replace(path, "{"+"QuestionnaireSid"+"}", QuestionnaireSid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.Active != nil {
 		data.Set("Active", fmt.Sprint(*params.Active))
@@ -382,7 +389,6 @@ func (c *ApiService) UpdateInsightsQuestionnaires(QuestionnaireSid string, param
 	if params != nil && params.Authorization != nil {
 		headers["Authorization"] = *params.Authorization
 	}
-
 	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)
 	if err != nil {
 		return nil, err

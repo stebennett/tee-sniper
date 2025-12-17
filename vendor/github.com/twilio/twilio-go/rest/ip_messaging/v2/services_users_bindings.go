@@ -31,7 +31,9 @@ func (c *ApiService) DeleteUserBinding(ServiceSid string, UserSid string, Sid st
 	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers)
 	if err != nil {
@@ -51,7 +53,9 @@ func (c *ApiService) FetchUserBinding(ServiceSid string, UserSid string, Sid str
 	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
 	if err != nil {
@@ -72,7 +76,7 @@ func (c *ApiService) FetchUserBinding(ServiceSid string, UserSid string, Sid str
 type ListUserBindingParams struct {
 	//
 	BindingType *[]string `json:"BindingType,omitempty"`
-	// How many resources to return in each list page. The default is 50, and the maximum is 1000.
+	// How many resources to return in each list page. The default is 50, and the maximum is 50.
 	PageSize *int `json:"PageSize,omitempty"`
 	// Max number of records to return.
 	Limit *int `json:"limit,omitempty"`
@@ -99,7 +103,9 @@ func (c *ApiService) PageUserBinding(ServiceSid string, UserSid string, params *
 	path = strings.Replace(path, "{"+"UserSid"+"}", UserSid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.BindingType != nil {
 		for _, item := range *params.BindingType {

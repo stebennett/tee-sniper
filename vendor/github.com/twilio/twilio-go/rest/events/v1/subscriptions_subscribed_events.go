@@ -27,7 +27,7 @@ import (
 type CreateSubscribedEventParams struct {
 	// Type of event being subscribed to.
 	Type *string `json:"Type,omitempty"`
-	// The schema version that the subscription should use.
+	// The schema version that the Subscription should use.
 	SchemaVersion *int `json:"SchemaVersion,omitempty"`
 }
 
@@ -40,13 +40,15 @@ func (params *CreateSubscribedEventParams) SetSchemaVersion(SchemaVersion int) *
 	return params
 }
 
-// Create a new Subscribed Event type for the subscription
+// Add an event type to a Subscription.
 func (c *ApiService) CreateSubscribedEvent(SubscriptionSid string, params *CreateSubscribedEventParams) (*EventsV1SubscribedEvent, error) {
 	path := "/v1/Subscriptions/{SubscriptionSid}/SubscribedEvents"
 	path = strings.Replace(path, "{"+"SubscriptionSid"+"}", SubscriptionSid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.Type != nil {
 		data.Set("Type", *params.Type)
@@ -70,14 +72,16 @@ func (c *ApiService) CreateSubscribedEvent(SubscriptionSid string, params *Creat
 	return ps, err
 }
 
-// Remove an event type from a subscription.
+// Remove an event type from a Subscription.
 func (c *ApiService) DeleteSubscribedEvent(SubscriptionSid string, Type string) error {
 	path := "/v1/Subscriptions/{SubscriptionSid}/SubscribedEvents/{Type}"
 	path = strings.Replace(path, "{"+"SubscriptionSid"+"}", SubscriptionSid, -1)
 	path = strings.Replace(path, "{"+"Type"+"}", Type, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers)
 	if err != nil {
@@ -96,7 +100,9 @@ func (c *ApiService) FetchSubscribedEvent(SubscriptionSid string, Type string) (
 	path = strings.Replace(path, "{"+"Type"+"}", Type, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
 	if err != nil {
@@ -137,7 +143,9 @@ func (c *ApiService) PageSubscribedEvent(SubscriptionSid string, params *ListSub
 	path = strings.Replace(path, "{"+"SubscriptionSid"+"}", SubscriptionSid, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.PageSize != nil {
 		data.Set("PageSize", fmt.Sprint(*params.PageSize))
@@ -253,7 +261,7 @@ func (c *ApiService) getNextListSubscribedEventResponse(nextPageUrl string) (int
 
 // Optional parameters for the method 'UpdateSubscribedEvent'
 type UpdateSubscribedEventParams struct {
-	// The schema version that the subscription should use.
+	// The schema version that the Subscription should use.
 	SchemaVersion *int `json:"SchemaVersion,omitempty"`
 }
 
@@ -269,7 +277,9 @@ func (c *ApiService) UpdateSubscribedEvent(SubscriptionSid string, Type string, 
 	path = strings.Replace(path, "{"+"Type"+"}", Type, -1)
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.SchemaVersion != nil {
 		data.Set("SchemaVersion", fmt.Sprint(*params.SchemaVersion))

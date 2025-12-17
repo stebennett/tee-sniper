@@ -31,7 +31,7 @@ type FetchVerificationAttemptsSummaryParams struct {
 	DateCreatedBefore *time.Time `json:"DateCreatedBefore,omitempty"`
 	// Filter used to consider only Verification Attempts sent to the specified destination country on the summary aggregation.
 	Country *string `json:"Country,omitempty"`
-	// Filter Verification Attempts considered on the summary aggregation by communication channel. Valid values are `SMS`, `CALL` and `WHATSAPP`
+	// Filter Verification Attempts considered on the summary aggregation by communication channel.
 	Channel *string `json:"Channel,omitempty"`
 	// Filter the Verification Attempts considered on the summary aggregation by Destination prefix. It is the prefix of a phone number in E.164 format.
 	DestinationPrefix *string `json:"DestinationPrefix,omitempty"`
@@ -67,7 +67,9 @@ func (c *ApiService) FetchVerificationAttemptsSummary(params *FetchVerificationA
 	path := "/v2/Attempts/Summary"
 
 	data := url.Values{}
-	headers := make(map[string]interface{})
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
 
 	if params != nil && params.VerifyServiceSid != nil {
 		data.Set("VerifyServiceSid", *params.VerifyServiceSid)
@@ -82,7 +84,7 @@ func (c *ApiService) FetchVerificationAttemptsSummary(params *FetchVerificationA
 		data.Set("Country", *params.Country)
 	}
 	if params != nil && params.Channel != nil {
-		data.Set("Channel", *params.Channel)
+		data.Set("Channel", fmt.Sprint(*params.Channel))
 	}
 	if params != nil && params.DestinationPrefix != nil {
 		data.Set("DestinationPrefix", *params.DestinationPrefix)
