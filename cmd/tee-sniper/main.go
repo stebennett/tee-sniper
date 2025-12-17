@@ -25,8 +25,6 @@ func getRandomRetryDelay(minSeconds, maxSeconds int) time.Duration {
 }
 
 func main() {
-	// Initialize random seed
-	rand.Seed(time.Now().UnixNano())
 	conf, err := config.GetConfig()
 	if err != nil {
 		log.Fatal(err)

@@ -10,7 +10,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/stebennett/tee-sniper/pkg/models"
@@ -46,7 +45,6 @@ func NewBookingClient(u string) (*BookingClient, error) {
 	}
 
 	// Select a random user agent for this session
-	rand.Seed(time.Now().UnixNano())
 	selectedUserAgent := userAgents[rand.Intn(len(userAgents))]
 
 	return &BookingClient{

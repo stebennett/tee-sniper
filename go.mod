@@ -1,6 +1,6 @@
 module github.com/stebennett/tee-sniper
 
-go 1.17
+go 1.25
 
 require github.com/PuerkitoBio/goquery v1.8.1
 
