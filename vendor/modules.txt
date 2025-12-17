@@ -1,7 +1,7 @@
-# github.com/PuerkitoBio/goquery v1.8.1
-## explicit; go 1.13
+# github.com/PuerkitoBio/goquery v1.11.0
+## explicit; go 1.24.0
 github.com/PuerkitoBio/goquery
-# github.com/andybalholm/cascadia v1.3.1
+# github.com/andybalholm/cascadia v1.3.3
 ## explicit; go 1.16
 github.com/andybalholm/cascadia
 # github.com/davecgh/go-spew v1.1.1
@@ -71,12 +71,12 @@ github.com/twilio/twilio-go/rest/verify/v2
 github.com/twilio/twilio-go/rest/video/v1
 github.com/twilio/twilio-go/rest/voice/v1
 github.com/twilio/twilio-go/rest/wireless/v1
-# golang.org/x/net v0.7.0
-## explicit; go 1.17
+# golang.org/x/net v0.47.0
+## explicit; go 1.24.0
 golang.org/x/net/html
 golang.org/x/net/html/atom
-# golang.org/x/sys v0.14.0
-## explicit; go 1.18
+# golang.org/x/sys v0.38.0
+## explicit; go 1.24.0
 golang.org/x/sys/unix
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
