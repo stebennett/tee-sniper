@@ -16,7 +16,7 @@ require (
 require (
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/jessevdk/go-flags v1.5.0
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.11.1
 	github.com/twilio/twilio-go v1.15.1
 	golang.org/x/net v0.7.0 // indirect
 )
