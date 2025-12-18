@@ -13,7 +13,7 @@ go run cmd/tee-sniper/main.go -h
 ./run-teesniper.sh
 
 # Example with all parameters
-go run cmd/tee-sniper/main.go -u username -p pin -b https://example.com/ -d 7 -t 15:00 -e 17:00 -n toNumber -f fromNumber
+go run cmd/tee-sniper/main.go -u username -p pin -b https://example.com/ -d 7 -t 15:00 -e 17:00 -n toNumber -f fromNumber -s "partner1,partner2"
 ```
 
 ### Testing
@@ -52,7 +52,7 @@ go build -o tee-sniper cmd/tee-sniper/main.go
 7. Sends SMS confirmation via Twilio
 
 **Configuration** (pkg/config/config.go):
-Uses jessevdk/go-flags for command line argument parsing. All required parameters must be provided via CLI flags or the application will exit with help text.
+Uses jessevdk/go-flags for command line argument parsing. All required parameters must be provided via CLI flags or the application will exit with help text. The optional `-s/--partners` flag accepts a comma-separated list of playing partner IDs to book additional slots.
 
 **Tee Time Logic** (pkg/teetimes/teetimes.go):
 - `FilterByBookable()` - Filters to only bookable slots
@@ -71,4 +71,6 @@ The application expects Twilio credentials as environment variables:
 - `TWILIO_AUTH_TOKEN`
 
 ### GitHub Actions Integration
-The repository includes a manual workflow (`.github/workflows/book-tee-time-manual.yml`) that allows triggering the booking process via GitHub Actions with configurable parameters.
+The repository includes CI workflows in `.github/workflows/`:
+- `build.yml` - Runs build and tests on push/PR to main
+- `release.yml` - Handles release automation
