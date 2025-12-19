@@ -1,76 +1,38 @@
 # TODOs - Testing Implementation
 
-## Phase 4: Booking Client Tests
+## Phase 5: Twilio Client Tests
 
-### Test Fixtures
-- [x] Create `testdata/login_success.html`
-- [x] Create `testdata/login_failure.html`
-- [x] Create `testdata/availability_with_slots.html`
-- [x] Create `testdata/availability_empty.html`
-- [x] Create `testdata/availability_blocked.html`
-- [x] Create `testdata/booking_success.html`
-- [x] Create `testdata/booking_failure.html`
+### Setup
+- [x] Create branch `test/phase5-twilioclient-tests` from `main`
+- [x] Create `pkg/clients/twilioclient_test.go`
 
-### Test File Setup
-- [x] Create `pkg/clients/bookingclient_test.go`
-- [x] Create `loadFixture` helper function
-- [x] Create mock server helpers
+### Refactoring for Testability
+- [x] Create `MessageCreator` interface to abstract Twilio API
+- [x] Add `messageCreator` field to `TwilioClient` struct
+- [x] Update `NewTwilioClient()` to use the interface
+- [x] Add `NewTwilioClientWithCreator()` constructor for testing
 
-### NewBookingClient Tests
-- [x] `TestNewBookingClientValidURL`
-- [x] `TestNewBookingClientEmptyURL`
-- [x] `TestNewBookingClientSetsUserAgent`
-- [x] `TestNewBookingClientHasCookieJar` (bonus)
+### NewTwilioClient Tests
+- [x] `TestNewTwilioClient`
+- [x] `TestNewTwilioClientReturnsNonNil`
+- [x] `TestNewTwilioClientWithCreator` (bonus)
 
-### Login Tests
-- [x] `TestLoginSuccess`
-- [x] `TestLoginFailure`
-- [x] `TestLoginNon200Status`
-- [x] `TestLoginNetworkError`
-- [x] `TestLoginFormParameters`
-- [x] `TestLoginSetsCorrectHeaders` (bonus)
+### SendSms Dry Run Tests
+- [x] `TestSendSmsDryRun`
+- [x] `TestSendSmsDryRunWithVariousInputs`
+- [x] `TestSendSmsNotCalledInDryRun` (bonus)
 
-### GetCourseAvailability Tests
-- [x] `TestGetCourseAvailabilitySuccess`
-- [x] `TestGetCourseAvailabilityNoSlots`
-- [x] `TestGetCourseAvailabilityBlockedSlots`
-- [x] `TestGetCourseAvailabilityNon200Status`
-- [x] `TestGetCourseAvailabilityNetworkError`
-- [x] `TestGetCourseAvailabilityDateParameter`
-- [x] `TestGetCourseAvailabilitySetsCorrectHeaders` (bonus)
+### SendSms API Tests (with mock)
+- [x] `TestSendSmsSuccess`
+- [x] `TestSendSmsAPIError`
+- [x] `TestSendSmsPassesCorrectParameters`
+- [x] `TestSendSmsCalledOncePerRequest` (bonus)
 
-### extractBookingID Tests
-- [x] `TestExtractBookingIDValid`
-- [x] `TestExtractBookingIDMidURL`
-- [x] `TestExtractBookingIDMissing`
-- [x] `TestExtractBookingIDEmpty`
-- [x] `TestExtractBookingIDNoQueryString` (bonus)
-- [x] `TestExtractBookingIDComplexValue` (bonus)
-
-### BookTimeSlot Tests
-- [x] `TestBookTimeSlotSuccess`
-- [x] `TestBookTimeSlotDryRun`
-- [x] `TestBookTimeSlotFailureNoConfirmation`
-- [x] `TestBookTimeSlotNon200Status`
-- [x] `TestBookTimeSlotNetworkError`
-- [x] `TestBookTimeSlotNumSlotsCalculation`
-- [x] `TestBookTimeSlotNumSlotsNoPartners` (bonus)
-- [x] `TestBookTimeSlotPassesBookingFormParams` (bonus)
-
-### AddPlayingPartner Tests
-- [x] `TestAddPlayingPartnerSuccess`
-- [x] `TestAddPlayingPartnerDryRun`
-- [x] `TestAddPlayingPartnerNon200Status`
-- [x] `TestAddPlayingPartnerNetworkError`
-- [x] `TestAddPlayingPartnerQueryParameters`
-- [x] `TestAddPlayingPartnerSetsCorrectHeaders` (bonus)
-
-### Additional Tests
-- [x] `TestAddBrowserHeadersSetsAllHeaders`
-- [x] `TestBookingClientImplementsBookingService`
+### Interface Compliance
+- [x] `TestTwilioClientImplementsSMSService`
 
 ### Final Verification
 - [x] All tests pass (`go test ./...`)
-- [x] Coverage target met (85.9% > 80%+)
+- [x] Coverage target met (100% > 80%+)
 - [x] Update TESTING_PLAN.md to mark tasks complete
-- [x] Create PR: https://github.com/stebennett/tee-sniper/pull/14
+- [x] Create PR: https://github.com/stebennett/tee-sniper/pull/15
