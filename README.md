@@ -143,18 +143,25 @@ A convenience script is provided that sources environment variables from `.env`:
 tee-sniper/
 ├── cmd/
 │   └── tee-sniper/
-│       └── main.go           # Application entry point
+│       ├── main.go           # Application entry point
+│       └── main_test.go      # Main application tests
 ├── pkg/
 │   ├── clients/
+│   │   ├── interfaces.go     # Service interfaces for dependency injection
 │   │   ├── bookingclient.go  # Golf course website HTTP client
-│   │   └── twilioclient.go   # Twilio SMS client
+│   │   ├── bookingclient_test.go
+│   │   ├── twilioclient.go   # Twilio SMS client
+│   │   ├── twilioclient_test.go
+│   │   └── mocks/            # Generated mock implementations
 │   ├── config/
-│   │   └── config.go         # CLI argument parsing
+│   │   ├── config.go         # CLI argument parsing
+│   │   └── config_test.go
 │   ├── models/
 │   │   └── models.go         # Data structures (TimeSlot)
 │   └── teetimes/
 │       ├── teetimes.go       # Tee time filtering and selection logic
-│       └── teetimes_test.go  # Unit tests
+│       └── teetimes_test.go
+├── testdata/                 # HTML fixtures for testing
 ├── .github/workflows/
 │   ├── build.yml             # CI build and test workflow
 │   └── release.yml           # Release automation
@@ -191,7 +198,21 @@ go test ./pkg/teetimes/
 
 # Run tests with verbose output
 go test -v ./...
+
+# Run tests with coverage
+go test -coverprofile=coverage.out ./...
+go tool cover -html=coverage.out
 ```
+
+### Test Coverage
+
+| Package | Coverage |
+|---------|----------|
+| `pkg/teetimes` | 100% |
+| `pkg/config` | 100% |
+| `pkg/clients` | 93% |
+| `cmd/tee-sniper` | 83% |
+| **Overall** | **~78%** |
 
 ### Building
 
@@ -211,6 +232,7 @@ GOOS=linux GOARCH=amd64 go build -o tee-sniper-linux cmd/tee-sniper/main.go
 | [go-flags](https://github.com/jessevdk/go-flags) | Command-line argument parsing |
 | [twilio-go](https://github.com/twilio/twilio-go) | Twilio SMS API client |
 | [testify](https://github.com/stretchr/testify) | Testing assertions |
+| [gomock](https://github.com/golang/mock) | Mock generation for testing |
 
 ## CI/CD
 
