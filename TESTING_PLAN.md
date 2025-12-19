@@ -4,7 +4,7 @@
 
 | Component | File | Tests | Coverage |
 |-----------|------|-------|----------|
-| teetimes | `pkg/teetimes/teetimes.go` | ✅ | 84.6% |
+| teetimes | `pkg/teetimes/teetimes.go` | ✅ | 100% |
 | config | `pkg/config/config.go` | ✅ | 100% |
 | bookingclient | `pkg/clients/bookingclient.go` | ❌ | 0% |
 | twilioclient | `pkg/clients/twilioclient.go` | ❌ | 0% |
@@ -116,9 +116,9 @@ mockgen -source=pkg/clients/interfaces.go -destination=pkg/clients/mocks/mock_cl
 | `FilterByBookable` | `TestFilterByBookableAllBookable` | Returns all when all are bookable |
 
 ### Tasks
-- [ ] Add `PickRandomTime` tests
-- [ ] Add edge case tests for all functions
-- [ ] Achieve 100% coverage
+- [x] Add `PickRandomTime` tests
+- [x] Add edge case tests for all functions
+- [x] Achieve 100% coverage
 
 ---
 

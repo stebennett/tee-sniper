@@ -34,6 +34,9 @@ func FilterBetweenTimes(slots []models.TimeSlot, startTime string, endTime strin
 }
 
 func PickRandomTime(slots []models.TimeSlot) models.TimeSlot {
+	if len(slots) == 0 {
+		return models.TimeSlot{}
+	}
 	index := rand.Intn(len(slots))
 	return slots[index]
 }
