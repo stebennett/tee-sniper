@@ -74,3 +74,17 @@ The application expects Twilio credentials as environment variables:
 The repository includes CI workflows in `.github/workflows/`:
 - `build.yml` - Runs build and tests on push/PR to main
 - `release.yml` - Handles release automation
+
+## Testing Workflow
+
+When implementing the comprehensive testing plan (see `TESTING_PLAN.md`):
+
+1. **Each phase must be completed in a separate PR**
+2. Follow this workflow per phase:
+   - Create feature branch from `main` (e.g., `test/phase1-interfaces-mocks`)
+   - Implement tests for that phase only
+   - Run `go test ./...` to verify all tests pass
+   - Commit changes with descriptive message
+   - Push branch and create PR
+   - Merge PR to `main` before starting next phase
+3. Respect phase dependencies - Phase 1 (interfaces/mocks) must be merged before phases that require mocking
