@@ -169,14 +169,14 @@ func TestLoginSuccess(t *testing.T) {
 ```
 
 ### Tasks
-- [ ] Create `pkg/clients/bookingclient_test.go`
-- [ ] Create test fixtures for HTML responses
-- [ ] Test `NewBookingClient` constructor
-- [ ] Test `Login` with mock server
-- [ ] Test `GetCourseAvailability` with mock HTML
-- [ ] Test `BookTimeSlot` with mock server
-- [ ] Test `extractBookingID` regex parsing
-- [ ] Test `AddPlayingPartner` with mock server
+- [x] Create `pkg/clients/bookingclient_test.go`
+- [x] Create test fixtures for HTML responses
+- [x] Test `NewBookingClient` constructor
+- [x] Test `Login` with mock server
+- [x] Test `GetCourseAvailability` with mock HTML
+- [x] Test `BookTimeSlot` with mock server
+- [x] Test `extractBookingID` regex parsing
+- [x] Test `AddPlayingPartner` with mock server
 
 ---
 
