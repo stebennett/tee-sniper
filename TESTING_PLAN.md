@@ -5,7 +5,7 @@
 | Component | File | Tests | Coverage |
 |-----------|------|-------|----------|
 | teetimes | `pkg/teetimes/teetimes.go` | ✅ | 84.6% |
-| config | `pkg/config/config.go` | ❌ | 0% |
+| config | `pkg/config/config.go` | ✅ | 100% |
 | bookingclient | `pkg/clients/bookingclient.go` | ❌ | 0% |
 | twilioclient | `pkg/clients/twilioclient.go` | ❌ | 0% |
 | models | `pkg/models/models.go` | ❌ | 0% |
@@ -90,10 +90,10 @@ mockgen -source=pkg/clients/interfaces.go -destination=pkg/clients/mocks/mock_cl
 | `isErrHelp` | `TestIsErrHelpFalse` | Returns false for other errors |
 
 ### Tasks
-- [ ] Create `pkg/config/config_test.go`
-- [ ] Test `GetPlayingPartnersList()` with various inputs
-- [ ] Test `isErrHelp()` error detection
-- [ ] Test `GetConfig()` with mock os.Args (optional, complex)
+- [x] Create `pkg/config/config_test.go`
+- [x] Test `GetPlayingPartnersList()` with various inputs
+- [x] Test `isErrHelp()` error detection
+- [x] Test `GetConfig()` with mock os.Args (optional, complex)
 
 ---
 
