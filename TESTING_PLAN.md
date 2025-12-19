@@ -67,10 +67,10 @@ mockgen -source=pkg/clients/interfaces.go -destination=pkg/clients/mocks/mock_cl
 ```
 
 ### Tasks
-- [ ] Create `pkg/clients/interfaces.go` with BookingService and SMSService interfaces
-- [ ] Update BookingClient and TwilioClient to implement interfaces
-- [ ] Generate mock implementations
-- [ ] Create `pkg/clients/mocks/` directory
+- [x] Create `pkg/clients/interfaces.go` with BookingService and SMSService interfaces
+- [x] Update BookingClient and TwilioClient to implement interfaces
+- [x] Generate mock implementations
+- [x] Create `pkg/clients/mocks/` directory
 
 ---
 
