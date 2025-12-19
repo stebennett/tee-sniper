@@ -180,24 +180,38 @@ func TestLoginSuccess(t *testing.T) {
 
 ---
 
-## Phase 5: Twilio Client Tests
+## Phase 5: Twilio Client Tests ✅ COMPLETED
 
 ### File: `pkg/clients/twilioclient_test.go`
 
-### Strategy: Test dry run behavior and interface compliance
+### Strategy: Refactor for dependency injection, test dry run behavior and interface compliance
+
+### Refactoring
+- Added `MessageCreator` interface to abstract Twilio API
+- Added `NewTwilioClientWithCreator()` constructor for testing with mocks
 
 ### Test Cases
 
 | Function | Test Name | Description |
 |----------|-----------|-------------|
 | `NewTwilioClient` | `TestNewTwilioClient` | Creates client successfully |
+| `NewTwilioClient` | `TestNewTwilioClientReturnsNonNil` | Verifies client is properly initialized |
+| `NewTwilioClientWithCreator` | `TestNewTwilioClientWithCreator` | Creates client with custom MessageCreator |
 | `SendSms` | `TestSendSmsDryRun` | Returns nil without sending in dry run |
-| `SendSms` | `TestSendSmsIntegration` | (Skip in CI) Sends real SMS |
+| `SendSms` | `TestSendSmsDryRunWithVariousInputs` | Tests dry run with different input combinations |
+| `SendSms` | `TestSendSmsNotCalledInDryRun` | Verifies API is never called in dry run mode |
+| `SendSms` | `TestSendSmsSuccess` | Tests successful message sending with mock |
+| `SendSms` | `TestSendSmsAPIError` | Tests error handling from Twilio API |
+| `SendSms` | `TestSendSmsPassesCorrectParameters` | Verifies correct parameters are passed |
+| `SendSms` | `TestSendSmsCalledOncePerRequest` | Verifies API is called exactly once |
+| Interface | `TestTwilioClientImplementsSMSService` | Compile-time interface compliance |
 
 ### Tasks
-- [ ] Create `pkg/clients/twilioclient_test.go`
-- [ ] Test dry run mode (no actual API calls)
-- [ ] Test interface compliance
+- [x] Create `pkg/clients/twilioclient_test.go`
+- [x] Refactor TwilioClient for testability (add MessageCreator interface)
+- [x] Test dry run mode (no actual API calls)
+- [x] Test interface compliance
+- [x] Test API calls with mock (100% coverage)
 
 ---
 
@@ -241,26 +255,27 @@ func (a *App) Run() error { ... }
 
 ---
 
-## Phase 7: Test Fixtures
+## Phase 7: Test Fixtures ✅ COMPLETED
 
 ### Directory: `testdata/`
 
-Create HTML fixtures for booking client tests:
+HTML fixtures for booking client tests (created in Phase 4):
 
 ```
 testdata/
 ├── login_success.html       # Successful login response
 ├── login_failure.html       # Failed login response
-├── availability_slots.html  # Page with available tee times
+├── availability_with_slots.html  # Page with available tee times
 ├── availability_empty.html  # Page with no tee times
+├── availability_blocked.html    # Page with blocked slots (bonus)
 ├── booking_success.html     # Successful booking confirmation
 └── booking_failure.html     # Failed booking response
 ```
 
 ### Tasks
-- [ ] Create `testdata/` directory
-- [ ] Create HTML fixture files
-- [ ] Create helper function to load fixtures
+- [x] Create `testdata/` directory
+- [x] Create HTML fixture files
+- [x] Create helper function to load fixtures
 
 ---
 
