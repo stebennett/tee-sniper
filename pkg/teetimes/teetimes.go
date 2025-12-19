@@ -1,11 +1,14 @@
 package teetimes
 
 import (
+	"errors"
 	"math/rand"
 	"sort"
 
 	"github.com/stebennett/tee-sniper/pkg/models"
 )
+
+var ErrNoTimeSlotsAvailable = errors.New("no time slots available")
 
 func SortTimesAscending(slots []models.TimeSlot) []models.TimeSlot {
 	sort.Slice(slots, func(i, j int) bool {
@@ -33,7 +36,10 @@ func FilterBetweenTimes(slots []models.TimeSlot, startTime string, endTime strin
 	return
 }
 
-func PickRandomTime(slots []models.TimeSlot) models.TimeSlot {
+func PickRandomTime(slots []models.TimeSlot) (models.TimeSlot, error) {
+	if len(slots) == 0 {
+		return models.TimeSlot{}, ErrNoTimeSlotsAvailable
+	}
 	index := rand.Intn(len(slots))
-	return slots[index]
+	return slots[index], nil
 }
