@@ -1,38 +1,49 @@
 # TODOs - Testing Implementation
 
-## Phase 5: Twilio Client Tests
+## Phase 6: Main Application Tests
 
 ### Setup
-- [x] Create branch `test/phase5-twilioclient-tests` from `main`
-- [x] Create `pkg/clients/twilioclient_test.go`
+- [x] Create branch `test/phase6-main-tests` from `main`
+- [x] Create `cmd/tee-sniper/main_test.go`
 
 ### Refactoring for Testability
-- [x] Create `MessageCreator` interface to abstract Twilio API
-- [x] Add `messageCreator` field to `TwilioClient` struct
-- [x] Update `NewTwilioClient()` to use the interface
-- [x] Add `NewTwilioClientWithCreator()` constructor for testing
+- [x] Export `GetRandomRetryDelay` function (rename from lowercase)
+- [x] Create `App` struct with dependency injection
+- [x] Add `TimeNow` function field for deterministic date testing
+- [x] Add `SleepFunc` function field to avoid real delays in tests
+- [x] Create `NewApp()` constructor with real dependencies
+- [x] Extract main logic into `App.Run()` method
+- [x] Update `main()` to use new App struct
 
-### NewTwilioClient Tests
-- [x] `TestNewTwilioClient`
-- [x] `TestNewTwilioClientReturnsNonNil`
-- [x] `TestNewTwilioClientWithCreator` (bonus)
+### GetRandomRetryDelay Tests
+- [x] `TestGetRandomRetryDelayWithinRange`
+- [x] `TestGetRandomRetryDelayMinEqualsMax`
+- [x] `TestGetRandomRetryDelayReturnsPositive`
+- [x] `TestGetRandomRetryDelayHasVariation`
 
-### SendSms Dry Run Tests
-- [x] `TestSendSmsDryRun`
-- [x] `TestSendSmsDryRunWithVariousInputs`
-- [x] `TestSendSmsNotCalledInDryRun` (bonus)
+### NewApp Tests
+- [x] `TestNewApp`
 
-### SendSms API Tests (with mock)
-- [x] `TestSendSmsSuccess`
-- [x] `TestSendSmsAPIError`
-- [x] `TestSendSmsPassesCorrectParameters`
-- [x] `TestSendSmsCalledOncePerRequest` (bonus)
-
-### Interface Compliance
-- [x] `TestTwilioClientImplementsSMSService`
+### App.Run() Tests
+- [x] `TestRunLoginError`
+- [x] `TestRunGetAvailabilityError`
+- [x] `TestRunSuccessfulBookingFirstAttempt`
+- [x] `TestRunSuccessfulBookingWithPartners`
+- [x] `TestRunPartnerAddFailureContinues`
+- [x] `TestRunRetryOnNoAvailability`
+- [x] `TestRunRetryOnBookingFailure`
+- [x] `TestRunRetryOnEmptyBookingID`
+- [x] `TestRunAllRetriesExhausted`
+- [x] `TestRunSendsFailureSMS`
+- [x] `TestRunSMSErrorDoesNotFailBooking`
+- [x] `TestRunDryRunMode`
+- [x] `TestRunFiltersNonBookableSlots`
+- [x] `TestRunFiltersOutsideTimeRange`
+- [x] `TestRunUsesCorrectDateFormat`
+- [x] `TestRunSleepCalledOnRetry`
 
 ### Final Verification
 - [x] All tests pass (`go test ./...`)
-- [x] Coverage target met (100% > 80%+)
+- [x] Coverage target met (83.1% > 70%+)
 - [x] Update TESTING_PLAN.md to mark tasks complete
-- [x] Create PR: https://github.com/stebennett/tee-sniper/pull/15
+- [ ] Create PR

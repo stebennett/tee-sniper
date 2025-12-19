@@ -6,12 +6,12 @@
 |-----------|------|-------|----------|
 | teetimes | `pkg/teetimes/teetimes.go` | ✅ | 100% |
 | config | `pkg/config/config.go` | ✅ | 100% |
-| bookingclient | `pkg/clients/bookingclient.go` | ❌ | 0% |
-| twilioclient | `pkg/clients/twilioclient.go` | ❌ | 0% |
-| models | `pkg/models/models.go` | ❌ | 0% |
-| main | `cmd/tee-sniper/main.go` | ❌ | 0% |
+| bookingclient | `pkg/clients/bookingclient.go` | ✅ | 93.4% |
+| twilioclient | `pkg/clients/twilioclient.go` | ✅ | 100% |
+| models | `pkg/models/models.go` | N/A | N/A (data only) |
+| main | `cmd/tee-sniper/main.go` | ✅ | 83.1% |
 
-**Overall Coverage**: ~17% (only 1 of 6 source files tested)
+**Overall Coverage**: ~78% (all testable components covered)
 
 ---
 
@@ -215,43 +215,62 @@ func TestLoginSuccess(t *testing.T) {
 
 ---
 
-## Phase 6: Main Application Tests
+## Phase 6: Main Application Tests ✅ COMPLETED
 
 ### File: `cmd/tee-sniper/main_test.go`
 
-### Refactoring Required
+### Refactoring Completed
 
-Extract testable functions from `main()`:
+Extracted testable functions from `main()`:
 
 ```go
-// Move to pkg/app/app.go or keep in main but export
+// Exported for testing
 func GetRandomRetryDelay(minSeconds, maxSeconds int) time.Duration
 
-// Create App struct for dependency injection
+// App struct for dependency injection
 type App struct {
-    config        config.Config
-    bookingClient clients.BookingService
-    twilioClient  clients.SMSService
+    Config        config.Config
+    BookingClient clients.BookingService
+    TwilioClient  clients.SMSService
+    TimeNow       func() time.Time      // For deterministic date testing
+    SleepFunc     func(time.Duration)   // For avoiding real delays in tests
 }
 
-func (a *App) Run() error { ... }
+func NewApp(conf config.Config, bookingClient clients.BookingService, twilioClient clients.SMSService) *App
+func (a *App) Run() error
 ```
 
 ### Test Cases
 
 | Function | Test Name | Description |
 |----------|-----------|-------------|
-| `getRandomRetryDelay` | `TestGetRandomRetryDelayRange` | Returns value within expected range |
-| `getRandomRetryDelay` | `TestGetRandomRetryDelayJitter` | Applies ±20% jitter |
-| `App.Run` | `TestRunSuccessfulBooking` | Complete flow with mocked dependencies |
-| `App.Run` | `TestRunRetryOnFailure` | Retries on booking failure |
-| `App.Run` | `TestRunSendsConfirmation` | Sends SMS on success |
+| `GetRandomRetryDelay` | `TestGetRandomRetryDelayWithinRange` | Returns value within expected range |
+| `GetRandomRetryDelay` | `TestGetRandomRetryDelayMinEqualsMax` | Handles edge case when min==max |
+| `GetRandomRetryDelay` | `TestGetRandomRetryDelayReturnsPositive` | Returns positive duration |
+| `GetRandomRetryDelay` | `TestGetRandomRetryDelayHasVariation` | Values have randomness |
+| `NewApp` | `TestNewApp` | Creates app with injected dependencies |
+| `App.Run` | `TestRunLoginError` | Handles login errors |
+| `App.Run` | `TestRunGetAvailabilityError` | Handles availability errors |
+| `App.Run` | `TestRunSuccessfulBookingFirstAttempt` | Books on first try |
+| `App.Run` | `TestRunSuccessfulBookingWithPartners` | Books with playing partners |
+| `App.Run` | `TestRunPartnerAddFailureContinues` | Continues if partner add fails |
+| `App.Run` | `TestRunRetryOnNoAvailability` | Retries when no slots available |
+| `App.Run` | `TestRunRetryOnBookingFailure` | Retries on booking error |
+| `App.Run` | `TestRunRetryOnEmptyBookingID` | Retries on empty booking ID |
+| `App.Run` | `TestRunAllRetriesExhausted` | Returns error after all retries |
+| `App.Run` | `TestRunSendsFailureSMS` | Sends failure SMS |
+| `App.Run` | `TestRunSMSErrorDoesNotFailBooking` | SMS error doesn't fail booking |
+| `App.Run` | `TestRunDryRunMode` | Respects dry run flag |
+| `App.Run` | `TestRunFiltersNonBookableSlots` | Filters non-bookable slots |
+| `App.Run` | `TestRunFiltersOutsideTimeRange` | Filters slots outside time range |
+| `App.Run` | `TestRunUsesCorrectDateFormat` | Uses correct date format |
+| `App.Run` | `TestRunSleepCalledOnRetry` | Sleep is called on retry |
 
 ### Tasks
-- [ ] Export `getRandomRetryDelay` for testing
-- [ ] Create `cmd/tee-sniper/main_test.go`
-- [ ] Test delay calculation
-- [ ] Optionally refactor main for full flow testing
+- [x] Export `getRandomRetryDelay` for testing
+- [x] Create `cmd/tee-sniper/main_test.go`
+- [x] Test delay calculation
+- [x] Refactor main for full flow testing (App struct with dependency injection)
 
 ---
 
