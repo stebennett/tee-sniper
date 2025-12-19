@@ -17,10 +17,10 @@ func NewTwilioClient() *TwilioClient {
 	}
 }
 
-func (t TwilioClient) SendSms(from string, to string, body string, dryRun bool) (*twilioApi.ApiV2010Message, error) {
+func (t TwilioClient) SendSms(from string, to string, body string, dryRun bool) error {
 	if dryRun {
 		log.Printf("DRY RUN: Would have sent SMS from %s to %s with body: %s", from, to, body)
-		return nil, nil
+		return nil
 	}
 
 	params := &twilioApi.CreateMessageParams{}
@@ -28,5 +28,6 @@ func (t TwilioClient) SendSms(from string, to string, body string, dryRun bool) 
 	params.SetFrom(from)
 	params.SetBody(body)
 
-	return t.client.Api.CreateMessage(params)
+	_, err := t.client.Api.CreateMessage(params)
+	return err
 }
