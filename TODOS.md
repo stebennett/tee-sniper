@@ -73,4 +73,4 @@
 - [x] All tests pass (`go test ./...`)
 - [x] Coverage target met (85.9% > 80%+)
 - [x] Update TESTING_PLAN.md to mark tasks complete
-- [ ] Create PR
+- [x] Create PR: https://github.com/stebennett/tee-sniper/pull/14
