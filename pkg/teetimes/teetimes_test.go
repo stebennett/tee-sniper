@@ -109,13 +109,15 @@ func TestFilterTimesBetweenExcludeStart(t *testing.T) {
 // PickRandomTime tests
 
 func TestPickRandomTimeEmptySlice(t *testing.T) {
-	result := PickRandomTime([]models.TimeSlot{})
+	result, err := PickRandomTime([]models.TimeSlot{})
+	assert.ErrorIs(t, err, ErrNoTimeSlotsAvailable)
 	assert.Equal(t, models.TimeSlot{}, result)
 }
 
 func TestPickRandomTimeSingleItem(t *testing.T) {
 	slot := models.TimeSlot{Time: "10:00", CanBook: true}
-	result := PickRandomTime([]models.TimeSlot{slot})
+	result, err := PickRandomTime([]models.TimeSlot{slot})
+	assert.NoError(t, err)
 	assert.Equal(t, slot, result)
 }
 
@@ -126,7 +128,8 @@ func TestPickRandomTimeMultipleItems(t *testing.T) {
 		{Time: "11:00", CanBook: true},
 	}
 
-	result := PickRandomTime(slots)
+	result, err := PickRandomTime(slots)
+	assert.NoError(t, err)
 
 	// Verify the result is one of the input slots
 	found := false

@@ -71,7 +71,11 @@ func main() {
 
 		log.Printf("Found %d available tee times between %s and %s on %s", len(availableTimes), conf.TimeStart, conf.TimeEnd, dateStr)
 
-		timeToBook := teetimes.PickRandomTime(availableTimes)
+		timeToBook, err := teetimes.PickRandomTime(availableTimes)
+		if err != nil {
+			log.Printf("Failed to pick random time: %s", err.Error())
+			continue
+		}
 		playingPartners := conf.GetPlayingPartnersList()
 
 		log.Printf("Attempting to book tee time: %s on %s for %d people", timeToBook.Time, dateStr, len(playingPartners)+1)
