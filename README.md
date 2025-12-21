@@ -36,6 +36,29 @@ go build -o tee-sniper cmd/tee-sniper/main.go
 
 Download the latest binary from the [Releases](https://github.com/stebennett/tee-sniper/releases) page.
 
+### Using Docker
+
+Build and run using Docker:
+
+```bash
+# Build the image
+docker build -t tee-sniper .
+
+# Run with arguments
+docker run --rm \
+    -e TWILIO_ACCOUNT_SID="your-sid" \
+    -e TWILIO_AUTH_TOKEN="your-token" \
+    tee-sniper \
+    -u YOUR_USERNAME \
+    -p YOUR_PIN \
+    -b https://your-golf-course.com/ \
+    -d 7 \
+    -t 15:00 \
+    -e 17:00 \
+    -f +1234567890 \
+    -n +0987654321
+```
+
 ## Configuration
 
 ### Environment Variables

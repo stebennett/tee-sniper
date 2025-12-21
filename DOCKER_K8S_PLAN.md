@@ -295,8 +295,8 @@ resources:
 
 ## Next Steps
 
-- [ ] Phase 1: Create Dockerfile and .dockerignore
-- [ ] Phase 1: Test local Docker build
+- [x] Phase 1: Create Dockerfile and .dockerignore
+- [x] Phase 1: Test local Docker build
 - [ ] Phase 2: Create K8s manifest files
 - [ ] Phase 3: Refactor config.go for env var support
 - [ ] Phase 4: Update CI/CD workflows
