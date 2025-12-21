@@ -91,7 +91,7 @@ When implementing the comprehensive testing plan (see `TESTING_PLAN.md`):
 
 ## Docker Migration Workflow
 
-When implementing the Docker migration plan (see `DOCKER_PLAN.md`):
+When implementing the Docker migration plan (see `docs/DOCKER_PLAN.md`):
 
 1. **Each phase must be completed in a separate PR**
 2. Follow this workflow per phase:
@@ -99,7 +99,7 @@ When implementing the Docker migration plan (see `DOCKER_PLAN.md`):
    - Implement the phase tasks
    - Run `go test ./...` to verify all tests pass
    - Test Docker builds locally where applicable
-   - Update `DOCKER_PLAN.md` to mark completed tasks
+   - Update `docs/DOCKER_PLAN.md` to mark completed tasks
    - Update `README.md` with any new usage instructions
    - Commit changes with descriptive message
    - Push branch and create PR for review
