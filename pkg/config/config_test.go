@@ -229,3 +229,127 @@ func TestGetConfigOptionalPartners(t *testing.T) {
 	assert.Equal(t, "", cfg.PlayingPartners, "PlayingPartners should be empty string when not provided")
 	assert.Equal(t, []string{}, cfg.GetPlayingPartnersList(), "GetPlayingPartnersList should return empty slice")
 }
+
+func TestGetConfigFromEnvVars(t *testing.T) {
+	// Save original os.Args and restore after test
+	originalArgs := os.Args
+	defer func() { os.Args = originalArgs }()
+
+	// Set environment variables
+	envVars := map[string]string{
+		"TS_DAYS_AHEAD":  "14",
+		"TS_TIME_START":  "09:00",
+		"TS_TIME_END":    "15:00",
+		"TS_RETRIES":     "10",
+		"TS_USERNAME":    "envuser",
+		"TS_PIN":         "5678",
+		"TS_BASEURL":     "https://env.example.com",
+		"TS_FROM_NUMBER": "+1111111111",
+		"TS_TO_NUMBER":   "+2222222222",
+		"TS_PARTNERS":    "envpartner1,envpartner2",
+	}
+
+	for key, value := range envVars {
+		os.Setenv(key, value)
+	}
+	defer func() {
+		for key := range envVars {
+			os.Unsetenv(key)
+		}
+	}()
+
+	// No CLI args provided - should use env vars
+	os.Args = []string{"cmd"}
+
+	cfg, err := GetConfig()
+	assert.NoError(t, err, "GetConfig should succeed with env vars")
+	assert.Equal(t, 14, cfg.DaysAhead)
+	assert.Equal(t, "09:00", cfg.TimeStart)
+	assert.Equal(t, "15:00", cfg.TimeEnd)
+	assert.Equal(t, 10, cfg.Retries)
+	assert.Equal(t, "envuser", cfg.Username)
+	assert.Equal(t, "5678", cfg.Pin)
+	assert.Equal(t, "https://env.example.com", cfg.BaseUrl)
+	assert.Equal(t, "+1111111111", cfg.FromNumber)
+	assert.Equal(t, "+2222222222", cfg.ToNumber)
+	assert.Equal(t, "envpartner1,envpartner2", cfg.PlayingPartners)
+}
+
+func TestGetConfigCliArgsOverrideEnvVars(t *testing.T) {
+	// Save original os.Args and restore after test
+	originalArgs := os.Args
+	defer func() { os.Args = originalArgs }()
+
+	// Set environment variables
+	envVars := map[string]string{
+		"TS_DAYS_AHEAD":  "14",
+		"TS_TIME_START":  "09:00",
+		"TS_TIME_END":    "15:00",
+		"TS_USERNAME":    "envuser",
+		"TS_PIN":         "5678",
+		"TS_BASEURL":     "https://env.example.com",
+		"TS_FROM_NUMBER": "+1111111111",
+		"TS_TO_NUMBER":   "+2222222222",
+	}
+
+	for key, value := range envVars {
+		os.Setenv(key, value)
+	}
+	defer func() {
+		for key := range envVars {
+			os.Unsetenv(key)
+		}
+	}()
+
+	// CLI args should override env vars
+	os.Args = []string{
+		"cmd",
+		"-d", "7",
+		"-t", "08:00",
+	}
+
+	cfg, err := GetConfig()
+	assert.NoError(t, err, "GetConfig should succeed with mixed env vars and CLI args")
+
+	// CLI args should override env vars
+	assert.Equal(t, 7, cfg.DaysAhead, "CLI arg should override env var")
+	assert.Equal(t, "08:00", cfg.TimeStart, "CLI arg should override env var")
+
+	// Env vars should be used when CLI args not provided
+	assert.Equal(t, "15:00", cfg.TimeEnd, "Env var should be used when CLI arg not provided")
+	assert.Equal(t, "envuser", cfg.Username, "Env var should be used when CLI arg not provided")
+}
+
+func TestGetConfigDryRunEnvVar(t *testing.T) {
+	// Save original os.Args and restore after test
+	originalArgs := os.Args
+	defer func() { os.Args = originalArgs }()
+
+	// Set environment variables
+	envVars := map[string]string{
+		"TS_DAYS_AHEAD":  "7",
+		"TS_TIME_START":  "08:00",
+		"TS_TIME_END":    "12:00",
+		"TS_USERNAME":    "testuser",
+		"TS_PIN":         "1234",
+		"TS_BASEURL":     "https://example.com",
+		"TS_FROM_NUMBER": "+1234567890",
+		"TS_TO_NUMBER":   "+0987654321",
+		"TS_DRY_RUN":     "true",
+	}
+
+	for key, value := range envVars {
+		os.Setenv(key, value)
+	}
+	defer func() {
+		for key := range envVars {
+			os.Unsetenv(key)
+		}
+	}()
+
+	os.Args = []string{"cmd"}
+
+	cfg, err := GetConfig()
+	assert.NoError(t, err, "GetConfig should succeed with env vars")
+	assert.True(t, cfg.DryRun, "DryRun should be true when TS_DRY_RUN env var is set to true")
+}

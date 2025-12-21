@@ -44,7 +44,7 @@ Build and run using Docker:
 # Build the image
 docker build -t tee-sniper .
 
-# Run with arguments
+# Run with CLI arguments
 docker run --rm \
     -e TWILIO_ACCOUNT_SID="your-sid" \
     -e TWILIO_AUTH_TOKEN="your-token" \
@@ -57,18 +57,56 @@ docker run --rm \
     -e 17:00 \
     -f +1234567890 \
     -n +0987654321
+
+# Or run with environment variables only
+docker run --rm \
+    -e TWILIO_ACCOUNT_SID="your-sid" \
+    -e TWILIO_AUTH_TOKEN="your-token" \
+    -e TS_USERNAME="your-username" \
+    -e TS_PIN="your-pin" \
+    -e TS_BASEURL="https://your-golf-course.com/" \
+    -e TS_DAYS_AHEAD="7" \
+    -e TS_TIME_START="15:00" \
+    -e TS_TIME_END="17:00" \
+    -e TS_FROM_NUMBER="+1234567890" \
+    -e TS_TO_NUMBER="+0987654321" \
+    tee-sniper
+```
+
+Pre-built images are available from GitHub Container Registry:
+
+```bash
+docker pull ghcr.io/stebennett/tee-sniper:latest
 ```
 
 ## Configuration
 
 ### Environment Variables
 
-Tee-Sniper requires Twilio credentials to be set as environment variables for SMS notifications:
+Tee-Sniper supports configuration via environment variables as an alternative to command-line flags. CLI flags take precedence over environment variables when both are provided.
+
+#### Required (Twilio)
 
 | Variable | Description |
 |----------|-------------|
 | `TWILIO_ACCOUNT_SID` | Your Twilio account SID |
 | `TWILIO_AUTH_TOKEN` | Your Twilio authentication token |
+
+#### Application Configuration
+
+| Variable | CLI Flag | Description |
+|----------|----------|-------------|
+| `TS_DAYS_AHEAD` | `-d` | Number of days ahead to look for a tee slot |
+| `TS_TIME_START` | `-t` | Earliest time to book (HH:MM format) |
+| `TS_TIME_END` | `-e` | Latest time to book (HH:MM format) |
+| `TS_RETRIES` | `-r` | Number of retry attempts (default: 5) |
+| `TS_DRY_RUN` | `-x` | Test mode - set to "true" to run without booking |
+| `TS_USERNAME` | `-u` | Booking website username |
+| `TS_PIN` | `-p` | PIN for authentication |
+| `TS_BASEURL` | `-b` | Booking website base URL |
+| `TS_FROM_NUMBER` | `-f` | Twilio sender phone number |
+| `TS_TO_NUMBER` | `-n` | SMS recipient phone number |
+| `TS_PARTNERS` | `-s` | Comma-separated list of playing partner IDs |
 
 Copy the example environment file and configure your credentials:
 
@@ -187,7 +225,7 @@ tee-sniper/
 ├── testdata/                 # HTML fixtures for testing
 ├── .github/workflows/
 │   ├── build.yml             # CI build and test workflow
-│   └── release.yml           # Release automation
+│   └── release.yml           # Release automation (binary + Docker)
 ├── .env.example              # Environment variables template
 ├── run-teesniper.sh          # Convenience execution script
 └── go.mod                    # Go module definition
@@ -262,7 +300,7 @@ GOOS=linux GOARCH=amd64 go build -o tee-sniper-linux cmd/tee-sniper/main.go
 The project includes GitHub Actions workflows:
 
 - **Build** (`.github/workflows/build.yml`): Runs on push to main and pull requests. Executes build and test steps.
-- **Release** (`.github/workflows/release.yml`): Triggers on version tags (v*.*.*). Builds Linux binary and creates GitHub release.
+- **Release** (`.github/workflows/release.yml`): Triggers on version tags (v*.*.*). Builds Linux binary, creates GitHub release, and pushes Docker image to GitHub Container Registry.
 
 ## License
 

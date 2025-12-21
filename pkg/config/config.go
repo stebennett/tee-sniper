@@ -12,19 +12,19 @@ var (
 )
 
 type Config struct {
-	DaysAhead int    `short:"d" long:"days" required:"true" description:"The number of days ahead to look for a tee-slot"`
-	TimeStart string `short:"t" long:"timestart" required:"true" description:"The time after which a tee-time will be selected"`
-	TimeEnd   string `short:"e" long:"timeend" required:"true" description:"The time before which a tee-time will be selected"`
-	Retries   int    `short:"r" long:"retries" required:"true" default:"5" description:"The number of times to retry booking"`
-	DryRun    bool   `short:"x" long:"dryrun" description:"Run everything, but don't do the booking and assume it succeeds"`
+	DaysAhead int    `short:"d" long:"days" env:"TS_DAYS_AHEAD" required:"true" description:"The number of days ahead to look for a tee-slot"`
+	TimeStart string `short:"t" long:"timestart" env:"TS_TIME_START" required:"true" description:"The time after which a tee-time will be selected"`
+	TimeEnd   string `short:"e" long:"timeend" env:"TS_TIME_END" required:"true" description:"The time before which a tee-time will be selected"`
+	Retries   int    `short:"r" long:"retries" env:"TS_RETRIES" default:"5" description:"The number of times to retry booking"`
+	DryRun    bool   `short:"x" long:"dryrun" env:"TS_DRY_RUN" description:"Run everything, but don't do the booking and assume it succeeds"`
 
-	Username string `short:"u" long:"username" required:"true" description:"The username to use for booking"`
-	Pin      string `short:"p" long:"pin" required:"true" description:"The pin associated with the username for booking"`
-	BaseUrl  string `short:"b" long:"baseurl" required:"true" description:"The host for the booking website"`
+	Username string `short:"u" long:"username" env:"TS_USERNAME" required:"true" description:"The username to use for booking"`
+	Pin      string `short:"p" long:"pin" env:"TS_PIN" required:"true" description:"The pin associated with the username for booking"`
+	BaseUrl  string `short:"b" long:"baseurl" env:"TS_BASEURL" required:"true" description:"The host for the booking website"`
 
-	FromNumber      string `short:"f" long:"fromnumber" required:"true" description:"The number to send the confirmation SMS from"`
-	ToNumber        string `short:"n" long:"tonumber" required:"true" description:"The number to send the confirmation SMS to"`
-	PlayingPartners string `short:"s" long:"partners" description:"Comma-separated list of playing partner IDs"`
+	FromNumber      string `short:"f" long:"fromnumber" env:"TS_FROM_NUMBER" required:"true" description:"The number to send the confirmation SMS from"`
+	ToNumber        string `short:"n" long:"tonumber" env:"TS_TO_NUMBER" required:"true" description:"The number to send the confirmation SMS to"`
+	PlayingPartners string `short:"s" long:"partners" env:"TS_PARTNERS" description:"Comma-separated list of playing partner IDs"`
 }
 
 func GetConfig() (Config, error) {

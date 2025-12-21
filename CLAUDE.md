@@ -89,23 +89,21 @@ When implementing the comprehensive testing plan (see `TESTING_PLAN.md`):
    - Merge PR to `main` before starting next phase
 3. Respect phase dependencies - Phase 1 (interfaces/mocks) must be merged before phases that require mocking
 
-## Docker & Kubernetes Migration Workflow
+## Docker Migration Workflow
 
-When implementing the Docker/K8s migration plan (see `DOCKER_K8S_PLAN.md`):
+When implementing the Docker migration plan (see `docs/DOCKER_PLAN.md`):
 
 1. **Each phase must be completed in a separate PR**
 2. Follow this workflow per phase:
-   - Create feature branch from `main` (e.g., `docker/phase1-dockerfile`)
+   - Create feature branch from `main` (e.g., `docker/phase2-config-refactor`)
    - Implement the phase tasks
    - Run `go test ./...` to verify all tests pass
    - Test Docker builds locally where applicable
-   - Update `DOCKER_K8S_PLAN.md` to mark completed tasks
-   - Update `README.md` with any new usage instructions (e.g., Docker run commands)
+   - Update `docs/DOCKER_PLAN.md` to mark completed tasks
+   - Update `README.md` with any new usage instructions
    - Commit changes with descriptive message
    - Push branch and create PR for review
    - Wait for PR to be reviewed and merged before starting next phase
 3. Phase dependencies:
-   - Phase 1 (Docker) must be complete before Phase 2 (K8s manifests)
-   - Phase 1 must be complete before Phase 4 (CI/CD)
-   - Phase 3 (Config refactor) can run in parallel with Phase 2
-   - Phase 5 (Ops) depends on Phases 1-4
+   - Phase 1 (Docker) must be complete before Phase 3 (CI/CD)
+   - Phase 2 (Config refactor) can run in parallel with Phase 3
