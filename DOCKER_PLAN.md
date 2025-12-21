@@ -96,36 +96,13 @@ The `go-flags` library already supports `env` tags, so this is a minimal change.
 
 ## Phase 3: CI/CD Pipeline Updates ✅
 
-### 3.1 Add Docker Build to GitHub Actions
+### 3.1 Add Docker Build to Release Workflow
 
-```yaml
-# .github/workflows/docker.yml
-name: Docker Build
+Docker build and push steps added to `.github/workflows/release.yml`. On version tags (v*.*.*), the release workflow now:
+1. Builds Linux binary and creates GitHub release
+2. Builds Docker image and pushes to GitHub Container Registry
 
-on:
-  push:
-    tags: ['v*.*.*']
-  pull_request:
-    branches: [main]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Build Docker image
-      run: docker build -t tee-sniper:${{ github.sha }} .
-
-    - name: Run tests in container
-      run: docker run --rm tee-sniper:${{ github.sha }} -h
-
-    - name: Push to registry
-      if: startsWith(github.ref, 'refs/tags/')
-      run: |
-        docker tag tee-sniper:${{ github.sha }} ghcr.io/${{ github.repository }}:${{ github.ref_name }}
-        docker push ghcr.io/${{ github.repository }}:${{ github.ref_name }}
-```
+Tags published: `version`, `major.minor`, and `latest`.
 
 ---
 
@@ -135,7 +112,7 @@ jobs:
 |-------|-------------|----------------------|
 | 1 | Docker basics | `Dockerfile`, `.dockerignore` |
 | 2 | Config refactor | `pkg/config/config.go` (add env tag support) |
-| 3 | CI/CD update | `.github/workflows/docker.yml` |
+| 3 | CI/CD update | `.github/workflows/release.yml` (add Docker steps) |
 
 ---
 

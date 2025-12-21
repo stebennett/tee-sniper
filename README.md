@@ -225,8 +225,7 @@ tee-sniper/
 ├── testdata/                 # HTML fixtures for testing
 ├── .github/workflows/
 │   ├── build.yml             # CI build and test workflow
-│   ├── docker.yml            # Docker build and push workflow
-│   └── release.yml           # Release automation
+│   └── release.yml           # Release automation (binary + Docker)
 ├── .env.example              # Environment variables template
 ├── run-teesniper.sh          # Convenience execution script
 └── go.mod                    # Go module definition
@@ -301,8 +300,7 @@ GOOS=linux GOARCH=amd64 go build -o tee-sniper-linux cmd/tee-sniper/main.go
 The project includes GitHub Actions workflows:
 
 - **Build** (`.github/workflows/build.yml`): Runs on push to main and pull requests. Executes build and test steps.
-- **Docker** (`.github/workflows/docker.yml`): Builds Docker images on push to main and pull requests. Pushes to GitHub Container Registry on main branch and version tags.
-- **Release** (`.github/workflows/release.yml`): Triggers on version tags (v*.*.*). Builds Linux binary and creates GitHub release.
+- **Release** (`.github/workflows/release.yml`): Triggers on version tags (v*.*.*). Builds Linux binary, creates GitHub release, and pushes Docker image to GitHub Container Registry.
 
 ## License
 
