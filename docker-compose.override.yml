@@ -1,0 +1,13 @@
+# Development overrides - automatically loaded by docker compose
+services:
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./api/app:/app/app:ro
+    environment:
+      - TSA_DEBUG=true
+      - TSA_LOG_LEVEL=DEBUG
+      - TSA_LOG_FORMAT=text
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
