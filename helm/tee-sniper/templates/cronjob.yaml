@@ -1,0 +1,139 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "tee-sniper.fullname" . }}
+  labels:
+    {{- include "tee-sniper.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.schedule | quote }}
+  concurrencyPolicy: {{ .Values.job.concurrencyPolicy }}
+  successfulJobsHistoryLimit: {{ .Values.job.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.job.failedJobsHistoryLimit }}
+  {{- if .Values.job.startingDeadlineSeconds }}
+  startingDeadlineSeconds: {{ .Values.job.startingDeadlineSeconds }}
+  {{- end }}
+  jobTemplate:
+    metadata:
+      labels:
+        {{- include "tee-sniper.labels" . | nindent 8 }}
+    spec:
+      {{- if .Values.job.ttlSecondsAfterFinished }}
+      ttlSecondsAfterFinished: {{ .Values.job.ttlSecondsAfterFinished }}
+      {{- end }}
+      backoffLimit: {{ .Values.job.backoffLimit }}
+      template:
+        metadata:
+          labels:
+            {{- include "tee-sniper.selectorLabels" . | nindent 12 }}
+            {{- with .Values.pod.labels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.pod.annotations }}
+          annotations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        spec:
+          {{- with .Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          serviceAccountName: {{ include "tee-sniper.serviceAccountName" . }}
+          restartPolicy: {{ .Values.pod.restartPolicy }}
+          {{- with .Values.pod.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          containers:
+            - name: {{ .Chart.Name }}
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              {{- with .Values.container.securityContext }}
+              securityContext:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+              env:
+                # Configuration from ConfigMap
+                - name: TS_DAYS_AHEAD
+                  valueFrom:
+                    configMapKeyRef:
+                      name: {{ include "tee-sniper.configMapName" . }}
+                      key: TS_DAYS_AHEAD
+                - name: TS_TIME_START
+                  valueFrom:
+                    configMapKeyRef:
+                      name: {{ include "tee-sniper.configMapName" . }}
+                      key: TS_TIME_START
+                - name: TS_TIME_END
+                  valueFrom:
+                    configMapKeyRef:
+                      name: {{ include "tee-sniper.configMapName" . }}
+                      key: TS_TIME_END
+                - name: TS_BASEURL
+                  valueFrom:
+                    configMapKeyRef:
+                      name: {{ include "tee-sniper.configMapName" . }}
+                      key: TS_BASEURL
+                - name: TS_RETRIES
+                  valueFrom:
+                    configMapKeyRef:
+                      name: {{ include "tee-sniper.configMapName" . }}
+                      key: TS_RETRIES
+                - name: TS_DRY_RUN
+                  valueFrom:
+                    configMapKeyRef:
+                      name: {{ include "tee-sniper.configMapName" . }}
+                      key: TS_DRY_RUN
+                {{- if .Values.config.partners }}
+                - name: TS_PARTNERS
+                  valueFrom:
+                    configMapKeyRef:
+                      name: {{ include "tee-sniper.configMapName" . }}
+                      key: TS_PARTNERS
+                {{- end }}
+                # Credentials from Secret
+                - name: TS_USERNAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "tee-sniper.secretName" . }}
+                      key: TS_USERNAME
+                - name: TS_PIN
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "tee-sniper.secretName" . }}
+                      key: TS_PIN
+                - name: TS_FROM_NUMBER
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "tee-sniper.secretName" . }}
+                      key: TS_FROM_NUMBER
+                - name: TS_TO_NUMBER
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "tee-sniper.secretName" . }}
+                      key: TS_TO_NUMBER
+                - name: TWILIO_ACCOUNT_SID
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "tee-sniper.secretName" . }}
+                      key: TWILIO_ACCOUNT_SID
+                - name: TWILIO_AUTH_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "tee-sniper.secretName" . }}
+                      key: TWILIO_AUTH_TOKEN
+              {{- with .Values.resources }}
+              resources:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+          {{- with .Values.pod.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.pod.affinity }}
+          affinity:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.pod.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}

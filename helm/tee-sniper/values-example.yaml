@@ -1,0 +1,60 @@
+# Example values file for tee-sniper
+#
+# Copy this file and fill in your actual values:
+#   cp values-example.yaml my-values.yaml
+#
+# WARNING: Never commit files containing real credentials!
+# Add your values file to .gitignore
+
+# CronJob schedule - when to run the booking
+# Examples:
+#   "0 8 * * 1"     - Every Monday at 8:00 AM UTC
+#   "0 7 * * 1-5"   - Weekdays at 7:00 AM UTC
+#   "30 6 * * *"    - Daily at 6:30 AM UTC
+schedule: "0 8 * * 1"
+
+# Application configuration
+config:
+  # How many days ahead to search for a tee time
+  daysAhead: 7
+
+  # Time range for acceptable tee times (24-hour format)
+  timeStart: "14:00"
+  timeEnd: "16:30"
+
+  # Your golf course booking website URL
+  baseUrl: "https://your-golf-course.com/"
+
+  # Number of retry attempts if booking fails
+  retries: 5
+
+  # Set to true to test without making actual bookings
+  dryRun: false
+
+  # Optional: comma-separated list of partner member IDs
+  # partners: "partner1,partner2"
+
+# Credentials - REPLACE WITH YOUR ACTUAL VALUES
+secrets:
+  create: true
+
+  # Booking site login credentials
+  username: "your-username"
+  pin: "your-pin"
+
+  # Twilio phone numbers (E.164 format: +1234567890)
+  fromNumber: "+1234567890"
+  toNumber: "+0987654321"
+
+  # Twilio API credentials (from https://console.twilio.com/)
+  twilioAccountSid: "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  twilioAuthToken: "your-auth-token"
+
+# Optional: Resource limits
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
