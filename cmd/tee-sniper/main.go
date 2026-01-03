@@ -3,12 +3,14 @@ package main
 import (
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"math/rand"
+	"os"
 	"time"
 
 	"github.com/stebennett/tee-sniper/pkg/clients"
 	"github.com/stebennett/tee-sniper/pkg/config"
+	"github.com/stebennett/tee-sniper/pkg/logger"
 	"github.com/stebennett/tee-sniper/pkg/teetimes"
 )
 
@@ -56,12 +58,17 @@ func (a *App) Run() error {
 		return fmt.Errorf("login failed: %w", err)
 	}
 
-	log.Printf("login status: %t", ok)
+	slog.Info("login completed", slog.Bool("success", ok))
 
 	nextBookableDate := a.TimeNow().AddDate(0, 0, a.Config.DaysAhead)
 	dateStr := nextBookableDate.Format("02-01-2006")
 
-	log.Printf("Finding tee times between %s and %s on date %s. retries %d", a.Config.TimeStart, a.Config.TimeEnd, dateStr, a.Config.Retries)
+	slog.Info("searching for tee times",
+		slog.String("time_start", a.Config.TimeStart),
+		slog.String("time_end", a.Config.TimeEnd),
+		slog.String("date", dateStr),
+		slog.Int("max_retries", a.Config.Retries),
+	)
 	booked := false
 
 	for i := 0; i < a.Config.Retries; i++ {
@@ -75,58 +82,85 @@ func (a *App) Run() error {
 		availableTimes = teetimes.FilterBetweenTimes(availableTimes, a.Config.TimeStart, a.Config.TimeEnd)
 
 		if len(availableTimes) == 0 {
-			log.Printf("No tee times available between %s and %s on %s. Retrying.", a.Config.TimeStart, a.Config.TimeEnd, dateStr)
+			slog.Info("no tee times available, retrying",
+				slog.String("time_start", a.Config.TimeStart),
+				slog.String("time_end", a.Config.TimeEnd),
+				slog.String("date", dateStr),
+			)
 			retryDelay := GetRandomRetryDelay(5, 15)
-			log.Printf("Waiting %v before retry", retryDelay)
+			slog.Debug("waiting before retry", slog.Duration("delay", retryDelay))
 			a.SleepFunc(retryDelay)
 			continue
 		}
 
-		log.Printf("Found %d available tee times between %s and %s on %s", len(availableTimes), a.Config.TimeStart, a.Config.TimeEnd, dateStr)
+		slog.Info("found available tee times",
+			slog.Int("count", len(availableTimes)),
+			slog.String("time_start", a.Config.TimeStart),
+			slog.String("time_end", a.Config.TimeEnd),
+			slog.String("date", dateStr),
+		)
 
 		timeToBook, err := teetimes.PickRandomTime(availableTimes)
 		if err != nil {
-			log.Printf("Failed to pick random time: %s", err.Error())
+			slog.Warn("failed to pick random time", slog.String("error", err.Error()))
 			continue
 		}
 		playingPartners := a.Config.GetPlayingPartnersList()
 
-		log.Printf("Attempting to book tee time: %s on %s for %d people", timeToBook.Time, dateStr, len(playingPartners)+1)
+		slog.Info("attempting to book tee time",
+			slog.String("tee_time", timeToBook.Time),
+			slog.String("date", dateStr),
+			slog.Int("players", len(playingPartners)+1),
+		)
 
 		bookingID, err := a.BookingClient.BookTimeSlot(timeToBook, playingPartners, a.Config.DryRun)
 		if err != nil {
-			log.Printf("Failed to book time slot: %s", err.Error())
+			slog.Warn("failed to book time slot", slog.String("error", err.Error()))
 			retryDelay := GetRandomRetryDelay(3, 8)
-			log.Printf("Waiting %v before retry", retryDelay)
+			slog.Debug("waiting before retry", slog.Duration("delay", retryDelay))
 			a.SleepFunc(retryDelay)
 			continue
 		}
 
 		if bookingID != "" {
-			log.Printf("Successfully booked tee time: %s on %s (booking ID: %s)", timeToBook.Time, dateStr, bookingID)
+			slog.Info("successfully booked tee time",
+				slog.String("tee_time", timeToBook.Time),
+				slog.String("date", dateStr),
+				slog.String("booking_id", bookingID),
+			)
 
 			for i, partnerID := range playingPartners {
 				slotNumber := i + 2
 				err := a.BookingClient.AddPlayingPartner(bookingID, partnerID, slotNumber, a.Config.DryRun)
 				if err != nil {
-					log.Printf("Failed to add playing partner %s to slot %d: %s", partnerID, slotNumber, err.Error())
+					slog.Warn("failed to add playing partner",
+						slog.String("partner_id", partnerID),
+						slog.Int("slot", slotNumber),
+						slog.String("error", err.Error()),
+					)
 				} else {
-					log.Printf("Added playing partner %s to slot %d", partnerID, slotNumber)
+					slog.Info("added playing partner",
+						slog.String("partner_id", partnerID),
+						slog.Int("slot", slotNumber),
+					)
 				}
 			}
 
 			message := fmt.Sprintf("Successfully booked tee time: %s on %s for %d people", timeToBook.Time, dateStr, len(playingPartners)+1)
 			err := a.TwilioClient.SendSms(a.Config.FromNumber, a.Config.ToNumber, message, a.Config.DryRun)
 			if err != nil {
-				log.Printf("Failed to send SMS: %s", err.Error())
+				slog.Warn("failed to send SMS", slog.String("error", err.Error()))
 			}
-			log.Println(message)
+			slog.Info("booking confirmation", slog.String("message", message))
 			booked = true
 			break
 		} else {
-			log.Printf("Failed to complete booking: %s on %s. Retrying.", timeToBook.Time, dateStr)
+			slog.Warn("booking incomplete, retrying",
+				slog.String("tee_time", timeToBook.Time),
+				slog.String("date", dateStr),
+			)
 			retryDelay := GetRandomRetryDelay(4, 10)
-			log.Printf("Waiting %v before retry", retryDelay)
+			slog.Debug("waiting before retry", slog.Duration("delay", retryDelay))
 			a.SleepFunc(retryDelay)
 		}
 	}
@@ -135,7 +169,7 @@ func (a *App) Run() error {
 		message := fmt.Sprintf("Failed to book tee time on %s", dateStr)
 		err := a.TwilioClient.SendSms(a.Config.FromNumber, a.Config.ToNumber, message, a.Config.DryRun)
 		if err != nil {
-			log.Printf("Failed to send SMS: %s", err.Error())
+			slog.Warn("failed to send failure SMS", slog.String("error", err.Error()))
 		}
 		return fmt.Errorf("%w: %s", ErrNoBooking, message)
 	}
@@ -146,18 +180,28 @@ func (a *App) Run() error {
 func main() {
 	conf, err := config.GetConfig()
 	if err != nil {
-		log.Fatal(err)
+		if errors.Is(err, config.ErrHelp) {
+			os.Exit(0)
+		}
+		// Initialize with default level for error output
+		logger.Init("info")
+		slog.Error("configuration error", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
+
+	logger.Init(conf.LogLevel)
 
 	bookingClient, err := clients.NewBookingClient(conf.BaseUrl)
 	if err != nil {
-		log.Fatal(err)
+		slog.Error("failed to create booking client", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
 
 	twilioClient := clients.NewTwilioClient()
 
 	app := NewApp(conf, bookingClient, twilioClient)
 	if err := app.Run(); err != nil {
-		log.Fatal(err)
+		slog.Error("application failed", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
 }

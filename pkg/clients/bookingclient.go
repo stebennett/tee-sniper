@@ -2,7 +2,7 @@ package clients
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"math/rand"
 	"net/http"
 	"net/http/cookiejar"
@@ -181,9 +181,13 @@ func (w BookingClient) BookTimeSlot(timeSlot models.TimeSlot, playingPartners []
 
 	req.URL.RawQuery = q.Encode()
 
-	log.Printf("Calling %s", req.URL.String())
+	slog.Debug("booking request", slog.String("url", req.URL.String()))
 	if dryRun {
-		log.Printf("DRY RUN: Would have booked time slot: %s for %d people", timeSlot.Time, numSlots)
+		slog.Info("dry run: booking simulated",
+			slog.String("tee_time", timeSlot.Time),
+			slog.Int("players", numSlots),
+			slog.Bool("dry_run", true),
+		)
 		return "dryrun-booking-id", nil
 	}
 
@@ -241,9 +245,14 @@ func (w BookingClient) AddPlayingPartner(bookingID, partnerID string, slotNumber
 	q.Add("partnerslot", strconv.Itoa(slotNumber))
 	req.URL.RawQuery = q.Encode()
 
-	log.Printf("Adding partner: %s", req.URL.String())
+	slog.Debug("adding partner request", slog.String("url", req.URL.String()))
 	if dryRun {
-		log.Printf("DRY RUN: Would have added partner %s to slot %d for booking %s", partnerID, slotNumber, bookingID)
+		slog.Info("dry run: partner addition simulated",
+			slog.String("partner_id", partnerID),
+			slog.Int("slot", slotNumber),
+			slog.String("booking_id", bookingID),
+			slog.Bool("dry_run", true),
+		)
 		return nil
 	}
 
