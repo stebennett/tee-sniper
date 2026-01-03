@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pythonjsonlogger import jsonlogger
 
 from app.config import get_settings
+from app.dependencies import close_redis_pool, get_redis
 from app.models.responses import HealthResponse
 
 
@@ -64,6 +65,8 @@ async def lifespan(app: FastAPI):
 
     # Shutdown
     logger.info("Shutting down tee-sniper-api")
+    await close_redis_pool()
+    logger.info("Redis connection pool closed")
 
 
 def create_app() -> FastAPI:
@@ -96,9 +99,20 @@ def create_app() -> FastAPI:
         description="Returns the health status of the service",
     )
     async def health_check() -> HealthResponse:
+        logger = logging.getLogger(__name__)
+        redis_healthy = False
+
+        try:
+            redis = await get_redis()
+            await redis.ping()
+            redis_healthy = True
+        except Exception as e:
+            logger.warning(f"Redis health check failed: {e}")
+
         return HealthResponse(
-            status="healthy",
+            status="healthy" if redis_healthy else "degraded",
             timestamp=datetime.now(timezone.utc),
+            redis_connected=redis_healthy,
         )
 
     return app

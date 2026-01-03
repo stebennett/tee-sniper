@@ -2,9 +2,12 @@
 
 import os
 from collections.abc import Generator
+from unittest.mock import AsyncMock
 
 import pytest
 from fastapi.testclient import TestClient
+
+from app.services.session_manager import SessionManager
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -48,3 +51,23 @@ def test_client() -> Generator[TestClient, None, None]:
 def shared_secret() -> str:
     """Test shared secret for encryption tests."""
     return "test-shared-secret-for-testing"
+
+
+@pytest.fixture
+def mock_redis() -> AsyncMock:
+    """Create a mock Redis client for unit testing."""
+    redis = AsyncMock()
+    redis.ping.return_value = True
+    redis.get.return_value = None
+    redis.setex.return_value = True
+    redis.delete.return_value = 1
+    redis.exists.return_value = 0
+    redis.expire.return_value = True
+    redis.ttl.return_value = -2
+    return redis
+
+
+@pytest.fixture
+def mock_session_manager(mock_redis) -> SessionManager:
+    """Create a SessionManager with mock Redis for unit testing."""
+    return SessionManager(mock_redis, ttl=1800)
