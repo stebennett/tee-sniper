@@ -24,7 +24,7 @@ def setup_logging() -> None:
         # JSON format for production
         formatter = jsonlogger.JsonFormatter(
             fmt="%(asctime)s %(levelname)s %(name)s %(message)s",
-            rename_fields={"asctime": "timestamp", "levelname": "level"},
+            rename_fields={"asctime": "time", "levelname": "level"},
         )
     else:
         # Text format for development

@@ -1,6 +1,6 @@
 """Pydantic models for API request validation."""
 
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field
 
 
 class LoginRequest(BaseModel):
@@ -9,11 +9,6 @@ class LoginRequest(BaseModel):
     credentials: str = Field(
         ...,
         description="AES-256-GCM encrypted 'username:pin' string, base64 encoded",
-    )
-    base_url: HttpUrl = Field(
-        ...,
-        description="Base URL of the golf course booking site",
-        examples=["https://golfcourse.example.com/"],
     )
 
 

@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     # Security - shared secret for credential encryption
     shared_secret: str
 
+    # Golf course booking site
+    base_url: str  # Base URL of the golf course booking site
+
     # Logging
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
     log_format: Literal["json", "text"] = "json"

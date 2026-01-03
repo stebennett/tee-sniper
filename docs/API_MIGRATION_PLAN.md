@@ -96,12 +96,13 @@ Authenticates user and returns access token.
 **Request:**
 ```json
 {
-  "credentials": "<encrypted_username:pin>",
-  "base_url": "https://example.com/"
+  "credentials": "<encrypted_username:pin>"
 }
 ```
 
 The `credentials` field contains `username:pin` encrypted with AES-256-GCM using a shared secret.
+
+Note: The golf course base URL is configured via the `TSA_BASE_URL` environment variable.
 
 **Response (200):**
 ```json
@@ -393,6 +394,9 @@ class Settings(BaseSettings):
     # Security
     shared_secret: str  # Required - for credential encryption
 
+    # Golf course booking site
+    base_url: str  # Required - base URL of the golf course booking site
+
     # Logging
     log_level: str = "INFO"
     log_format: str = "json"  # json or text
@@ -552,7 +556,6 @@ type APIClient struct {
 
 type LoginRequest struct {
     Credentials string `json:"credentials"`
-    BaseURL     string `json:"base_url"`
 }
 
 type LoginResponse struct {
@@ -601,13 +604,12 @@ func NewAPIClient(apiBaseURL, sharedSecret string) *APIClient {
     }
 }
 
-func (c *APIClient) Login(username, pin, golfSiteURL string) error {
+func (c *APIClient) Login(username, pin string) error {
     // Encrypt credentials
     encrypted := encryptCredentials(username, pin, c.sharedSecret)
 
     reqBody := LoginRequest{
         Credentials: encrypted,
-        BaseURL:     golfSiteURL,
     }
 
     resp, err := c.doRequest("POST", "/api/login", reqBody, false)
@@ -721,9 +723,9 @@ func (a *App) Run() error {
     var client BookingService
 
     if a.Config.UseAPIMode() {
-        // Use API client
+        // Use API client (base_url is configured on the API server)
         apiClient := clients.NewAPIClient(a.Config.APIBaseURL, a.Config.SharedSecret)
-        if err := apiClient.Login(a.Config.Username, a.Config.Pin, a.Config.GolfSiteURL); err != nil {
+        if err := apiClient.Login(a.Config.Username, a.Config.Pin); err != nil {
             return fmt.Errorf("API login failed: %w", err)
         }
         client = apiClient

@@ -15,6 +15,7 @@ def set_test_env() -> Generator[None, None, None]:
     # Set test environment variables
     os.environ["TSA_SHARED_SECRET"] = "test-shared-secret-for-testing"
     os.environ["TSA_REDIS_URL"] = "redis://localhost:6379/0"
+    os.environ["TSA_BASE_URL"] = "https://test-golf-course.example.com/"
     os.environ["TSA_LOG_LEVEL"] = "DEBUG"
     os.environ["TSA_LOG_FORMAT"] = "text"
 
