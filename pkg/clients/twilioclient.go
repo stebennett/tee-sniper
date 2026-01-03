@@ -1,7 +1,7 @@
 package clients
 
 import (
-	"log"
+	"log/slog"
 
 	twilio "github.com/twilio/twilio-go"
 	twilioApi "github.com/twilio/twilio-go/rest/api/v2010"
@@ -33,7 +33,11 @@ func NewTwilioClientWithCreator(creator MessageCreator) *TwilioClient {
 
 func (t TwilioClient) SendSms(from string, to string, body string, dryRun bool) error {
 	if dryRun {
-		log.Printf("DRY RUN: Would have sent SMS from %s to %s with body: %s", from, to, body)
+		slog.Info("dry run: SMS simulated",
+			slog.String("from", from),
+			slog.String("to", to),
+			slog.Bool("dry_run", true),
+		)
 		return nil
 	}
 
