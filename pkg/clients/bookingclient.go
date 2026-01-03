@@ -184,7 +184,7 @@ func (w BookingClient) BookTimeSlot(timeSlot models.TimeSlot, playingPartners []
 	slog.Debug("booking request", slog.String("url", req.URL.String()))
 	if dryRun {
 		slog.Info("dry run: booking simulated",
-			slog.String("time", timeSlot.Time),
+			slog.String("tee_time", timeSlot.Time),
 			slog.Int("players", numSlots),
 			slog.Bool("dry_run", true),
 		)

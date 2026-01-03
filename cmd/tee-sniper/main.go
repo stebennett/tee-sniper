@@ -108,7 +108,7 @@ func (a *App) Run() error {
 		playingPartners := a.Config.GetPlayingPartnersList()
 
 		slog.Info("attempting to book tee time",
-			slog.String("time", timeToBook.Time),
+			slog.String("tee_time", timeToBook.Time),
 			slog.String("date", dateStr),
 			slog.Int("players", len(playingPartners)+1),
 		)
@@ -124,7 +124,7 @@ func (a *App) Run() error {
 
 		if bookingID != "" {
 			slog.Info("successfully booked tee time",
-				slog.String("time", timeToBook.Time),
+				slog.String("tee_time", timeToBook.Time),
 				slog.String("date", dateStr),
 				slog.String("booking_id", bookingID),
 			)
@@ -156,7 +156,7 @@ func (a *App) Run() error {
 			break
 		} else {
 			slog.Warn("booking incomplete, retrying",
-				slog.String("time", timeToBook.Time),
+				slog.String("tee_time", timeToBook.Time),
 				slog.String("date", dateStr),
 			)
 			retryDelay := GetRandomRetryDelay(4, 10)
