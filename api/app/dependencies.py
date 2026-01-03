@@ -1,5 +1,6 @@
 """FastAPI dependency injection providers."""
 
+from collections.abc import AsyncGenerator
 from functools import lru_cache
 from typing import Optional
 
@@ -8,6 +9,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from redis.asyncio import ConnectionPool, Redis
 
 from app.config import Settings, get_settings
+from app.services.booking_client import BookingClient
 from app.services.encryption import EncryptionService
 from app.services.session_manager import SessionManager, SessionNotFoundError
 
@@ -110,3 +112,31 @@ async def get_current_session(
             detail="Invalid or expired session token",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+
+async def get_booking_client(
+    session: dict = Depends(get_current_session),
+) -> AsyncGenerator[BookingClient, None]:
+    """
+    Provide BookingClient with session cookies.
+
+    The client is initialized with cookies from the user's session,
+    allowing authenticated requests to the booking website.
+
+    Args:
+        session: Session data from get_current_session dependency
+
+    Yields:
+        BookingClient: Configured booking client instance
+
+    Example:
+        @router.get("/times")
+        async def get_times(client: BookingClient = Depends(get_booking_client)):
+            return await client.get_availability("22-01-2024")
+    """
+    client = BookingClient(
+        base_url=session["base_url"],
+        cookies=session.get("cookies"),
+    )
+    async with client:
+        yield client
