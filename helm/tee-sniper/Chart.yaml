@@ -1,0 +1,16 @@
+apiVersion: v2
+name: tee-sniper
+description: A Helm chart for deploying tee-sniper golf booking automation as a Kubernetes CronJob
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - golf
+  - booking
+  - automation
+  - cronjob
+home: https://github.com/stebennett/tee-sniper
+sources:
+  - https://github.com/stebennett/tee-sniper
+maintainers:
+  - name: stebennett
