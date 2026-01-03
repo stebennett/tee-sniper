@@ -13,6 +13,10 @@ class HealthResponse(BaseModel):
         default_factory=datetime.utcnow,
         description="Current server timestamp",
     )
+    redis_connected: bool = Field(
+        default=True,
+        description="Whether Redis is connected and healthy",
+    )
 
 
 class LoginResponse(BaseModel):
