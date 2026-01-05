@@ -29,9 +29,9 @@ var (
 )
 
 type BookingClient struct {
-	baseUrl   string
+	baseUrl    string
 	httpClient *http.Client
-	userAgent string
+	userAgent  string
 }
 
 func NewBookingClient(u string) (*BookingClient, error) {
@@ -48,9 +48,9 @@ func NewBookingClient(u string) (*BookingClient, error) {
 	selectedUserAgent := userAgents[rand.Intn(len(userAgents))]
 
 	return &BookingClient{
-		baseUrl:   u,
+		baseUrl:    u,
 		httpClient: client,
-		userAgent: selectedUserAgent,
+		userAgent:  selectedUserAgent,
 	}, nil
 }
 
@@ -81,6 +81,8 @@ func (w BookingClient) Login(username string, password string) (bool, error) {
 
 	w.addBrowserHeaders(req)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	slog.Debug("login request", slog.String("url", url))
 
 	resp, err := w.httpClient.Do(req)
 	if err != nil {
@@ -116,6 +118,8 @@ func (w BookingClient) GetCourseAvailability(dateStr string) ([]models.TimeSlot,
 	q.Add("date", dateStr)
 	req.URL.RawQuery = q.Encode()
 
+	slog.Debug("availability request", slog.String("url", req.URL.String()))
+
 	resp, err := w.httpClient.Do(req)
 	if err != nil {
 		return slots, err
@@ -132,7 +136,7 @@ func (w BookingClient) GetCourseAvailability(dateStr string) ([]models.TimeSlot,
 		return slots, err
 	}
 
-	doc.Find("tr.canreserve,tr.cantreserve").Each(func(i int, s *goquery.Selection) {
+	doc.Find("tr.bookable").Each(func(i int, s *goquery.Selection) {
 		bookingButton := s.Find("a.inlineBooking").Length() != 0
 		peopleBooked := s.Find("span.player-name").Length() != 0
 		blocked := s.Find("div.comp-item").Length() != 0

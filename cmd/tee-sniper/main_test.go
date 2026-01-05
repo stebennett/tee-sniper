@@ -9,6 +9,7 @@ import (
 	"github.com/stebennett/tee-sniper/pkg/clients/mocks"
 	"github.com/stebennett/tee-sniper/pkg/config"
 	"github.com/stebennett/tee-sniper/pkg/models"
+	utilMocks "github.com/stebennett/tee-sniper/pkg/utils/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -75,14 +76,15 @@ func TestNewApp(t *testing.T) {
 		Username: "testuser",
 		Pin:      "1234",
 	}
+	mockClock := utilMocks.NewMockClock(ctrl, time.Now())
 
-	app := NewApp(conf, mockBooking, mockSMS)
+	app := NewApp(conf, mockBooking, mockSMS, mockClock)
 
 	assert.NotNil(t, app)
 	assert.Equal(t, conf, app.Config)
 	assert.NotNil(t, app.BookingClient)
 	assert.NotNil(t, app.TwilioClient)
-	assert.NotNil(t, app.TimeNow)
+	assert.NotNil(t, app.Clock)
 	assert.NotNil(t, app.SleepFunc)
 }
 
@@ -90,16 +92,18 @@ func TestNewApp(t *testing.T) {
 // App.Run() Tests
 // =============================================================================
 
-func createTestApp(t *testing.T, conf config.Config) (*App, *mocks.MockBookingService, *mocks.MockSMSService, *gomock.Controller) {
+func createTestApp(t *testing.T, conf config.Config, rt time.Time) (*App, *mocks.MockBookingService, *mocks.MockSMSService, *gomock.Controller) {
 	ctrl := gomock.NewController(t)
 	mockBooking := mocks.NewMockBookingService(ctrl)
 	mockSMS := mocks.NewMockSMSService(ctrl)
+
+	mockClock := utilMocks.NewMockClock(ctrl, rt)
 
 	app := &App{
 		Config:        conf,
 		BookingClient: mockBooking,
 		TwilioClient:  mockSMS,
-		TimeNow:       func() time.Time { return time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC) },
+		Clock:         mockClock,
 		SleepFunc:     func(d time.Duration) {},
 	}
 
@@ -122,7 +126,7 @@ func defaultTestConfig() config.Config {
 }
 
 func TestRunLoginError(t *testing.T) {
-	app, mockBooking, _, ctrl := createTestApp(t, defaultTestConfig())
+	app, mockBooking, _, ctrl := createTestApp(t, defaultTestConfig(), time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
 	defer ctrl.Finish()
 
 	mockBooking.EXPECT().
@@ -136,7 +140,7 @@ func TestRunLoginError(t *testing.T) {
 }
 
 func TestRunGetAvailabilityError(t *testing.T) {
-	app, mockBooking, _, ctrl := createTestApp(t, defaultTestConfig())
+	app, mockBooking, _, ctrl := createTestApp(t, defaultTestConfig(), time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
 	defer ctrl.Finish()
 
 	mockBooking.EXPECT().
@@ -153,7 +157,7 @@ func TestRunGetAvailabilityError(t *testing.T) {
 }
 
 func TestRunSuccessfulBookingFirstAttempt(t *testing.T) {
-	app, mockBooking, mockSMS, ctrl := createTestApp(t, defaultTestConfig())
+	app, mockBooking, mockSMS, ctrl := createTestApp(t, defaultTestConfig(), time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
 	defer ctrl.Finish()
 
 	availableSlots := []models.TimeSlot{
@@ -182,7 +186,7 @@ func TestRunSuccessfulBookingWithPartners(t *testing.T) {
 	conf := defaultTestConfig()
 	conf.PlayingPartners = "partner1,partner2"
 
-	app, mockBooking, mockSMS, ctrl := createTestApp(t, conf)
+	app, mockBooking, mockSMS, ctrl := createTestApp(t, conf, time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
 	defer ctrl.Finish()
 
 	availableSlots := []models.TimeSlot{
@@ -217,7 +221,7 @@ func TestRunPartnerAddFailureContinues(t *testing.T) {
 	conf := defaultTestConfig()
 	conf.PlayingPartners = "partner1,partner2"
 
-	app, mockBooking, mockSMS, ctrl := createTestApp(t, conf)
+	app, mockBooking, mockSMS, ctrl := createTestApp(t, conf, time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
 	defer ctrl.Finish()
 
 	availableSlots := []models.TimeSlot{
@@ -252,7 +256,7 @@ func TestRunRetryOnNoAvailability(t *testing.T) {
 	conf := defaultTestConfig()
 	conf.Retries = 2
 
-	app, mockBooking, mockSMS, ctrl := createTestApp(t, conf)
+	app, mockBooking, mockSMS, ctrl := createTestApp(t, conf, time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
 	defer ctrl.Finish()
 
 	emptySlots := []models.TimeSlot{}
@@ -289,7 +293,7 @@ func TestRunRetryOnBookingFailure(t *testing.T) {
 	conf := defaultTestConfig()
 	conf.Retries = 2
 
-	app, mockBooking, mockSMS, ctrl := createTestApp(t, conf)
+	app, mockBooking, mockSMS, ctrl := createTestApp(t, conf, time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
 	defer ctrl.Finish()
 
 	availableSlots := []models.TimeSlot{
@@ -326,7 +330,7 @@ func TestRunRetryOnEmptyBookingID(t *testing.T) {
 	conf := defaultTestConfig()
 	conf.Retries = 2
 
-	app, mockBooking, mockSMS, ctrl := createTestApp(t, conf)
+	app, mockBooking, mockSMS, ctrl := createTestApp(t, conf, time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
 	defer ctrl.Finish()
 
 	availableSlots := []models.TimeSlot{
@@ -363,7 +367,7 @@ func TestRunAllRetriesExhausted(t *testing.T) {
 	conf := defaultTestConfig()
 	conf.Retries = 2
 
-	app, mockBooking, mockSMS, ctrl := createTestApp(t, conf)
+	app, mockBooking, mockSMS, ctrl := createTestApp(t, conf, time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
 	defer ctrl.Finish()
 
 	emptySlots := []models.TimeSlot{}
@@ -390,7 +394,7 @@ func TestRunSendsFailureSMS(t *testing.T) {
 	conf := defaultTestConfig()
 	conf.Retries = 1
 
-	app, mockBooking, mockSMS, ctrl := createTestApp(t, conf)
+	app, mockBooking, mockSMS, ctrl := createTestApp(t, conf, time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
 	defer ctrl.Finish()
 
 	emptySlots := []models.TimeSlot{}
@@ -412,7 +416,7 @@ func TestRunSendsFailureSMS(t *testing.T) {
 }
 
 func TestRunSMSErrorDoesNotFailBooking(t *testing.T) {
-	app, mockBooking, mockSMS, ctrl := createTestApp(t, defaultTestConfig())
+	app, mockBooking, mockSMS, ctrl := createTestApp(t, defaultTestConfig(), time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
 	defer ctrl.Finish()
 
 	availableSlots := []models.TimeSlot{
@@ -441,7 +445,7 @@ func TestRunDryRunMode(t *testing.T) {
 	conf := defaultTestConfig()
 	conf.DryRun = true
 
-	app, mockBooking, mockSMS, ctrl := createTestApp(t, conf)
+	app, mockBooking, mockSMS, ctrl := createTestApp(t, conf, time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
 	defer ctrl.Finish()
 
 	availableSlots := []models.TimeSlot{
@@ -470,7 +474,7 @@ func TestRunFiltersNonBookableSlots(t *testing.T) {
 	conf := defaultTestConfig()
 	conf.Retries = 1
 
-	app, mockBooking, mockSMS, ctrl := createTestApp(t, conf)
+	app, mockBooking, mockSMS, ctrl := createTestApp(t, conf, time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
 	defer ctrl.Finish()
 
 	slotsWithNonBookable := []models.TimeSlot{
@@ -501,7 +505,7 @@ func TestRunFiltersOutsideTimeRange(t *testing.T) {
 	conf.TimeEnd = "16:00"
 	conf.Retries = 1
 
-	app, mockBooking, mockSMS, ctrl := createTestApp(t, conf)
+	app, mockBooking, mockSMS, ctrl := createTestApp(t, conf, time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
 	defer ctrl.Finish()
 
 	slotsOutsideRange := []models.TimeSlot{
@@ -530,12 +534,10 @@ func TestRunUsesCorrectDateFormat(t *testing.T) {
 	conf := defaultTestConfig()
 	conf.DaysAhead = 10
 
-	app, mockBooking, mockSMS, ctrl := createTestApp(t, conf)
-	defer ctrl.Finish()
+	runTime := time.Date(2024, 3, 5, 10, 0, 0, 0, time.UTC)
 
-	app.TimeNow = func() time.Time {
-		return time.Date(2024, 3, 5, 10, 0, 0, 0, time.UTC)
-	}
+	app, mockBooking, mockSMS, ctrl := createTestApp(t, conf, runTime)
+	defer ctrl.Finish()
 
 	availableSlots := []models.TimeSlot{
 		{Time: "10:00", CanBook: true, BookingForm: map[string]string{"id": "1"}},
@@ -569,12 +571,14 @@ func TestRunSleepCalledOnRetry(t *testing.T) {
 	mockBooking := mocks.NewMockBookingService(ctrl)
 	mockSMS := mocks.NewMockSMSService(ctrl)
 
+	mockClock := utilMocks.NewMockClock(ctrl, time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
+
 	sleepCalled := false
 	app := &App{
 		Config:        conf,
 		BookingClient: mockBooking,
 		TwilioClient:  mockSMS,
-		TimeNow:       func() time.Time { return time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC) },
+		Clock:         mockClock,
 		SleepFunc: func(d time.Duration) {
 			sleepCalled = true
 			assert.Greater(t, d, time.Duration(0))
