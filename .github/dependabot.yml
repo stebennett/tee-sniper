@@ -4,6 +4,15 @@
 # https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
 
 version: 2
+
+registries:
+  dhi:
+    type: docker-registry
+    url: dhi.io
+    username: ${{ secrets.DOCKERHUB_USER }}
+    password: ${{ secrets.DOCKERHUB_TOKEN }}
+    replaces-base: false
+
 updates:
   - package-ecosystem: "gomod"
     directory: "/"
