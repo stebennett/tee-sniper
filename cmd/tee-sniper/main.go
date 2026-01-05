@@ -11,6 +11,7 @@ import (
 	"github.com/stebennett/tee-sniper/pkg/clients"
 	"github.com/stebennett/tee-sniper/pkg/config"
 	"github.com/stebennett/tee-sniper/pkg/logger"
+	"github.com/stebennett/tee-sniper/pkg/models"
 	"github.com/stebennett/tee-sniper/pkg/teetimes"
 	"github.com/stebennett/tee-sniper/pkg/utils"
 )
@@ -18,6 +19,15 @@ import (
 var (
 	ErrNoBooking = errors.New("failed to book tee time")
 )
+
+// extractTimes returns a slice of time strings from a slice of TimeSlots
+func extractTimes(slots []models.TimeSlot) []string {
+	times := make([]string, len(slots))
+	for i, slot := range slots {
+		times[i] = slot.Time
+	}
+	return times
+}
 
 // GetRandomRetryDelay returns a random delay between min and max seconds with jitter
 func GetRandomRetryDelay(minSeconds, maxSeconds int) time.Duration {
@@ -78,9 +88,14 @@ func (a *App) Run() error {
 			return fmt.Errorf("failed to get availability: %w", err)
 		}
 
+		slog.Debug("found available times", slog.Int("count", len(availableTimes)), slog.Any("times", extractTimes(availableTimes)))
+
 		availableTimes = teetimes.FilterByBookable(availableTimes)
+		slog.Debug("filtered by bookable", slog.Int("count", len(availableTimes)), slog.Any("times", extractTimes(availableTimes)))
+
 		availableTimes = teetimes.SortTimesAscending(availableTimes)
 		availableTimes = teetimes.FilterBetweenTimes(availableTimes, a.Config.TimeStart, a.Config.TimeEnd)
+		slog.Debug("filtered between times", slog.Int("count", len(availableTimes)), slog.String("start", a.Config.TimeStart), slog.String("end", a.Config.TimeEnd), slog.Any("times", extractTimes(availableTimes)))
 
 		if len(availableTimes) == 0 {
 			slog.Info("no tee times available, retrying",
