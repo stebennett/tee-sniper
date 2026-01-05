@@ -83,7 +83,7 @@ jobs:
           type=raw,value=latest
 
     - name: Build and push Go Docker image
-      uses: docker/build-push-action@v5
+      uses: docker/build-push-action@v6
       with:
         context: .
         push: true
@@ -103,7 +103,7 @@ jobs:
           type=raw,value=latest
 
     - name: Build and push API Docker image
-      uses: docker/build-push-action@v5
+      uses: docker/build-push-action@v6
       with:
         context: ./api
         push: true
