@@ -12,6 +12,7 @@ import (
 	"github.com/stebennett/tee-sniper/pkg/config"
 	"github.com/stebennett/tee-sniper/pkg/logger"
 	"github.com/stebennett/tee-sniper/pkg/teetimes"
+	"github.com/stebennett/tee-sniper/pkg/utils"
 )
 
 var (
@@ -36,17 +37,17 @@ type App struct {
 	Config        config.Config
 	BookingClient clients.BookingService
 	TwilioClient  clients.SMSService
-	TimeNow       func() time.Time
+	Clock         utils.Clock
 	SleepFunc     func(time.Duration)
 }
 
 // NewApp creates a new App with real dependencies
-func NewApp(conf config.Config, bookingClient clients.BookingService, twilioClient clients.SMSService) *App {
+func NewApp(conf config.Config, bookingClient clients.BookingService, twilioClient clients.SMSService, clock utils.Clock) *App {
 	return &App{
 		Config:        conf,
 		BookingClient: bookingClient,
 		TwilioClient:  twilioClient,
-		TimeNow:       time.Now,
+		Clock:         clock,
 		SleepFunc:     time.Sleep,
 	}
 }
@@ -60,7 +61,7 @@ func (a *App) Run() error {
 
 	slog.Info("login completed", slog.Bool("success", ok))
 
-	nextBookableDate := a.TimeNow().AddDate(0, 0, a.Config.DaysAhead)
+	nextBookableDate := a.Clock.Now().AddDate(0, 0, a.Config.DaysAhead)
 	dateStr := nextBookableDate.Format("02-01-2006")
 
 	slog.Info("searching for tee times",
@@ -199,7 +200,13 @@ func main() {
 
 	twilioClient := clients.NewTwilioClient()
 
-	app := NewApp(conf, bookingClient, twilioClient)
+	clock, err := utils.NewRealClock("Europe/London")
+	if err != nil {
+		slog.Error("failed to create a clock", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+
+	app := NewApp(conf, bookingClient, twilioClient, clock)
 	if err := app.Run(); err != nil {
 		slog.Error("application failed", slog.String("error", err.Error()))
 		os.Exit(1)
