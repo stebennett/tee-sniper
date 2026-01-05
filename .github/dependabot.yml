@@ -18,3 +18,16 @@ updates:
       python-dependencies:
         patterns:
           - "*"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "docker"
+    directories:
+    - "/api"
+    - "/"
+    schedule:
+      interval: "weekly"
+      
