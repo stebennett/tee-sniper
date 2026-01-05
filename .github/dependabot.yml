@@ -39,4 +39,5 @@ updates:
     - "/"
     schedule:
       interval: "weekly"
+    registries: "*"
       
