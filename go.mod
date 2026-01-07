@@ -20,6 +20,6 @@ require (
 	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/jessevdk/go-flags v1.6.1
 	github.com/stretchr/testify v1.11.1
-	github.com/twilio/twilio-go v1.29.0
+	github.com/twilio/twilio-go v1.29.1
 	golang.org/x/net v0.47.0 // indirect
 )
