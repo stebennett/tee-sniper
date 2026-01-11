@@ -1,0 +1,101 @@
+# Example ArgoCD Application manifest for tee-sniper
+#
+# This manifest deploys tee-sniper as a CronJob to your Kubernetes cluster.
+#
+# Prerequisites:
+# 1. ArgoCD installed in your cluster
+# 2. Secrets configured (see secrets-example.yaml or use external secret management)
+#
+# Usage:
+#   kubectl apply -f application.yaml -n argocd
+#
+# For production deployments, consider:
+# - Using Sealed Secrets or External Secrets Operator for credentials
+# - Storing values in a separate private repository
+# - Using ArgoCD ApplicationSets for multi-environment deployments
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tee-sniper
+  namespace: argocd
+  # Finalizer ensures proper cleanup when the Application is deleted
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  source:
+    # Repository containing the Helm chart
+    repoURL: https://github.com/stebennett/tee-sniper.git
+    targetRevision: HEAD
+    path: helm/tee-sniper
+
+    # Helm-specific configuration
+    helm:
+      # Release name
+      releaseName: tee-sniper
+
+      # Values file from the repository (optional)
+      # valueFiles:
+      #   - values-production.yaml
+
+      # Inline values (override values.yaml)
+      values: |
+        schedule: "0 8 * * 1"  # Every Monday at 8:00 AM UTC
+
+        config:
+          daysAhead: 7
+          timeStart: "14:00"
+          timeEnd: "16:30"
+          baseUrl: "https://your-golf-course.com/"
+          retries: 5
+          dryRun: false
+
+        # For production, set secrets.create: false and use existingSecret
+        # with External Secrets Operator or Sealed Secrets
+        secrets:
+          create: false
+
+        existingSecret: "tee-sniper-credentials"
+
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+
+  destination:
+    # Target cluster (use https://kubernetes.default.svc for in-cluster)
+    server: https://kubernetes.default.svc
+    # Target namespace
+    namespace: tee-sniper
+
+  syncPolicy:
+    # Automated sync configuration
+    automated:
+      # Automatically prune resources that are no longer defined
+      prune: true
+      # Automatically sync when changes are detected
+      selfHeal: true
+      # Allow empty resources (useful for conditional templates)
+      allowEmpty: false
+
+    # Sync options
+    syncOptions:
+      # Create namespace if it doesn't exist
+      - CreateNamespace=true
+      # Apply out of sync resources only
+      - ApplyOutOfSyncOnly=true
+      # Server-side apply for better conflict resolution
+      - ServerSideApply=true
+
+    # Retry configuration for failed syncs
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

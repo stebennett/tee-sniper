@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "tee-sniper.configMapName" . }}
+  labels:
+    {{- include "tee-sniper.labels" . | nindent 4 }}
+data:
+  TS_DAYS_AHEAD: {{ .Values.config.daysAhead | quote }}
+  TS_TIME_START: {{ .Values.config.timeStart | quote }}
+  TS_TIME_END: {{ .Values.config.timeEnd | quote }}
+  TS_BASEURL: {{ .Values.config.baseUrl | quote }}
+  TS_RETRIES: {{ .Values.config.retries | quote }}
+  TS_DRY_RUN: {{ .Values.config.dryRun | quote }}
+  {{- if .Values.config.partners }}
+  TS_PARTNERS: {{ .Values.config.partners | quote }}
+  {{- end }}

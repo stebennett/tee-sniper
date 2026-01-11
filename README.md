@@ -79,6 +79,26 @@ Pre-built images are available from GitHub Container Registry:
 docker pull ghcr.io/stebennett/tee-sniper:latest
 ```
 
+### Kubernetes with Helm
+
+Deploy to Kubernetes as a CronJob using the included Helm chart:
+
+```bash
+# Install with Helm
+helm install tee-sniper ./helm/tee-sniper \
+    --namespace tee-sniper \
+    --create-namespace \
+    --set config.baseUrl="https://your-golf-course.com/" \
+    --set secrets.username="your-username" \
+    --set secrets.pin="your-pin" \
+    --set secrets.fromNumber="+1234567890" \
+    --set secrets.toNumber="+0987654321" \
+    --set secrets.twilioAccountSid="ACxxxx" \
+    --set secrets.twilioAuthToken="your-token"
+```
+
+For ArgoCD deployment, see the example manifests in `argocd/`. Full Helm chart documentation is available in [`helm/tee-sniper/README.md`](helm/tee-sniper/README.md).
+
 ## Configuration
 
 ### Environment Variables
@@ -222,6 +242,14 @@ tee-sniper/
 │   └── teetimes/
 │       ├── teetimes.go       # Tee time filtering and selection logic
 │       └── teetimes_test.go
+├── helm/
+│   └── tee-sniper/           # Helm chart for Kubernetes deployment
+│       ├── Chart.yaml
+│       ├── values.yaml
+│       └── templates/
+├── argocd/                   # ArgoCD Application examples
+│   ├── application.yaml
+│   └── secrets-example.yaml
 ├── testdata/                 # HTML fixtures for testing
 ├── .github/workflows/
 │   ├── build.yml             # CI build and test workflow
