@@ -387,7 +387,7 @@ func TestRunAllRetriesExhausted(t *testing.T) {
 	err := app.Run()
 
 	assert.Error(t, err)
-	assert.True(t, errors.Is(err, ErrNoBooking))
+	assert.True(t, errors.Is(err, ErrNoTimesMatched))
 }
 
 func TestRunSendsFailureSMS(t *testing.T) {
@@ -496,7 +496,7 @@ func TestRunFiltersNonBookableSlots(t *testing.T) {
 	err := app.Run()
 
 	assert.Error(t, err)
-	assert.True(t, errors.Is(err, ErrNoBooking))
+	assert.True(t, errors.Is(err, ErrNoTimesMatched))
 }
 
 func TestRunFiltersOutsideTimeRange(t *testing.T) {
@@ -527,7 +527,7 @@ func TestRunFiltersOutsideTimeRange(t *testing.T) {
 	err := app.Run()
 
 	assert.Error(t, err)
-	assert.True(t, errors.Is(err, ErrNoBooking))
+	assert.True(t, errors.Is(err, ErrNoTimesMatched))
 }
 
 func TestRunUsesCorrectDateFormat(t *testing.T) {
