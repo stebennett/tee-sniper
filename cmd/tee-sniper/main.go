@@ -17,7 +17,8 @@ import (
 )
 
 var (
-	ErrNoBooking = errors.New("failed to book tee time")
+	ErrNoBooking      = errors.New("failed to book tee time")
+	ErrNoTimesMatched = errors.New("no tee times matched preferences")
 )
 
 // extractTimes returns a slice of time strings from a slice of TimeSlots
@@ -187,7 +188,7 @@ func (a *App) Run() error {
 		if err != nil {
 			slog.Warn("failed to send failure SMS", slog.String("error", err.Error()))
 		}
-		return fmt.Errorf("%w: %s", ErrNoBooking, message)
+		return ErrNoTimesMatched
 	}
 
 	return nil
@@ -223,6 +224,10 @@ func main() {
 
 	app := NewApp(conf, bookingClient, twilioClient, clock)
 	if err := app.Run(); err != nil {
+		if errors.Is(err, ErrNoTimesMatched) {
+			slog.Info("completed without booking", slog.String("reason", err.Error()))
+			os.Exit(0)
+		}
 		slog.Error("application failed", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
