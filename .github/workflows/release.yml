@@ -24,6 +24,10 @@ jobs:
         fetch-depth: 0
         fetch-tags: true
 
+    - name: Set up Go
+      uses: actions/setup-go@v6
+
+
     - name: Set up Python
       uses: actions/setup-python@v7
       with:
