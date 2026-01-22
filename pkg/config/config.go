@@ -23,8 +23,7 @@ type Config struct {
 	Pin      string `short:"p" long:"pin" env:"TS_PIN" required:"true" description:"The pin associated with the username for booking"`
 	BaseUrl  string `short:"b" long:"baseurl" env:"TS_BASEURL" required:"true" description:"The host for the booking website"`
 
-	FromNumber      string `short:"f" long:"fromnumber" env:"TS_FROM_NUMBER" required:"true" description:"The number to send the confirmation SMS from"`
-	ToNumber        string `short:"n" long:"tonumber" env:"TS_TO_NUMBER" required:"true" description:"The number to send the confirmation SMS to"`
+	AppriseURL      string `short:"a" long:"apprise" env:"APPRISE_URL" required:"true" description:"The Apprise notification URL for sending booking confirmations"`
 	PlayingPartners string `short:"s" long:"partners" env:"TS_PARTNERS" description:"Comma-separated list of playing partner IDs"`
 }
 

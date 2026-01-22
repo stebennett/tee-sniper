@@ -93,39 +93,39 @@ func (mr *MockBookingServiceMockRecorder) Login(username, password interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Login", reflect.TypeOf((*MockBookingService)(nil).Login), username, password)
 }
 
-// MockSMSService is a mock of SMSService interface.
-type MockSMSService struct {
+// MockNotificationService is a mock of NotificationService interface.
+type MockNotificationService struct {
 	ctrl     *gomock.Controller
-	recorder *MockSMSServiceMockRecorder
+	recorder *MockNotificationServiceMockRecorder
 }
 
-// MockSMSServiceMockRecorder is the mock recorder for MockSMSService.
-type MockSMSServiceMockRecorder struct {
-	mock *MockSMSService
+// MockNotificationServiceMockRecorder is the mock recorder for MockNotificationService.
+type MockNotificationServiceMockRecorder struct {
+	mock *MockNotificationService
 }
 
-// NewMockSMSService creates a new mock instance.
-func NewMockSMSService(ctrl *gomock.Controller) *MockSMSService {
-	mock := &MockSMSService{ctrl: ctrl}
-	mock.recorder = &MockSMSServiceMockRecorder{mock}
+// NewMockNotificationService creates a new mock instance.
+func NewMockNotificationService(ctrl *gomock.Controller) *MockNotificationService {
+	mock := &MockNotificationService{ctrl: ctrl}
+	mock.recorder = &MockNotificationServiceMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockSMSService) EXPECT() *MockSMSServiceMockRecorder {
+func (m *MockNotificationService) EXPECT() *MockNotificationServiceMockRecorder {
 	return m.recorder
 }
 
-// SendSms mocks base method.
-func (m *MockSMSService) SendSms(from, to, body string, dryRun bool) error {
+// SendNotification mocks base method.
+func (m *MockNotificationService) SendNotification(message string, dryRun bool) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SendSms", from, to, body, dryRun)
+	ret := m.ctrl.Call(m, "SendNotification", message, dryRun)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// SendSms indicates an expected call of SendSms.
-func (mr *MockSMSServiceMockRecorder) SendSms(from, to, body, dryRun interface{}) *gomock.Call {
+// SendNotification indicates an expected call of SendNotification.
+func (mr *MockNotificationServiceMockRecorder) SendNotification(message, dryRun interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendSms", reflect.TypeOf((*MockSMSService)(nil).SendSms), from, to, body, dryRun)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendNotification", reflect.TypeOf((*MockNotificationService)(nil).SendNotification), message, dryRun)
 }
