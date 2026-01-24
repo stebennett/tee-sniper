@@ -71,19 +71,19 @@ func TestNewApp(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockBooking := mocks.NewMockBookingService(ctrl)
-	mockSMS := mocks.NewMockSMSService(ctrl)
+	mockNotification := mocks.NewMockNotificationService(ctrl)
 	conf := config.Config{
 		Username: "testuser",
 		Pin:      "1234",
 	}
 	mockClock := utilMocks.NewMockClock(ctrl, time.Now())
 
-	app := NewApp(conf, mockBooking, mockSMS, mockClock)
+	app := NewApp(conf, mockBooking, mockNotification, mockClock)
 
 	assert.NotNil(t, app)
 	assert.Equal(t, conf, app.Config)
 	assert.NotNil(t, app.BookingClient)
-	assert.NotNil(t, app.TwilioClient)
+	assert.NotNil(t, app.NotificationClient)
 	assert.NotNil(t, app.Clock)
 	assert.NotNil(t, app.SleepFunc)
 }
@@ -92,22 +92,22 @@ func TestNewApp(t *testing.T) {
 // App.Run() Tests
 // =============================================================================
 
-func createTestApp(t *testing.T, conf config.Config, rt time.Time) (*App, *mocks.MockBookingService, *mocks.MockSMSService, *gomock.Controller) {
+func createTestApp(t *testing.T, conf config.Config, rt time.Time) (*App, *mocks.MockBookingService, *mocks.MockNotificationService, *gomock.Controller) {
 	ctrl := gomock.NewController(t)
 	mockBooking := mocks.NewMockBookingService(ctrl)
-	mockSMS := mocks.NewMockSMSService(ctrl)
+	mockNotification := mocks.NewMockNotificationService(ctrl)
 
 	mockClock := utilMocks.NewMockClock(ctrl, rt)
 
 	app := &App{
-		Config:        conf,
-		BookingClient: mockBooking,
-		TwilioClient:  mockSMS,
-		Clock:         mockClock,
-		SleepFunc:     func(d time.Duration) {},
+		Config:             conf,
+		BookingClient:      mockBooking,
+		NotificationClient: mockNotification,
+		Clock:              mockClock,
+		SleepFunc:          func(d time.Duration) {},
 	}
 
-	return app, mockBooking, mockSMS, ctrl
+	return app, mockBooking, mockNotification, ctrl
 }
 
 func defaultTestConfig() config.Config {
@@ -120,8 +120,7 @@ func defaultTestConfig() config.Config {
 		Username:   "testuser",
 		Pin:        "1234",
 		BaseUrl:    "https://example.com",
-		FromNumber: "+1234567890",
-		ToNumber:   "+0987654321",
+		AppriseURL: "http://localhost:8000/notify",
 	}
 }
 
@@ -157,7 +156,7 @@ func TestRunGetAvailabilityError(t *testing.T) {
 }
 
 func TestRunSuccessfulBookingFirstAttempt(t *testing.T) {
-	app, mockBooking, mockSMS, ctrl := createTestApp(t, defaultTestConfig(), time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
+	app, mockBooking, mockNotification, ctrl := createTestApp(t, defaultTestConfig(), time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
 	defer ctrl.Finish()
 
 	availableSlots := []models.TimeSlot{
@@ -173,8 +172,8 @@ func TestRunSuccessfulBookingFirstAttempt(t *testing.T) {
 	mockBooking.EXPECT().
 		BookTimeSlot(gomock.Any(), gomock.Any(), false).
 		Return("booking-123", nil)
-	mockSMS.EXPECT().
-		SendSms("+1234567890", "+0987654321", gomock.Any(), false).
+	mockNotification.EXPECT().
+		SendNotification(gomock.Any(), false).
 		Return(nil)
 
 	err := app.Run()
@@ -186,7 +185,7 @@ func TestRunSuccessfulBookingWithPartners(t *testing.T) {
 	conf := defaultTestConfig()
 	conf.PlayingPartners = "partner1,partner2"
 
-	app, mockBooking, mockSMS, ctrl := createTestApp(t, conf, time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
+	app, mockBooking, mockNotification, ctrl := createTestApp(t, conf, time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
 	defer ctrl.Finish()
 
 	availableSlots := []models.TimeSlot{
@@ -208,8 +207,8 @@ func TestRunSuccessfulBookingWithPartners(t *testing.T) {
 	mockBooking.EXPECT().
 		AddPlayingPartner("booking-123", "partner2", 3, false).
 		Return(nil)
-	mockSMS.EXPECT().
-		SendSms("+1234567890", "+0987654321", gomock.Any(), false).
+	mockNotification.EXPECT().
+		SendNotification(gomock.Any(), false).
 		Return(nil)
 
 	err := app.Run()
@@ -221,7 +220,7 @@ func TestRunPartnerAddFailureContinues(t *testing.T) {
 	conf := defaultTestConfig()
 	conf.PlayingPartners = "partner1,partner2"
 
-	app, mockBooking, mockSMS, ctrl := createTestApp(t, conf, time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
+	app, mockBooking, mockNotification, ctrl := createTestApp(t, conf, time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
 	defer ctrl.Finish()
 
 	availableSlots := []models.TimeSlot{
@@ -243,8 +242,8 @@ func TestRunPartnerAddFailureContinues(t *testing.T) {
 	mockBooking.EXPECT().
 		AddPlayingPartner("booking-123", "partner2", 3, false).
 		Return(nil)
-	mockSMS.EXPECT().
-		SendSms("+1234567890", "+0987654321", gomock.Any(), false).
+	mockNotification.EXPECT().
+		SendNotification(gomock.Any(), false).
 		Return(nil)
 
 	err := app.Run()
@@ -256,7 +255,7 @@ func TestRunRetryOnNoAvailability(t *testing.T) {
 	conf := defaultTestConfig()
 	conf.Retries = 2
 
-	app, mockBooking, mockSMS, ctrl := createTestApp(t, conf, time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
+	app, mockBooking, mockNotification, ctrl := createTestApp(t, conf, time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
 	defer ctrl.Finish()
 
 	emptySlots := []models.TimeSlot{}
@@ -280,8 +279,8 @@ func TestRunRetryOnNoAvailability(t *testing.T) {
 	mockBooking.EXPECT().
 		BookTimeSlot(gomock.Any(), gomock.Any(), false).
 		Return("booking-123", nil)
-	mockSMS.EXPECT().
-		SendSms(gomock.Any(), gomock.Any(), gomock.Any(), false).
+	mockNotification.EXPECT().
+		SendNotification(gomock.Any(), false).
 		Return(nil)
 
 	err := app.Run()
@@ -293,7 +292,7 @@ func TestRunRetryOnBookingFailure(t *testing.T) {
 	conf := defaultTestConfig()
 	conf.Retries = 2
 
-	app, mockBooking, mockSMS, ctrl := createTestApp(t, conf, time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
+	app, mockBooking, mockNotification, ctrl := createTestApp(t, conf, time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
 	defer ctrl.Finish()
 
 	availableSlots := []models.TimeSlot{
@@ -317,8 +316,8 @@ func TestRunRetryOnBookingFailure(t *testing.T) {
 			Return("booking-123", nil),
 	)
 
-	mockSMS.EXPECT().
-		SendSms(gomock.Any(), gomock.Any(), gomock.Any(), false).
+	mockNotification.EXPECT().
+		SendNotification(gomock.Any(), false).
 		Return(nil)
 
 	err := app.Run()
@@ -330,7 +329,7 @@ func TestRunRetryOnEmptyBookingID(t *testing.T) {
 	conf := defaultTestConfig()
 	conf.Retries = 2
 
-	app, mockBooking, mockSMS, ctrl := createTestApp(t, conf, time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
+	app, mockBooking, mockNotification, ctrl := createTestApp(t, conf, time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
 	defer ctrl.Finish()
 
 	availableSlots := []models.TimeSlot{
@@ -354,8 +353,8 @@ func TestRunRetryOnEmptyBookingID(t *testing.T) {
 			Return("booking-123", nil),
 	)
 
-	mockSMS.EXPECT().
-		SendSms(gomock.Any(), gomock.Any(), gomock.Any(), false).
+	mockNotification.EXPECT().
+		SendNotification(gomock.Any(), false).
 		Return(nil)
 
 	err := app.Run()
@@ -367,7 +366,7 @@ func TestRunAllRetriesExhausted(t *testing.T) {
 	conf := defaultTestConfig()
 	conf.Retries = 2
 
-	app, mockBooking, mockSMS, ctrl := createTestApp(t, conf, time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
+	app, mockBooking, mockNotification, ctrl := createTestApp(t, conf, time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
 	defer ctrl.Finish()
 
 	emptySlots := []models.TimeSlot{}
@@ -380,8 +379,8 @@ func TestRunAllRetriesExhausted(t *testing.T) {
 		Return(emptySlots, nil).
 		Times(2)
 
-	mockSMS.EXPECT().
-		SendSms("+1234567890", "+0987654321", gomock.Any(), false).
+	mockNotification.EXPECT().
+		SendNotification(gomock.Any(), false).
 		Return(nil)
 
 	err := app.Run()
@@ -390,11 +389,11 @@ func TestRunAllRetriesExhausted(t *testing.T) {
 	assert.True(t, errors.Is(err, ErrNoTimesMatched))
 }
 
-func TestRunSendsFailureSMS(t *testing.T) {
+func TestRunSendsFailureNotification(t *testing.T) {
 	conf := defaultTestConfig()
 	conf.Retries = 1
 
-	app, mockBooking, mockSMS, ctrl := createTestApp(t, conf, time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
+	app, mockBooking, mockNotification, ctrl := createTestApp(t, conf, time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
 	defer ctrl.Finish()
 
 	emptySlots := []models.TimeSlot{}
@@ -406,8 +405,8 @@ func TestRunSendsFailureSMS(t *testing.T) {
 		GetCourseAvailability("22-01-2024").
 		Return(emptySlots, nil)
 
-	mockSMS.EXPECT().
-		SendSms("+1234567890", "+0987654321", "Failed to book tee time on 22-01-2024", false).
+	mockNotification.EXPECT().
+		SendNotification("Failed to book tee time on 22-01-2024", false).
 		Return(nil)
 
 	err := app.Run()
@@ -415,8 +414,8 @@ func TestRunSendsFailureSMS(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestRunSMSErrorDoesNotFailBooking(t *testing.T) {
-	app, mockBooking, mockSMS, ctrl := createTestApp(t, defaultTestConfig(), time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
+func TestRunNotificationErrorDoesNotFailBooking(t *testing.T) {
+	app, mockBooking, mockNotification, ctrl := createTestApp(t, defaultTestConfig(), time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
 	defer ctrl.Finish()
 
 	availableSlots := []models.TimeSlot{
@@ -432,9 +431,9 @@ func TestRunSMSErrorDoesNotFailBooking(t *testing.T) {
 	mockBooking.EXPECT().
 		BookTimeSlot(gomock.Any(), gomock.Any(), false).
 		Return("booking-123", nil)
-	mockSMS.EXPECT().
-		SendSms(gomock.Any(), gomock.Any(), gomock.Any(), false).
-		Return(errors.New("SMS failed"))
+	mockNotification.EXPECT().
+		SendNotification(gomock.Any(), false).
+		Return(errors.New("notification failed"))
 
 	err := app.Run()
 
@@ -445,7 +444,7 @@ func TestRunDryRunMode(t *testing.T) {
 	conf := defaultTestConfig()
 	conf.DryRun = true
 
-	app, mockBooking, mockSMS, ctrl := createTestApp(t, conf, time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
+	app, mockBooking, mockNotification, ctrl := createTestApp(t, conf, time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
 	defer ctrl.Finish()
 
 	availableSlots := []models.TimeSlot{
@@ -461,8 +460,8 @@ func TestRunDryRunMode(t *testing.T) {
 	mockBooking.EXPECT().
 		BookTimeSlot(gomock.Any(), gomock.Any(), true).
 		Return("dry-run-123", nil)
-	mockSMS.EXPECT().
-		SendSms(gomock.Any(), gomock.Any(), gomock.Any(), true).
+	mockNotification.EXPECT().
+		SendNotification(gomock.Any(), true).
 		Return(nil)
 
 	err := app.Run()
@@ -474,7 +473,7 @@ func TestRunFiltersNonBookableSlots(t *testing.T) {
 	conf := defaultTestConfig()
 	conf.Retries = 1
 
-	app, mockBooking, mockSMS, ctrl := createTestApp(t, conf, time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
+	app, mockBooking, mockNotification, ctrl := createTestApp(t, conf, time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
 	defer ctrl.Finish()
 
 	slotsWithNonBookable := []models.TimeSlot{
@@ -489,8 +488,8 @@ func TestRunFiltersNonBookableSlots(t *testing.T) {
 		GetCourseAvailability("22-01-2024").
 		Return(slotsWithNonBookable, nil)
 
-	mockSMS.EXPECT().
-		SendSms(gomock.Any(), gomock.Any(), gomock.Any(), false).
+	mockNotification.EXPECT().
+		SendNotification(gomock.Any(), false).
 		Return(nil)
 
 	err := app.Run()
@@ -505,7 +504,7 @@ func TestRunFiltersOutsideTimeRange(t *testing.T) {
 	conf.TimeEnd = "16:00"
 	conf.Retries = 1
 
-	app, mockBooking, mockSMS, ctrl := createTestApp(t, conf, time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
+	app, mockBooking, mockNotification, ctrl := createTestApp(t, conf, time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
 	defer ctrl.Finish()
 
 	slotsOutsideRange := []models.TimeSlot{
@@ -520,8 +519,8 @@ func TestRunFiltersOutsideTimeRange(t *testing.T) {
 		GetCourseAvailability("22-01-2024").
 		Return(slotsOutsideRange, nil)
 
-	mockSMS.EXPECT().
-		SendSms(gomock.Any(), gomock.Any(), gomock.Any(), false).
+	mockNotification.EXPECT().
+		SendNotification(gomock.Any(), false).
 		Return(nil)
 
 	err := app.Run()
@@ -536,7 +535,7 @@ func TestRunUsesCorrectDateFormat(t *testing.T) {
 
 	runTime := time.Date(2024, 3, 5, 10, 0, 0, 0, time.UTC)
 
-	app, mockBooking, mockSMS, ctrl := createTestApp(t, conf, runTime)
+	app, mockBooking, mockNotification, ctrl := createTestApp(t, conf, runTime)
 	defer ctrl.Finish()
 
 	availableSlots := []models.TimeSlot{
@@ -552,8 +551,8 @@ func TestRunUsesCorrectDateFormat(t *testing.T) {
 	mockBooking.EXPECT().
 		BookTimeSlot(gomock.Any(), gomock.Any(), false).
 		Return("booking-123", nil)
-	mockSMS.EXPECT().
-		SendSms(gomock.Any(), gomock.Any(), gomock.Any(), false).
+	mockNotification.EXPECT().
+		SendNotification(gomock.Any(), false).
 		Return(nil)
 
 	err := app.Run()
@@ -569,16 +568,16 @@ func TestRunSleepCalledOnRetry(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockBooking := mocks.NewMockBookingService(ctrl)
-	mockSMS := mocks.NewMockSMSService(ctrl)
+	mockNotification := mocks.NewMockNotificationService(ctrl)
 
 	mockClock := utilMocks.NewMockClock(ctrl, time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
 
 	sleepCalled := false
 	app := &App{
-		Config:        conf,
-		BookingClient: mockBooking,
-		TwilioClient:  mockSMS,
-		Clock:         mockClock,
+		Config:             conf,
+		BookingClient:      mockBooking,
+		NotificationClient: mockNotification,
+		Clock:              mockClock,
 		SleepFunc: func(d time.Duration) {
 			sleepCalled = true
 			assert.Greater(t, d, time.Duration(0))
@@ -606,8 +605,8 @@ func TestRunSleepCalledOnRetry(t *testing.T) {
 	mockBooking.EXPECT().
 		BookTimeSlot(gomock.Any(), gomock.Any(), false).
 		Return("booking-123", nil)
-	mockSMS.EXPECT().
-		SendSms(gomock.Any(), gomock.Any(), gomock.Any(), false).
+	mockNotification.EXPECT().
+		SendNotification(gomock.Any(), false).
 		Return(nil)
 
 	err := app.Run()

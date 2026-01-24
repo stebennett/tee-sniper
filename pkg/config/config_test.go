@@ -136,8 +136,7 @@ func TestGetConfigValidArgs(t *testing.T) {
 		"-u", "testuser",
 		"-p", "1234",
 		"-b", "https://example.com",
-		"-f", "+1234567890",
-		"-n", "+0987654321",
+		"-a", "http://localhost:8000/notify",
 		"-s", "partner1,partner2",
 	}
 
@@ -150,8 +149,7 @@ func TestGetConfigValidArgs(t *testing.T) {
 	assert.Equal(t, "testuser", cfg.Username)
 	assert.Equal(t, "1234", cfg.Pin)
 	assert.Equal(t, "https://example.com", cfg.BaseUrl)
-	assert.Equal(t, "+1234567890", cfg.FromNumber)
-	assert.Equal(t, "+0987654321", cfg.ToNumber)
+	assert.Equal(t, "http://localhost:8000/notify", cfg.AppriseURL)
 	assert.Equal(t, "partner1,partner2", cfg.PlayingPartners)
 }
 
@@ -169,8 +167,7 @@ func TestGetConfigDryRunFlag(t *testing.T) {
 		"-u", "testuser",
 		"-p", "1234",
 		"-b", "https://example.com",
-		"-f", "+1234567890",
-		"-n", "+0987654321",
+		"-a", "http://localhost:8000/notify",
 		"-x", // dry run flag
 	}
 
@@ -196,8 +193,7 @@ func TestGetConfigDefaultRetries(t *testing.T) {
 		"-u", "testuser",
 		"-p", "1234",
 		"-b", "https://example.com",
-		"-f", "+1234567890",
-		"-n", "+0987654321",
+		"-a", "http://localhost:8000/notify",
 	}
 
 	cfg, err := GetConfig()
@@ -219,8 +215,7 @@ func TestGetConfigOptionalPartners(t *testing.T) {
 		"-u", "testuser",
 		"-p", "1234",
 		"-b", "https://example.com",
-		"-f", "+1234567890",
-		"-n", "+0987654321",
+		"-a", "http://localhost:8000/notify",
 		// No -s flag - partners is optional
 	}
 
@@ -237,16 +232,15 @@ func TestGetConfigFromEnvVars(t *testing.T) {
 
 	// Set environment variables
 	envVars := map[string]string{
-		"TS_DAYS_AHEAD":  "14",
-		"TS_TIME_START":  "09:00",
-		"TS_TIME_END":    "15:00",
-		"TS_RETRIES":     "10",
-		"TS_USERNAME":    "envuser",
-		"TS_PIN":         "5678",
-		"TS_BASEURL":     "https://env.example.com",
-		"TS_FROM_NUMBER": "+1111111111",
-		"TS_TO_NUMBER":   "+2222222222",
-		"TS_PARTNERS":    "envpartner1,envpartner2",
+		"TS_DAYS_AHEAD": "14",
+		"TS_TIME_START": "09:00",
+		"TS_TIME_END":   "15:00",
+		"TS_RETRIES":    "10",
+		"TS_USERNAME":   "envuser",
+		"TS_PIN":        "5678",
+		"TS_BASEURL":    "https://env.example.com",
+		"APPRISE_URL":   "http://apprise.example.com/notify",
+		"TS_PARTNERS":   "envpartner1,envpartner2",
 	}
 
 	for key, value := range envVars {
@@ -270,8 +264,7 @@ func TestGetConfigFromEnvVars(t *testing.T) {
 	assert.Equal(t, "envuser", cfg.Username)
 	assert.Equal(t, "5678", cfg.Pin)
 	assert.Equal(t, "https://env.example.com", cfg.BaseUrl)
-	assert.Equal(t, "+1111111111", cfg.FromNumber)
-	assert.Equal(t, "+2222222222", cfg.ToNumber)
+	assert.Equal(t, "http://apprise.example.com/notify", cfg.AppriseURL)
 	assert.Equal(t, "envpartner1,envpartner2", cfg.PlayingPartners)
 }
 
@@ -282,14 +275,13 @@ func TestGetConfigCliArgsOverrideEnvVars(t *testing.T) {
 
 	// Set environment variables
 	envVars := map[string]string{
-		"TS_DAYS_AHEAD":  "14",
-		"TS_TIME_START":  "09:00",
-		"TS_TIME_END":    "15:00",
-		"TS_USERNAME":    "envuser",
-		"TS_PIN":         "5678",
-		"TS_BASEURL":     "https://env.example.com",
-		"TS_FROM_NUMBER": "+1111111111",
-		"TS_TO_NUMBER":   "+2222222222",
+		"TS_DAYS_AHEAD": "14",
+		"TS_TIME_START": "09:00",
+		"TS_TIME_END":   "15:00",
+		"TS_USERNAME":   "envuser",
+		"TS_PIN":        "5678",
+		"TS_BASEURL":    "https://env.example.com",
+		"APPRISE_URL":   "http://apprise.example.com/notify",
 	}
 
 	for key, value := range envVars {
@@ -327,15 +319,14 @@ func TestGetConfigDryRunEnvVar(t *testing.T) {
 
 	// Set environment variables
 	envVars := map[string]string{
-		"TS_DAYS_AHEAD":  "7",
-		"TS_TIME_START":  "08:00",
-		"TS_TIME_END":    "12:00",
-		"TS_USERNAME":    "testuser",
-		"TS_PIN":         "1234",
-		"TS_BASEURL":     "https://example.com",
-		"TS_FROM_NUMBER": "+1234567890",
-		"TS_TO_NUMBER":   "+0987654321",
-		"TS_DRY_RUN":     "true",
+		"TS_DAYS_AHEAD": "7",
+		"TS_TIME_START": "08:00",
+		"TS_TIME_END":   "12:00",
+		"TS_USERNAME":   "testuser",
+		"TS_PIN":        "1234",
+		"TS_BASEURL":    "https://example.com",
+		"APPRISE_URL":   "http://localhost:8000/notify",
+		"TS_DRY_RUN":    "true",
 	}
 
 	for key, value := range envVars {

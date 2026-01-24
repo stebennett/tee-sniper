@@ -1,6 +1,6 @@
 # Tee-Sniper
 
-An automated golf tee-time booking bot written in Go. Tee-Sniper logs into a golf course booking website, searches for available tee times within your specified date and time range, and automatically books a slot. Upon successful booking, it sends an SMS confirmation via Twilio.
+An automated golf tee-time booking bot written in Go. Tee-Sniper logs into a golf course booking website, searches for available tee times within your specified date and time range, and automatically books a slot. Upon successful booking, it sends a notification via Apprise.
 
 ## Features
 
@@ -9,14 +9,14 @@ An automated golf tee-time booking bot written in Go. Tee-Sniper logs into a gol
 - Random selection from available slots to avoid predictable booking patterns
 - User-agent rotation to avoid detection
 - Retry logic with jitter to handle high-demand booking periods
-- SMS notifications via Twilio for booking confirmations
+- Notifications via Apprise for booking confirmations (supports SMS, email, push notifications, and more)
 - Support for booking with playing partners
 - Dry-run mode for testing without making actual bookings
 
 ## Prerequisites
 
-- Go 1.25 or later
-- A Twilio account for SMS notifications
+- Go 1.24 or later
+- An Apprise notification URL (see [Apprise documentation](https://github.com/caronc/apprise) for supported services)
 - Access credentials for your golf course booking website
 
 ## Installation
@@ -46,30 +46,24 @@ docker build -t tee-sniper .
 
 # Run with CLI arguments
 docker run --rm \
-    -e TWILIO_ACCOUNT_SID="your-sid" \
-    -e TWILIO_AUTH_TOKEN="your-token" \
+    -e APPRISE_URL="http://your-apprise-server/notify" \
     tee-sniper \
     -u YOUR_USERNAME \
     -p YOUR_PIN \
     -b https://your-golf-course.com/ \
     -d 7 \
     -t 15:00 \
-    -e 17:00 \
-    -f +1234567890 \
-    -n +0987654321
+    -e 17:00
 
 # Or run with environment variables only
 docker run --rm \
-    -e TWILIO_ACCOUNT_SID="your-sid" \
-    -e TWILIO_AUTH_TOKEN="your-token" \
+    -e APPRISE_URL="http://your-apprise-server/notify" \
     -e TS_USERNAME="your-username" \
     -e TS_PIN="your-pin" \
     -e TS_BASEURL="https://your-golf-course.com/" \
     -e TS_DAYS_AHEAD="7" \
     -e TS_TIME_START="15:00" \
     -e TS_TIME_END="17:00" \
-    -e TS_FROM_NUMBER="+1234567890" \
-    -e TS_TO_NUMBER="+0987654321" \
     tee-sniper
 ```
 
@@ -85,12 +79,11 @@ docker pull ghcr.io/stebennett/tee-sniper:latest
 
 Tee-Sniper supports configuration via environment variables as an alternative to command-line flags. CLI flags take precedence over environment variables when both are provided.
 
-#### Required (Twilio)
+#### Required (Notifications)
 
 | Variable | Description |
 |----------|-------------|
-| `TWILIO_ACCOUNT_SID` | Your Twilio account SID |
-| `TWILIO_AUTH_TOKEN` | Your Twilio authentication token |
+| `APPRISE_URL` | Your Apprise notification URL (e.g., `http://localhost:8000/notify`) |
 
 #### Application Configuration
 
@@ -104,8 +97,8 @@ Tee-Sniper supports configuration via environment variables as an alternative to
 | `TS_USERNAME` | `-u` | Booking website username |
 | `TS_PIN` | `-p` | PIN for authentication |
 | `TS_BASEURL` | `-b` | Booking website base URL |
-| `TS_FROM_NUMBER` | `-f` | Twilio sender phone number |
-| `TS_TO_NUMBER` | `-n` | SMS recipient phone number |
+| `APPRISE_URL` | `-a` | Apprise notification URL |
+| `APPRISE_TAG` | `--apprise-tag` | Optional tag to target specific Apprise notification services |
 | `TS_PARTNERS` | `-s` | Comma-separated list of playing partner IDs |
 
 Copy the example environment file and configure your credentials:
@@ -127,8 +120,8 @@ cp .env.example .env
 | `--username` | `-u` | Booking website username | Yes | - |
 | `--pin` | `-p` | PIN for authentication | Yes | - |
 | `--baseurl` | `-b` | Booking website base URL | Yes | - |
-| `--fromnumber` | `-f` | Twilio sender phone number | Yes | - |
-| `--tonumber` | `-n` | SMS recipient phone number | Yes | - |
+| `--apprise` | `-a` | Apprise notification URL | Yes | - |
+| `--apprise-tag` | - | Tag to target specific Apprise notification services | No | - |
 | `--partners` | `-s` | Comma-separated list of playing partner IDs | No | - |
 
 ## Usage
@@ -151,8 +144,7 @@ go run cmd/tee-sniper/main.go \
     -d 7 \
     -t 15:00 \
     -e 17:00 \
-    -f +1234567890 \
-    -n +0987654321
+    -a http://localhost:8000/notify
 ```
 
 ### Booking with Playing Partners
@@ -167,8 +159,7 @@ go run cmd/tee-sniper/main.go \
     -d 7 \
     -t 15:00 \
     -e 17:00 \
-    -f +1234567890 \
-    -n +0987654321 \
+    -a http://localhost:8000/notify \
     -s "partner1_id,partner2_id"
 ```
 
@@ -184,8 +175,7 @@ go run cmd/tee-sniper/main.go \
     -d 7 \
     -t 15:00 \
     -e 17:00 \
-    -f +1234567890 \
-    -n +0987654321 \
+    -a http://localhost:8000/notify \
     -x
 ```
 
@@ -196,6 +186,46 @@ A convenience script is provided that sources environment variables from `.env`:
 ```bash
 # Configure your .env file first
 ./run-teesniper.sh
+```
+
+## Apprise Notification Setup
+
+Tee-Sniper uses [Apprise](https://github.com/caronc/apprise) for notifications, which supports over 100+ notification services including:
+
+- SMS (Twilio, AWS SNS, Nexmo, etc.)
+- Email (SMTP, Gmail, etc.)
+- Push notifications (Pushover, Pushbullet, etc.)
+- Chat services (Slack, Discord, Telegram, etc.)
+- And many more...
+
+### Running Apprise API
+
+The easiest way to use Apprise is to run the [Apprise API](https://github.com/caronc/apprise-api) as a Docker container:
+
+```bash
+docker run -d --name apprise \
+    -p 8000:8000 \
+    caronc/apprise:latest
+```
+
+Then configure your notification URLs via the Apprise API interface at `http://localhost:8000`.
+
+### Example Notification URLs
+
+For stateless notifications, you can include the notification URL directly in the `APPRISE_URL`:
+
+```bash
+# SMS via Twilio
+APPRISE_URL="twilio://AccountSid:AuthToken@FromPhone/ToPhone"
+
+# Email via SMTP
+APPRISE_URL="mailto://user:password@gmail.com"
+
+# Slack webhook
+APPRISE_URL="slack://TokenA/TokenB/TokenC"
+
+# Multiple services (comma-separated)
+APPRISE_URL="twilio://...,mailto://..."
 ```
 
 ## Project Structure
@@ -211,8 +241,8 @@ tee-sniper/
 │   │   ├── interfaces.go     # Service interfaces for dependency injection
 │   │   ├── bookingclient.go  # Golf course website HTTP client
 │   │   ├── bookingclient_test.go
-│   │   ├── twilioclient.go   # Twilio SMS client
-│   │   ├── twilioclient_test.go
+│   │   ├── appriseclient.go  # Apprise notification client
+│   │   ├── appriseclient_test.go
 │   │   └── mocks/            # Generated mock implementations
 │   ├── config/
 │   │   ├── config.go         # CLI argument parsing
@@ -241,7 +271,7 @@ tee-sniper/
 4. **Select**: Randomly picks one slot from the filtered results
 5. **Book**: Attempts to book the selected time slot
    - If partners are specified, adds them to additional slots
-6. **Notify**: Sends SMS confirmation via Twilio
+6. **Notify**: Sends notification via Apprise
 7. **Retry**: If booking fails or no slots are available, waits with random delay and retries
 
 The retry logic includes jitter (random delay variation) to avoid rate limiting and detection.
@@ -291,7 +321,6 @@ GOOS=linux GOARCH=amd64 go build -o tee-sniper-linux cmd/tee-sniper/main.go
 |---------|---------|
 | [goquery](https://github.com/PuerkitoBio/goquery) | HTML parsing and DOM traversal |
 | [go-flags](https://github.com/jessevdk/go-flags) | Command-line argument parsing |
-| [twilio-go](https://github.com/twilio/twilio-go) | Twilio SMS API client |
 | [testify](https://github.com/stretchr/testify) | Testing assertions |
 | [gomock](https://github.com/golang/mock) | Mock generation for testing |
 

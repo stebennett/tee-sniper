@@ -45,21 +45,21 @@ func GetRandomRetryDelay(minSeconds, maxSeconds int) time.Duration {
 
 // App encapsulates the application dependencies for testability
 type App struct {
-	Config        config.Config
-	BookingClient clients.BookingService
-	TwilioClient  clients.SMSService
-	Clock         utils.Clock
-	SleepFunc     func(time.Duration)
+	Config             config.Config
+	BookingClient      clients.BookingService
+	NotificationClient clients.NotificationService
+	Clock              utils.Clock
+	SleepFunc          func(time.Duration)
 }
 
 // NewApp creates a new App with real dependencies
-func NewApp(conf config.Config, bookingClient clients.BookingService, twilioClient clients.SMSService, clock utils.Clock) *App {
+func NewApp(conf config.Config, bookingClient clients.BookingService, notificationClient clients.NotificationService, clock utils.Clock) *App {
 	return &App{
-		Config:        conf,
-		BookingClient: bookingClient,
-		TwilioClient:  twilioClient,
-		Clock:         clock,
-		SleepFunc:     time.Sleep,
+		Config:             conf,
+		BookingClient:      bookingClient,
+		NotificationClient: notificationClient,
+		Clock:              clock,
+		SleepFunc:          time.Sleep,
 	}
 }
 
@@ -164,7 +164,7 @@ func (a *App) Run() error {
 			}
 
 			message := fmt.Sprintf("Successfully booked tee time: %s on %s for %d people", timeToBook.Time, dateStr, len(playingPartners)+1)
-			err := a.TwilioClient.SendSms(a.Config.FromNumber, a.Config.ToNumber, message, a.Config.DryRun)
+			err := a.NotificationClient.SendNotification(message, a.Config.DryRun)
 			if err != nil {
 				slog.Warn("failed to send SMS", slog.String("error", err.Error()))
 			}
@@ -184,7 +184,7 @@ func (a *App) Run() error {
 
 	if !booked {
 		message := fmt.Sprintf("Failed to book tee time on %s", dateStr)
-		err := a.TwilioClient.SendSms(a.Config.FromNumber, a.Config.ToNumber, message, a.Config.DryRun)
+		err := a.NotificationClient.SendNotification(message, a.Config.DryRun)
 		if err != nil {
 			slog.Warn("failed to send failure SMS", slog.String("error", err.Error()))
 		}
@@ -214,7 +214,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	twilioClient := clients.NewTwilioClient()
+	notificationClient := clients.NewAppriseClient(conf.AppriseURL, conf.AppriseTag)
 
 	clock, err := utils.NewRealClock("Europe/London")
 	if err != nil {
@@ -222,7 +222,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	app := NewApp(conf, bookingClient, twilioClient, clock)
+	app := NewApp(conf, bookingClient, notificationClient, clock)
 	if err := app.Run(); err != nil {
 		if errors.Is(err, ErrNoTimesMatched) {
 			slog.Info("completed without booking", slog.String("reason", err.Error()))

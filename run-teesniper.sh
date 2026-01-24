@@ -9,6 +9,4 @@ go run cmd/tee-sniper/main.go \
     -d 5 \
     -t 11:15 -e 18:20 \
     -r 60 \
-    -f ${TS_FROM_NUMBER} \
-    -n ${TS_TO_NUMBER}
-   
+    -a ${APPRISE_URL}

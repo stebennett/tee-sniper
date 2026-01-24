@@ -6,7 +6,7 @@ import "github.com/stebennett/tee-sniper/pkg/models"
 
 // Compile-time verification that concrete types implement interfaces
 var _ BookingService = (*BookingClient)(nil)
-var _ SMSService = (*TwilioClient)(nil)
+var _ NotificationService = (*AppriseClient)(nil)
 
 // BookingService defines the interface for booking operations.
 // This interface is implemented by BookingClient and can be mocked for testing.
@@ -27,10 +27,10 @@ type BookingService interface {
 	AddPlayingPartner(bookingID, partnerID string, slotNumber int, dryRun bool) error
 }
 
-// SMSService defines the interface for SMS operations.
-// This interface is implemented by TwilioClient and can be mocked for testing.
-type SMSService interface {
-	// SendSms sends an SMS message.
+// NotificationService defines the interface for sending notifications.
+// This interface is implemented by AppriseClient and can be mocked for testing.
+type NotificationService interface {
+	// SendNotification sends a notification message.
 	// In dry run mode, the message is logged but not actually sent.
-	SendSms(from, to, body string, dryRun bool) error
+	SendNotification(message string, dryRun bool) error
 }
