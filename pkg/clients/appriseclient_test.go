@@ -13,9 +13,9 @@ import (
 
 // mockHTTPClient is a mock implementation of HTTPClient for testing
 type mockHTTPClient struct {
-	doFunc     func(req *http.Request) (*http.Response, error)
-	lastReq    *http.Request
-	callCount  int
+	doFunc    func(req *http.Request) (*http.Response, error)
+	lastReq   *http.Request
+	callCount int
 }
 
 func (m *mockHTTPClient) Do(req *http.Request) (*http.Response, error) {
@@ -32,21 +32,34 @@ func (m *mockHTTPClient) Do(req *http.Request) (*http.Response, error) {
 
 func TestNewAppriseClient(t *testing.T) {
 	urls := "http://localhost:8000/notify"
-	client := NewAppriseClient(urls)
+	tag := "sms"
+	client := NewAppriseClient(urls, tag)
 
 	require.NotNil(t, client)
 	assert.Equal(t, urls, client.urls)
+	assert.Equal(t, tag, client.tag)
 	assert.NotNil(t, client.httpClient)
+}
+
+func TestNewAppriseClientWithEmptyTag(t *testing.T) {
+	urls := "http://localhost:8000/notify"
+	client := NewAppriseClient(urls, "")
+
+	require.NotNil(t, client)
+	assert.Equal(t, urls, client.urls)
+	assert.Equal(t, "", client.tag)
 }
 
 func TestNewAppriseClientWithHTTPClient(t *testing.T) {
 	urls := "http://localhost:8000/notify"
+	tag := "email"
 	mockClient := &mockHTTPClient{}
 
-	client := NewAppriseClientWithHTTPClient(urls, mockClient)
+	client := NewAppriseClientWithHTTPClient(urls, tag, mockClient)
 
 	require.NotNil(t, client)
 	assert.Equal(t, urls, client.urls)
+	assert.Equal(t, tag, client.tag)
 	assert.Equal(t, mockClient, client.httpClient)
 }
 
@@ -57,7 +70,7 @@ func TestSendNotificationDryRun(t *testing.T) {
 			return nil, nil
 		},
 	}
-	client := NewAppriseClientWithHTTPClient("http://localhost:8000/notify", mockClient)
+	client := NewAppriseClientWithHTTPClient("http://localhost:8000/notify", "", mockClient)
 
 	err := client.SendNotification("Test message", true)
 
@@ -91,7 +104,7 @@ func TestSendNotificationDryRunWithVariousMessages(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockClient := &mockHTTPClient{}
-			client := NewAppriseClientWithHTTPClient("http://localhost:8000/notify", mockClient)
+			client := NewAppriseClientWithHTTPClient("http://localhost:8000/notify", "", mockClient)
 
 			err := client.SendNotification(tc.message, true)
 
@@ -110,7 +123,7 @@ func TestSendNotificationSuccess(t *testing.T) {
 			}, nil
 		},
 	}
-	client := NewAppriseClientWithHTTPClient("http://localhost:8000/notify", mockClient)
+	client := NewAppriseClientWithHTTPClient("http://localhost:8000/notify", "", mockClient)
 
 	err := client.SendNotification("Test message", false)
 
@@ -128,7 +141,7 @@ func TestSendNotificationHTTPError(t *testing.T) {
 			return nil, expectedError
 		},
 	}
-	client := NewAppriseClientWithHTTPClient("http://localhost:8000/notify", mockClient)
+	client := NewAppriseClientWithHTTPClient("http://localhost:8000/notify", "", mockClient)
 
 	err := client.SendNotification("Test message", false)
 
@@ -169,7 +182,7 @@ func TestSendNotificationNon2xxStatus(t *testing.T) {
 					}, nil
 				},
 			}
-			client := NewAppriseClientWithHTTPClient("http://localhost:8000/notify", mockClient)
+			client := NewAppriseClientWithHTTPClient("http://localhost:8000/notify", "", mockClient)
 
 			err := client.SendNotification("Test message", false)
 
@@ -194,13 +207,40 @@ func TestSendNotificationRequestBody(t *testing.T) {
 			}, nil
 		},
 	}
-	client := NewAppriseClientWithHTTPClient(urls, mockClient)
+	client := NewAppriseClientWithHTTPClient(urls, "", mockClient)
 
 	err := client.SendNotification(message, false)
 
 	assert.NoError(t, err)
 	assert.Contains(t, string(capturedBody), `"urls":"http://localhost:8000/notify"`)
 	assert.Contains(t, string(capturedBody), `"body":"Your tee time has been booked!"`)
+	// Tag should be omitted when empty
+	assert.NotContains(t, string(capturedBody), `"tag"`)
+}
+
+func TestSendNotificationRequestBodyWithTag(t *testing.T) {
+	urls := "http://localhost:8000/notify"
+	tag := "sms"
+	message := "Your tee time has been booked!"
+
+	var capturedBody []byte
+	mockClient := &mockHTTPClient{
+		doFunc: func(req *http.Request) (*http.Response, error) {
+			capturedBody, _ = io.ReadAll(req.Body)
+			return &http.Response{
+				StatusCode: 200,
+				Body:       io.NopCloser(bytes.NewBufferString("")),
+			}, nil
+		},
+	}
+	client := NewAppriseClientWithHTTPClient(urls, tag, mockClient)
+
+	err := client.SendNotification(message, false)
+
+	assert.NoError(t, err)
+	assert.Contains(t, string(capturedBody), `"urls":"http://localhost:8000/notify"`)
+	assert.Contains(t, string(capturedBody), `"body":"Your tee time has been booked!"`)
+	assert.Contains(t, string(capturedBody), `"tag":"sms"`)
 }
 
 func TestAppriseClientImplementsNotificationService(t *testing.T) {
@@ -209,7 +249,7 @@ func TestAppriseClientImplementsNotificationService(t *testing.T) {
 	var _ NotificationService = (*AppriseClient)(nil)
 
 	// Runtime verification
-	client := NewAppriseClientWithHTTPClient("http://localhost:8000/notify", &mockHTTPClient{})
+	client := NewAppriseClientWithHTTPClient("http://localhost:8000/notify", "", &mockHTTPClient{})
 	var notificationService NotificationService = client
 	assert.NotNil(t, notificationService)
 }
@@ -225,7 +265,7 @@ func TestSendNotificationNotCalledInDryRun(t *testing.T) {
 			}, nil
 		},
 	}
-	client := NewAppriseClientWithHTTPClient("http://localhost:8000/notify", mockClient)
+	client := NewAppriseClientWithHTTPClient("http://localhost:8000/notify", "", mockClient)
 
 	// Call multiple times in dry run mode
 	for i := 0; i < 5; i++ {
@@ -247,7 +287,7 @@ func TestSendNotificationCalledOncePerRequest(t *testing.T) {
 			}, nil
 		},
 	}
-	client := NewAppriseClientWithHTTPClient("http://localhost:8000/notify", mockClient)
+	client := NewAppriseClientWithHTTPClient("http://localhost:8000/notify", "", mockClient)
 
 	err := client.SendNotification("Test", false)
 
@@ -276,11 +316,65 @@ func TestSendNotification2xxStatusCodes(t *testing.T) {
 					}, nil
 				},
 			}
-			client := NewAppriseClientWithHTTPClient("http://localhost:8000/notify", mockClient)
+			client := NewAppriseClientWithHTTPClient("http://localhost:8000/notify", "", mockClient)
 
 			err := client.SendNotification("Test message", false)
 
 			assert.NoError(t, err)
+		})
+	}
+}
+
+func TestSendNotificationWithVariousTags(t *testing.T) {
+	testCases := []struct {
+		name        string
+		tag         string
+		expectInBody bool
+	}{
+		{
+			name:        "empty tag",
+			tag:         "",
+			expectInBody: false,
+		},
+		{
+			name:        "sms tag",
+			tag:         "sms",
+			expectInBody: true,
+		},
+		{
+			name:        "email tag",
+			tag:         "email",
+			expectInBody: true,
+		},
+		{
+			name:        "multiple tags",
+			tag:         "sms,email",
+			expectInBody: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var capturedBody []byte
+			mockClient := &mockHTTPClient{
+				doFunc: func(req *http.Request) (*http.Response, error) {
+					capturedBody, _ = io.ReadAll(req.Body)
+					return &http.Response{
+						StatusCode: 200,
+						Body:       io.NopCloser(bytes.NewBufferString("")),
+					}, nil
+				},
+			}
+			client := NewAppriseClientWithHTTPClient("http://localhost:8000/notify", tc.tag, mockClient)
+
+			err := client.SendNotification("Test message", false)
+
+			assert.NoError(t, err)
+			if tc.expectInBody {
+				assert.Contains(t, string(capturedBody), `"tag":"`+tc.tag+`"`)
+			} else {
+				assert.NotContains(t, string(capturedBody), `"tag"`)
+			}
 		})
 	}
 }

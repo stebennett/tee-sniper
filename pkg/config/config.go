@@ -24,6 +24,7 @@ type Config struct {
 	BaseUrl  string `short:"b" long:"baseurl" env:"TS_BASEURL" required:"true" description:"The host for the booking website"`
 
 	AppriseURL      string `short:"a" long:"apprise" env:"APPRISE_URL" required:"true" description:"The Apprise notification URL for sending booking confirmations"`
+	AppriseTag      string `long:"apprise-tag" env:"APPRISE_TAG" description:"Optional tag to target specific Apprise notification services"`
 	PlayingPartners string `short:"s" long:"partners" env:"TS_PARTNERS" description:"Comma-separated list of playing partner IDs"`
 }
 

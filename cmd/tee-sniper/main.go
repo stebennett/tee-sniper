@@ -214,7 +214,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	notificationClient := clients.NewAppriseClient(conf.AppriseURL)
+	notificationClient := clients.NewAppriseClient(conf.AppriseURL, conf.AppriseTag)
 
 	clock, err := utils.NewRealClock("Europe/London")
 	if err != nil {

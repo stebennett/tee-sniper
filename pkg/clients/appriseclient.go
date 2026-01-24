@@ -19,29 +19,33 @@ type HTTPClient interface {
 type AppriseClient struct {
 	httpClient HTTPClient
 	urls       string
+	tag        string
 }
 
 // appriseRequest represents the JSON payload for Apprise API
 type appriseRequest struct {
 	URLs string `json:"urls"`
 	Body string `json:"body"`
+	Tag  string `json:"tag,omitempty"`
 }
 
 // NewAppriseClient creates an AppriseClient with the default HTTP client
-func NewAppriseClient(urls string) *AppriseClient {
+func NewAppriseClient(urls string, tag string) *AppriseClient {
 	return &AppriseClient{
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
 		urls: urls,
+		tag:  tag,
 	}
 }
 
 // NewAppriseClientWithHTTPClient creates an AppriseClient with a custom HTTP client (for testing)
-func NewAppriseClientWithHTTPClient(urls string, httpClient HTTPClient) *AppriseClient {
+func NewAppriseClientWithHTTPClient(urls string, tag string, httpClient HTTPClient) *AppriseClient {
 	return &AppriseClient{
 		httpClient: httpClient,
 		urls:       urls,
+		tag:        tag,
 	}
 }
 
@@ -50,6 +54,7 @@ func (a *AppriseClient) SendNotification(message string, dryRun bool) error {
 	if dryRun {
 		slog.Info("dry run: notification simulated",
 			slog.String("message", message),
+			slog.String("tag", a.tag),
 			slog.Bool("dry_run", true),
 		)
 		return nil
@@ -58,6 +63,7 @@ func (a *AppriseClient) SendNotification(message string, dryRun bool) error {
 	payload := appriseRequest{
 		URLs: a.urls,
 		Body: message,
+		Tag:  a.tag,
 	}
 
 	jsonData, err := json.Marshal(payload)

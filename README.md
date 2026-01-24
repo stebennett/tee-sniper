@@ -98,6 +98,7 @@ Tee-Sniper supports configuration via environment variables as an alternative to
 | `TS_PIN` | `-p` | PIN for authentication |
 | `TS_BASEURL` | `-b` | Booking website base URL |
 | `APPRISE_URL` | `-a` | Apprise notification URL |
+| `APPRISE_TAG` | `--apprise-tag` | Optional tag to target specific Apprise notification services |
 | `TS_PARTNERS` | `-s` | Comma-separated list of playing partner IDs |
 
 Copy the example environment file and configure your credentials:
@@ -120,6 +121,7 @@ cp .env.example .env
 | `--pin` | `-p` | PIN for authentication | Yes | - |
 | `--baseurl` | `-b` | Booking website base URL | Yes | - |
 | `--apprise` | `-a` | Apprise notification URL | Yes | - |
+| `--apprise-tag` | - | Tag to target specific Apprise notification services | No | - |
 | `--partners` | `-s` | Comma-separated list of playing partner IDs | No | - |
 
 ## Usage
