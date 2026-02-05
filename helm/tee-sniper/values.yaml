@@ -1,0 +1,121 @@
+# Default values for tee-sniper
+# This is a YAML-formatted file.
+
+# Image configuration
+image:
+  repository: ghcr.io/stebennett/tee-sniper
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+# Image pull secrets for private registries
+imagePullSecrets: []
+
+# CronJob schedule (cron expression)
+# Default: Every Monday at 8:00 AM UTC
+schedule: "0 8 * * 1"
+
+# Application configuration (non-sensitive)
+config:
+  # Days ahead to search for tee time
+  daysAhead: 7
+  # Earliest booking time (HH:MM format)
+  timeStart: "14:00"
+  # Latest booking time (HH:MM format)
+  timeEnd: "16:30"
+  # Golf course website base URL
+  baseUrl: ""
+  # Number of retry attempts
+  retries: 5
+  # Dry run mode (no actual booking)
+  dryRun: false
+  # Comma-separated list of partner IDs
+  partners: ""
+
+# Sensitive credentials
+# IMPORTANT: For production, use external secret management
+# (Sealed Secrets, External Secrets Operator, or ArgoCD Vault Plugin)
+secrets:
+  # Set to true to create the Secret resource
+  # Set to false if using external secret management
+  create: true
+  # Booking site credentials
+  username: ""
+  pin: ""
+  # Twilio phone numbers
+  fromNumber: ""
+  toNumber: ""
+  # Twilio API credentials
+  twilioAccountSid: ""
+  twilioAuthToken: ""
+
+# Existing secret name to use instead of creating one
+# Only used when secrets.create is false
+existingSecret: ""
+
+# Job configuration
+job:
+  # Number of retries before marking job as failed
+  backoffLimit: 1
+  # Number of successful job runs to keep
+  successfulJobsHistoryLimit: 3
+  # Number of failed job runs to keep
+  failedJobsHistoryLimit: 3
+  # Deadline in seconds for starting the job
+  startingDeadlineSeconds: 300
+  # Concurrency policy: Allow, Forbid, or Replace
+  concurrencyPolicy: Forbid
+  # Time to live after job completion (seconds)
+  ttlSecondsAfterFinished: 86400
+
+# Pod configuration
+pod:
+  # Pod restart policy (Never or OnFailure)
+  restartPolicy: Never
+  # Pod annotations
+  annotations: {}
+  # Pod labels
+  labels: {}
+  # Node selector
+  nodeSelector: {}
+  # Tolerations
+  tolerations: []
+  # Affinity rules
+  affinity: {}
+  # Security context for the pod
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+
+# Container configuration
+container:
+  # Security context for the container
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+
+# Resource requests and limits
+resources: {}
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # limits:
+  #   cpu: 200m
+  #   memory: 256Mi
+
+# Service account configuration
+serviceAccount:
+  # Create a service account
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # Name of the service account (auto-generated if empty)
+  name: ""
+
+# Override the name of the chart
+nameOverride: ""
+fullnameOverride: ""

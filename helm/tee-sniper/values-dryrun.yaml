@@ -1,0 +1,48 @@
+# Dry run values file for testing tee-sniper
+#
+# Use this to test your deployment without making actual bookings:
+#   helm install tee-sniper-test ./helm/tee-sniper -f values-dryrun.yaml
+#
+# The job will:
+# - Log into the booking site
+# - Search for available tee times
+# - Select a time slot
+# - Log what would be booked (but not actually book)
+# - Skip sending SMS notification
+
+# Run every 5 minutes for testing (adjust as needed)
+schedule: "*/5 * * * *"
+
+config:
+  daysAhead: 7
+  timeStart: "06:00"
+  timeEnd: "20:00"
+  baseUrl: "https://your-golf-course.com/"
+  retries: 1
+
+  # DRY RUN MODE - no actual booking will be made
+  dryRun: true
+
+# You still need valid credentials to test login and search
+secrets:
+  create: true
+  username: "your-username"
+  pin: "your-pin"
+  fromNumber: "+1234567890"
+  toNumber: "+0987654321"
+  twilioAccountSid: "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  twilioAuthToken: "your-auth-token"
+
+# Minimal resources for testing
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 100m
+    memory: 128Mi
+
+# Keep more job history for debugging
+job:
+  successfulJobsHistoryLimit: 5
+  failedJobsHistoryLimit: 5
