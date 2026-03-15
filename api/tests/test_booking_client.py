@@ -10,6 +10,7 @@ from pytest_httpx import HTTPXMock
 from app.models.domain import TimeSlot
 from app.services.booking_client import (
     BookingClient,
+    BookingClientError,
     BookingError,
 )
 from app.utils.user_agents import USER_AGENTS
@@ -116,6 +117,20 @@ class TestBookingClientLogin:
 
         async with BookingClient(base_url) as client:
             result = await client.login("testuser", "wrong")
+
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_login_non_200_returns_false(self, httpx_mock: HTTPXMock, base_url: str):
+        """Non-200 response returns False without raising."""
+        httpx_mock.add_response(
+            url=f"{base_url}/login.php",
+            method="POST",
+            status_code=403,
+        )
+
+        async with BookingClient(base_url) as client:
+            result = await client.login("testuser", "1234")
 
         assert result is False
 
@@ -385,6 +400,19 @@ class TestBookingClientAddPartner:
 
             with pytest.raises(BookingError, match="between 2 and 4"):
                 await client.add_partner("BOOK123", "PARTNER456", slot_num=5)
+
+    @pytest.mark.asyncio
+    async def test_non_200_raises_error(self, httpx_mock: HTTPXMock, base_url: str):
+        """Non-200 response raises BookingClientError."""
+        httpx_mock.add_response(
+            url=re.compile(rf"{re.escape(base_url)}/memberbooking/.*"),
+            method="GET",
+            status_code=500,
+        )
+
+        async with BookingClient(base_url) as client:
+            with pytest.raises(BookingClientError, match="status code 500"):
+                await client.add_partner("BOOK123", "PARTNER456", slot_num=2)
 
     @pytest.mark.asyncio
     async def test_dry_run_returns_true(self, base_url: str):

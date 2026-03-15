@@ -23,7 +23,7 @@ def parse_availability(html: str) -> list[TimeSlot]:
     """Parse availability HTML and return list of bookable TimeSlots.
 
     Matches Go implementation logic:
-    - Selects tr.canreserve and tr.cantreserve rows
+    - Selects tr.bookable rows
     - Checks for booking button (a.inlineBooking)
     - Checks for people booked (span.player-name)
     - Checks for blocked slots (div.comp-item)
@@ -33,7 +33,7 @@ def parse_availability(html: str) -> list[TimeSlot]:
     soup = BeautifulSoup(html, "lxml")
     slots: list[TimeSlot] = []
 
-    for row in soup.select("tr.canreserve, tr.cantreserve"):
+    for row in soup.select("tr.bookable"):
         # Extract time from th element
         time_elem = row.find("th")
         if not time_elem:
@@ -50,7 +50,7 @@ def parse_availability(html: str) -> list[TimeSlot]:
         for input_elem in row.select("td.slot-actions form input"):
             name = input_elem.get("name")
             value = input_elem.get("value", "")
-            if name and value:  # Go checks nok && vok (both must exist)
+            if name is not None and value is not None:  # Go checks nok && vok (both must exist)
                 booking_form[name] = value
 
         # Filter: only include bookable slots (matching Go: !peopleBooked && !blocked && bookingButton)
@@ -84,10 +84,12 @@ def parse_booking_response(html: str) -> tuple[bool, str]:
 
     expected_message = "Now please enter the names of your playing partners."
 
-    if success_elem and success_elem.text.strip() == expected_message:
+    confirmation = success_elem.text.strip() if success_elem else ""
+
+    if confirmation == expected_message:
         return True, ""
 
-    return False, "Booking failed - time slot may no longer be available"
+    return False, f"booking failed: unexpected confirmation message: {confirmation}"
 
 
 def extract_booking_id(url: str) -> str | None:

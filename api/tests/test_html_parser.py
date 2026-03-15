@@ -102,7 +102,7 @@ class TestParseAvailability:
         """Rows without a.inlineBooking are filtered out."""
         html = """
         <html><body>
-        <tr class="canreserve">
+        <tr class="bookable">
             <th>09:00</th>
             <td class="slot-actions">
                 <form><input name="date" value="2024-01-15"/></form>
@@ -118,7 +118,7 @@ class TestParseAvailability:
         """Rows with span.player-name are filtered out."""
         html = """
         <html><body>
-        <tr class="canreserve">
+        <tr class="bookable">
             <th>09:00</th>
             <td class="slot-actions">
                 <form><input name="date" value="2024-01-15"/></form>
@@ -135,7 +135,7 @@ class TestParseAvailability:
         """Rows with div.comp-item are filtered out."""
         html = """
         <html><body>
-        <tr class="canreserve">
+        <tr class="bookable">
             <th>09:00</th>
             <td class="slot-actions">
                 <form><input name="date" value="2024-01-15"/></form>
@@ -150,7 +150,7 @@ class TestParseAvailability:
 
     def test_malformed_html_handled(self):
         """Gracefully handle malformed HTML."""
-        html = "<html><body><tr class='canreserve'><th>09:00"  # Unclosed tags
+        html = "<html><body><tr class='bookable'><th>09:00"  # Unclosed tags
         slots = parse_availability(html)
         # Should not raise, may return empty or partial results
         assert isinstance(slots, list)
@@ -173,7 +173,7 @@ class TestParseBookingResponse:
         success, error = parse_booking_response(html)
 
         assert success is False
-        assert "time slot may no longer be available" in error.lower()
+        assert "booking failed: unexpected confirmation message:" in error
 
     def test_wrong_confirmation_message(self):
         """Unexpected confirmation message returns failure."""

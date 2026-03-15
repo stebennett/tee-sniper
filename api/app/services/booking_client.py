@@ -108,7 +108,9 @@ class BookingClient:
             data=form_data,
             headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
-        resp.raise_for_status()
+
+        if resp.status_code != 200:
+            return False
 
         return parse_login_response(resp.text)
 
@@ -220,7 +222,12 @@ class BookingClient:
             },
         )
 
-        return resp.status_code == 200
+        if resp.status_code != 200:
+            raise BookingClientError(
+                f"failed to add partner: status code {resp.status_code}"
+            )
+
+        return True
 
     def get_cookies(self) -> dict[str, str]:
         """Return current session cookies for storage/restoration.
