@@ -18,11 +18,17 @@ go run cmd/tee-sniper/main.go -u username -p pin -b https://example.com/ -d 7 -t
 
 ### Testing
 ```bash
-# Run tests
+# Run Go tests
 go test ./...
 
-# Run tests for specific package
+# Run Go tests for specific package
 go test ./pkg/teetimes/
+
+# Run Python API tests
+cd api && .venv/bin/python -m pytest tests/ -v
+
+# Run specific Python test file
+cd api && .venv/bin/python -m pytest tests/test_booking_routes.py -v
 ```
 
 ### Building
@@ -34,11 +40,24 @@ go build -o tee-sniper cmd/tee-sniper/main.go
 ## Code Architecture
 
 ### Project Structure
+
+**Go CLI:**
 - `cmd/tee-sniper/main.go` - Main application entry point
 - `pkg/config/` - Configuration handling using go-flags
 - `pkg/models/` - Data models (TimeSlot, etc.)
 - `pkg/clients/` - External service clients (Twilio, booking site)
 - `pkg/teetimes/` - Core business logic for filtering and selecting tee times
+
+**Python API** (`api/`):
+- `api/app/main.py` - FastAPI application entry point with health endpoint
+- `api/app/config.py` - Settings via pydantic-settings (TSA_ env prefix)
+- `api/app/dependencies.py` - DI providers (Redis, session, auth, booking client)
+- `api/app/routers/booking.py` - All API endpoints (login, times, book, partners)
+- `api/app/services/booking_client.py` - Async HTTP client for booking site
+- `api/app/services/session_manager.py` - Redis session management with sliding TTL
+- `api/app/services/encryption.py` - AES-256-GCM credential encryption
+- `api/app/models/` - Pydantic request/response/domain models
+- `api/app/utils/` - HTML parser, user agent rotation
 
 ### Core Components
 
@@ -88,6 +107,21 @@ When implementing the comprehensive testing plan (see `TESTING_PLAN.md`):
    - Push branch and create PR
    - Merge PR to `main` before starting next phase
 3. Respect phase dependencies - Phase 1 (interfaces/mocks) must be merged before phases that require mocking
+
+## API Migration Workflow
+
+When implementing the API migration plan (see `docs/API_MIGRATION_PLAN.md`):
+
+1. **Each phase must be completed in a separate PR**
+2. Follow this workflow per phase:
+   - Create feature branch from `main` (e.g., `api/phase4-endpoints`)
+   - Implement the phase tasks
+   - Run `cd api && .venv/bin/python -m pytest tests/ -v` to verify all tests pass
+   - Update `docs/API_MIGRATION_PLAN.md` to mark completed tasks
+   - Commit changes with descriptive message
+   - Push branch and create PR for review
+   - Wait for PR to be reviewed and merged before starting next phase
+3. Completed phases: 1 (Foundation), 2 (Redis), 3 (Booking Client), 4 (API Endpoints)
 
 ## Docker Migration Workflow
 

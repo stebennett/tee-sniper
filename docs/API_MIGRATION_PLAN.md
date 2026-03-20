@@ -64,9 +64,7 @@ api/
 │   │   └── domain.py           # Domain models (TimeSlot, etc.)
 │   ├── routers/
 │   │   ├── __init__.py
-│   │   ├── auth.py             # /api/login endpoint
-│   │   ├── teetimes.py         # /api/{date}/times endpoint
-│   │   └── bookings.py         # Booking and partner endpoints
+│   │   └── booking.py          # All booking endpoints (login, times, book, partners)
 │   ├── services/
 │   │   ├── __init__.py
 │   │   ├── booking_client.py   # Website interaction logic
@@ -79,9 +77,15 @@ api/
 ├── tests/
 │   ├── __init__.py
 │   ├── conftest.py
-│   ├── test_auth.py
-│   ├── test_teetimes.py
-│   └── test_bookings.py
+│   ├── test_booking_client.py
+│   ├── test_booking_routes.py
+│   ├── test_config.py
+│   ├── test_dependencies.py
+│   ├── test_encryption.py
+│   ├── test_health.py
+│   ├── test_html_parser.py
+│   ├── test_session_integration.py
+│   └── test_session_manager.py
 ├── Dockerfile
 ├── requirements.txt
 ├── pyproject.toml
@@ -96,13 +100,14 @@ Authenticates user and returns access token.
 **Request:**
 ```json
 {
-  "credentials": "<encrypted_username:pin>"
+  "credentials": "<encrypted_username:pin>",
+  "base_url": "https://custom-golf-course.com/"
 }
 ```
 
 The `credentials` field contains `username:pin` encrypted with AES-256-GCM using a shared secret.
 
-Note: The golf course base URL is configured via the `TSA_BASE_URL` environment variable.
+The `base_url` field is optional. When omitted, falls back to the `TSA_BASE_URL` environment variable. This allows per-session flexibility for different golf course sites.
 
 **Response (200):**
 ```json
@@ -121,10 +126,14 @@ Note: The golf course base URL is configured via the `TSA_BASE_URL` environment 
 
 **Implementation Notes:**
 - Decrypt credentials using shared secret (from environment variable)
+- Use `base_url` from request body, or fall back to `TSA_BASE_URL` setting
+- Create a fresh `BookingClient` (no session exists yet)
 - Perform login to golf course website
-- Store cookies in Redis with generated UUID token as key
+- Capture cookies from the client session
+- Store cookies and base_url in Redis with generated UUID token as key
 - Set TTL of 30 minutes on Redis key
-- Return token to client
+- Return token and expiration timestamp to client
+- Error mapping: `EncryptionError` → 400, `LoginError` → 401, `BookingClientError` → 502
 
 ---
 
@@ -212,26 +221,27 @@ Books a tee time.
 }
 ```
 
-**Response (400):**
-```json
-{
-  "detail": "Time slot not available or already booked"
-}
-```
-
 **Response (404):**
 ```json
 {
-  "detail": "Time slot not found for specified date/time"
+  "detail": "No bookable slot found for 09:00 on 2024-01-15"
+}
+```
+
+**Response (422):**
+```json
+{
+  "detail": "Slot taken"
 }
 ```
 
 **Implementation Notes:**
 - First fetch availability to get booking form parameters
-- Find the matching time slot
+- Find the matching bookable time slot (404 if not found or not bookable)
 - Submit booking request with `numslots` parameter
 - Extract booking ID from redirect URL
 - Return booking confirmation
+- Error mapping: `BookingError` → 422, `BookingClientError` → 502
 
 ---
 
@@ -257,7 +267,8 @@ Adds playing partners to an existing booking.
 {
   "booking_id": "BOOK123456",
   "partners_added": ["partner1_id", "partner2_id"],
-  "message": "Partners added successfully"
+  "partners_failed": [],
+  "message": "All partners added successfully"
 }
 ```
 
@@ -267,14 +278,22 @@ Adds playing partners to an existing booking.
   "booking_id": "BOOK123456",
   "partners_added": ["partner1_id"],
   "partners_failed": ["partner2_id"],
-  "message": "Some partners could not be added"
+  "message": "Partial success: 1 added, 1 failed"
+}
+```
+
+**Response (502 - Total Failure):**
+```json
+{
+  "detail": "Failed to add any partners"
 }
 ```
 
 **Implementation Notes:**
 - Loop through partners list
-- Call `addpartner` endpoint for each with incrementing slot numbers (2, 3, 4...)
-- Return success/partial success based on results
+- Call `addpartner` endpoint for each with incrementing slot numbers (2, 3, 4)
+- Track successes and failures separately
+- Return 200 for full success, 207 (via JSONResponse) for partial success, 502 for total failure
 
 ---
 
@@ -890,36 +909,36 @@ stringData:
 ## Phase 5: Implementation Tasks
 
 ### Phase 5.1: API Foundation
-- [ ] Create `api/` directory structure
-- [ ] Set up pyproject.toml and requirements.txt
-- [ ] Implement config.py with pydantic-settings
-- [ ] Create FastAPI app skeleton with health endpoint
-- [ ] Implement encryption service
-- [ ] Write unit tests for encryption
+- [x] Create `api/` directory structure
+- [x] Set up pyproject.toml and requirements.txt
+- [x] Implement config.py with pydantic-settings
+- [x] Create FastAPI app skeleton with health endpoint
+- [x] Implement encryption service
+- [x] Write unit tests for encryption
 
 ### Phase 5.2: Redis Integration
-- [ ] Implement session manager
-- [ ] Add Redis connection handling
-- [ ] Write session manager tests
-- [ ] Add session cleanup/expiry handling
+- [x] Implement session manager
+- [x] Add Redis connection handling
+- [x] Write session manager tests
+- [x] Add session cleanup/expiry handling
 
 ### Phase 5.3: Booking Client
-- [ ] Port user agent rotation logic
-- [ ] Implement login functionality
-- [ ] Implement availability scraping with BeautifulSoup
-- [ ] Implement booking logic
-- [ ] Implement partner addition
-- [ ] Port test fixtures from Go tests
-- [ ] Write comprehensive tests
+- [x] Port user agent rotation logic
+- [x] Implement login functionality
+- [x] Implement availability scraping with BeautifulSoup
+- [x] Implement booking logic
+- [x] Implement partner addition
+- [x] Port test fixtures from Go tests
+- [x] Write comprehensive tests
 
 ### Phase 5.4: API Endpoints
-- [ ] Implement `/api/login` endpoint
-- [ ] Implement `/api/{date}/times` endpoint
-- [ ] Implement `/api/{date}/time/{time}/book` endpoint
-- [ ] Implement `/api/bookings/{booking_id}` PATCH endpoint
-- [ ] Add `/health` endpoint
-- [ ] Add OpenAPI documentation
-- [ ] Write integration tests
+- [x] Implement `/api/login` endpoint
+- [x] Implement `/api/{date}/times` endpoint
+- [x] Implement `/api/{date}/time/{time}/book` endpoint
+- [x] Implement `/api/bookings/{booking_id}` PATCH endpoint
+- [x] Add `/health` endpoint
+- [x] Add OpenAPI documentation (auto-generated by FastAPI)
+- [x] Write integration tests
 
 ### Phase 5.5: Docker Configuration
 - [ ] Create API Dockerfile
