@@ -87,7 +87,8 @@ class BookingClient:
     async def login(self, username: str, pin: str) -> bool:
         """Login to booking site.
 
-        Returns True on successful authentication, False on auth failure.
+        Returns True on successful authentication.
+        Raises LoginError on authentication failure (non-200 or invalid credentials).
         Raises BookingClientError on network/HTTP errors.
 
         Mirrors Go: Login(username, password string) (bool, error)
@@ -103,16 +104,22 @@ class BookingClient:
             "Submit": "Login",
         }
 
-        resp = await self._client.post(
-            f"{self.base_url}/login.php",
-            data=form_data,
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
-        )
+        try:
+            resp = await self._client.post(
+                f"{self.base_url}/login.php",
+                data=form_data,
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
+            )
+        except httpx.HTTPError as exc:
+            raise BookingClientError(f"Login request failed: {exc}") from exc
 
         if resp.status_code != 200:
-            return False
+            raise LoginError(f"Login failed with status code {resp.status_code}")
 
-        return parse_login_response(resp.text)
+        if not parse_login_response(resp.text):
+            raise LoginError("Login failed: invalid credentials")
+
+        return True
 
     async def get_availability(self, date: str) -> list[TimeSlot]:
         """Get available tee times for a date.
@@ -127,11 +134,20 @@ class BookingClient:
         """
         await self._ensure_client()
 
-        resp = await self._client.get(
-            f"{self.base_url}/memberbooking/",
-            params={"date": date},
-        )
-        resp.raise_for_status()
+        try:
+            resp = await self._client.get(
+                f"{self.base_url}/memberbooking/",
+                params={"date": date},
+            )
+            resp.raise_for_status()
+        except httpx.HTTPStatusError as exc:
+            raise BookingClientError(
+                f"Failed to get availability: HTTP {exc.response.status_code}"
+            ) from exc
+        except httpx.HTTPError as exc:
+            raise BookingClientError(
+                f"Failed to get availability: {exc}"
+            ) from exc
 
         return parse_availability(resp.text)
 
@@ -168,11 +184,20 @@ class BookingClient:
         # Combine form params with num_slots
         params = {**time_slot.booking_form, "numslots": str(num_slots)}
 
-        resp = await self._client.get(
-            f"{self.base_url}/memberbooking/",
-            params=params,
-        )
-        resp.raise_for_status()
+        try:
+            resp = await self._client.get(
+                f"{self.base_url}/memberbooking/",
+                params=params,
+            )
+            resp.raise_for_status()
+        except httpx.HTTPStatusError as exc:
+            raise BookingError(
+                f"Booking request failed with status code {exc.response.status_code}"
+            ) from exc
+        except httpx.HTTPError as exc:
+            raise BookingClientError(
+                f"Error communicating with booking service: {exc}"
+            ) from exc
 
         success, error = parse_booking_response(resp.text)
         if not success:

@@ -12,6 +12,7 @@ from app.services.booking_client import (
     BookingClient,
     BookingClientError,
     BookingError,
+    LoginError,
 )
 from app.utils.user_agents import USER_AGENTS
 
@@ -107,8 +108,8 @@ class TestBookingClientLogin:
         assert result is True
 
     @pytest.mark.asyncio
-    async def test_login_failure(self, httpx_mock: HTTPXMock, base_url: str):
-        """Failed login returns False."""
+    async def test_login_failure_raises_login_error(self, httpx_mock: HTTPXMock, base_url: str):
+        """Failed login raises LoginError."""
         httpx_mock.add_response(
             url=f"{base_url}/login.php",
             method="POST",
@@ -116,13 +117,12 @@ class TestBookingClientLogin:
         )
 
         async with BookingClient(base_url) as client:
-            result = await client.login("testuser", "wrong")
-
-        assert result is False
+            with pytest.raises(LoginError, match="invalid credentials"):
+                await client.login("testuser", "wrong")
 
     @pytest.mark.asyncio
-    async def test_login_non_200_returns_false(self, httpx_mock: HTTPXMock, base_url: str):
-        """Non-200 response returns False without raising."""
+    async def test_login_non_200_raises_login_error(self, httpx_mock: HTTPXMock, base_url: str):
+        """Non-200 response raises LoginError."""
         httpx_mock.add_response(
             url=f"{base_url}/login.php",
             method="POST",
@@ -130,9 +130,8 @@ class TestBookingClientLogin:
         )
 
         async with BookingClient(base_url) as client:
-            result = await client.login("testuser", "1234")
-
-        assert result is False
+            with pytest.raises(LoginError, match="status code 403"):
+                await client.login("testuser", "1234")
 
     @pytest.mark.asyncio
     async def test_login_sends_correct_form_data(
@@ -205,6 +204,21 @@ class TestBookingClientGetAvailability:
             slots = await client.get_availability("15-01-2024")
 
         assert len(slots) == 0
+
+    @pytest.mark.asyncio
+    async def test_non_200_raises_booking_client_error(
+        self, httpx_mock: HTTPXMock, base_url: str
+    ):
+        """Non-200 response raises BookingClientError."""
+        httpx_mock.add_response(
+            url=re.compile(rf"{re.escape(base_url)}/memberbooking/.*"),
+            method="GET",
+            status_code=500,
+        )
+
+        async with BookingClient(base_url) as client:
+            with pytest.raises(BookingClientError, match="HTTP 500"):
+                await client.get_availability("15-01-2024")
 
 
 class TestBookingClientBookTimeSlot:
@@ -320,6 +334,24 @@ class TestBookingClientBookTimeSlot:
             )
 
         assert booking_id == "dryrun-booking-id"
+
+    @pytest.mark.asyncio
+    async def test_non_200_raises_booking_error(
+        self,
+        httpx_mock: HTTPXMock,
+        base_url: str,
+        sample_time_slot: TimeSlot,
+    ):
+        """Non-200 response raises BookingError."""
+        httpx_mock.add_response(
+            url=re.compile(rf"{re.escape(base_url)}/memberbooking/.*"),
+            method="GET",
+            status_code=500,
+        )
+
+        async with BookingClient(base_url) as client:
+            with pytest.raises(BookingError, match="status code 500"):
+                await client.book_time_slot(sample_time_slot)
 
     @pytest.mark.asyncio
     async def test_sends_form_params(
@@ -500,14 +532,20 @@ class TestBookingClientHeaders:
 class TestUserAgentRandomization:
     """Tests for user agent randomization."""
 
-    def test_random_user_agent_selection(self, base_url: str):
-        """Different clients may get different user agents."""
-        # Create multiple clients and check we get variety
-        # (with 5 user agents, probability of all same after 20 tries is very low)
+    def test_random_user_agent_selection(self, base_url: str, monkeypatch):
+        """Different clients get different user agents deterministically."""
+        test_agents = ["Agent-A", "Agent-B"]
+        monkeypatch.setattr("app.utils.user_agents.USER_AGENTS", test_agents)
+
+        agent_cycle = iter(test_agents * 2)
+        monkeypatch.setattr(
+            "app.utils.user_agents.random.choice",
+            lambda seq: next(agent_cycle),
+        )
+
         user_agents = set()
-        for _ in range(20):
+        for _ in range(4):
             client = BookingClient(base_url)
             user_agents.add(client._user_agent)
 
-        # Should have at least 2 different user agents
-        assert len(user_agents) >= 2
+        assert user_agents == {"Agent-A", "Agent-B"}

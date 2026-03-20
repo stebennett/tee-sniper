@@ -49,7 +49,7 @@ def parse_availability(html: str) -> list[TimeSlot]:
         booking_form: dict[str, str] = {}
         for input_elem in row.select("td.slot-actions form input"):
             name = input_elem.get("name")
-            value = input_elem.get("value", "")
+            value = input_elem.get("value")
             if name is not None and value is not None:  # Go checks nok && vok (both must exist)
                 booking_form[name] = value
 
