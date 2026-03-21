@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/twilio/twilio-go/client"
+	"github.com/twilio/twilio-go/client/metadata"
 )
 
 // Optional parameters for the method 'CreateAccount'
@@ -47,7 +48,7 @@ func (c *ApiService) CreateAccount(params *CreateAccountParams) (*ApiV2010Accoun
 		data.Set("FriendlyName", *params.FriendlyName)
 	}
 
-	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -62,6 +63,40 @@ func (c *ApiService) CreateAccount(params *CreateAccountParams) (*ApiV2010Accoun
 	return ps, err
 }
 
+// CreateAccountWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) CreateAccountWithMetadata(params *CreateAccountParams) (*metadata.ResourceMetadata[ApiV2010Account], error) {
+	path := "/2010-04-01/Accounts.json"
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	if params != nil && params.FriendlyName != nil {
+		data.Set("FriendlyName", *params.FriendlyName)
+	}
+
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &ApiV2010Account{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[ApiV2010Account](
+		*ps,             // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
+}
+
 // Fetch the account specified by the provided Account Sid
 func (c *ApiService) FetchAccount(Sid string) (*ApiV2010Account, error) {
 	path := "/2010-04-01/Accounts/{Sid}.json"
@@ -72,7 +107,7 @@ func (c *ApiService) FetchAccount(Sid string) (*ApiV2010Account, error) {
 		"Content-Type": "application/x-www-form-urlencoded",
 	}
 
-	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -85,6 +120,37 @@ func (c *ApiService) FetchAccount(Sid string) (*ApiV2010Account, error) {
 	}
 
 	return ps, err
+}
+
+// FetchAccountWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) FetchAccountWithMetadata(Sid string) (*metadata.ResourceMetadata[ApiV2010Account], error) {
+	path := "/2010-04-01/Accounts/{Sid}.json"
+	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &ApiV2010Account{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[ApiV2010Account](
+		*ps,             // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Optional parameters for the method 'ListAccount'
@@ -142,7 +208,7 @@ func (c *ApiService) PageAccount(params *ListAccountParams, pageToken, pageNumbe
 		data.Set("Page", pageNumber)
 	}
 
-	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -155,6 +221,53 @@ func (c *ApiService) PageAccount(params *ListAccountParams, pageToken, pageNumbe
 	}
 
 	return ps, err
+}
+
+// PageAccountWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) PageAccountWithMetadata(params *ListAccountParams, pageToken, pageNumber string) (*metadata.ResourceMetadata[ListAccountResponse], error) {
+	path := "/2010-04-01/Accounts.json"
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	if params != nil && params.FriendlyName != nil {
+		data.Set("FriendlyName", *params.FriendlyName)
+	}
+	if params != nil && params.Status != nil {
+		data.Set("Status", fmt.Sprint(*params.Status))
+	}
+	if params != nil && params.PageSize != nil {
+		data.Set("PageSize", fmt.Sprint(*params.PageSize))
+	}
+
+	if pageToken != "" {
+		data.Set("PageToken", pageToken)
+	}
+	if pageNumber != "" {
+		data.Set("Page", pageNumber)
+	}
+
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &ListAccountResponse{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[ListAccountResponse](
+		*ps,             // The page object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Lists Account records from the API as a list. Unlike stream, this operation is eager and loads 'limit' records into memory before returning.
@@ -171,6 +284,29 @@ func (c *ApiService) ListAccount(params *ListAccountParams) ([]ApiV2010Account, 
 	}
 
 	return records, nil
+}
+
+// ListAccountWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) ListAccountWithMetadata(params *ListAccountParams) (*metadata.ResourceMetadata[[]ApiV2010Account], error) {
+	response, errors := c.StreamAccountWithMetadata(params)
+	resource := response.GetResource()
+
+	records := make([]ApiV2010Account, 0)
+	for record := range resource {
+		records = append(records, record)
+	}
+
+	if err := <-errors; err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[[]ApiV2010Account](
+		records,
+		response.GetStatusCode(), // HTTP status code
+		response.GetHeaders(),    // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Streams Account records from the API as a channel stream. This operation lazily loads records as efficiently as possible until the limit is reached.
@@ -193,6 +329,35 @@ func (c *ApiService) StreamAccount(params *ListAccountParams) (chan ApiV2010Acco
 	}
 
 	return recordChannel, errorChannel
+}
+
+// StreamAccountWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) StreamAccountWithMetadata(params *ListAccountParams) (*metadata.ResourceMetadata[chan ApiV2010Account], chan error) {
+	if params == nil {
+		params = &ListAccountParams{}
+	}
+	params.SetPageSize(client.ReadLimits(params.PageSize, params.Limit))
+
+	recordChannel := make(chan ApiV2010Account, 1)
+	errorChannel := make(chan error, 1)
+
+	response, err := c.PageAccountWithMetadata(params, "", "")
+	if err != nil {
+		errorChannel <- err
+		close(recordChannel)
+		close(errorChannel)
+	} else {
+		resource := response.GetResource()
+		go c.streamAccount(&resource, params, recordChannel, errorChannel)
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[chan ApiV2010Account](
+		recordChannel,            // The stream
+		response.GetStatusCode(), // HTTP status code from page response
+		response.GetHeaders(),    // HTTP headers from page response
+	)
+
+	return metadataWrapper, errorChannel
 }
 
 func (c *ApiService) streamAccount(response *ListAccountResponse, params *ListAccountParams, recordChannel chan ApiV2010Account, errorChannel chan error) {
@@ -229,7 +394,7 @@ func (c *ApiService) getNextListAccountResponse(nextPageUrl string) (interface{}
 	if nextPageUrl == "" {
 		return nil, nil
 	}
-	resp, err := c.requestHandler.Get(nextPageUrl, nil, nil)
+	resp, err := c.requestHandler.Get(nextPageUrl, nil, nil, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -277,7 +442,7 @@ func (c *ApiService) UpdateAccount(Sid string, params *UpdateAccountParams) (*Ap
 		data.Set("Status", fmt.Sprint(*params.Status))
 	}
 
-	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -290,4 +455,42 @@ func (c *ApiService) UpdateAccount(Sid string, params *UpdateAccountParams) (*Ap
 	}
 
 	return ps, err
+}
+
+// UpdateAccountWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) UpdateAccountWithMetadata(Sid string, params *UpdateAccountParams) (*metadata.ResourceMetadata[ApiV2010Account], error) {
+	path := "/2010-04-01/Accounts/{Sid}.json"
+	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	if params != nil && params.FriendlyName != nil {
+		data.Set("FriendlyName", *params.FriendlyName)
+	}
+	if params != nil && params.Status != nil {
+		data.Set("Status", fmt.Sprint(*params.Status))
+	}
+
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &ApiV2010Account{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[ApiV2010Account](
+		*ps,             // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }

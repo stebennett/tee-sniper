@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+
+	"github.com/twilio/twilio-go/client/metadata"
 )
 
 // Optional parameters for the method 'CreateRealtimeTranscription'
@@ -53,6 +55,10 @@ type CreateRealtimeTranscriptionParams struct {
 	EnableAutomaticPunctuation *bool `json:"EnableAutomaticPunctuation,omitempty"`
 	// The SID or unique name of the [Intelligence Service](https://www.twilio.com/docs/conversational-intelligence/api/service-resource) for persisting transcripts and running post-call Language Operators
 	IntelligenceService *string `json:"IntelligenceService,omitempty"`
+	// The ID of the Conversations Configuration for customizing conversation behavior in Intelligence Service
+	ConversationConfiguration *string `json:"ConversationConfiguration,omitempty"`
+	// The ID of the Conversation for associating this Transcription with an existing Conversation in Intelligence Service
+	ConversationId *string `json:"ConversationId,omitempty"`
 	// Whether the callback includes raw provider data.
 	EnableProviderData *bool `json:"EnableProviderData,omitempty"`
 }
@@ -117,6 +123,14 @@ func (params *CreateRealtimeTranscriptionParams) SetIntelligenceService(Intellig
 	params.IntelligenceService = &IntelligenceService
 	return params
 }
+func (params *CreateRealtimeTranscriptionParams) SetConversationConfiguration(ConversationConfiguration string) *CreateRealtimeTranscriptionParams {
+	params.ConversationConfiguration = &ConversationConfiguration
+	return params
+}
+func (params *CreateRealtimeTranscriptionParams) SetConversationId(ConversationId string) *CreateRealtimeTranscriptionParams {
+	params.ConversationId = &ConversationId
+	return params
+}
 func (params *CreateRealtimeTranscriptionParams) SetEnableProviderData(EnableProviderData bool) *CreateRealtimeTranscriptionParams {
 	params.EnableProviderData = &EnableProviderData
 	return params
@@ -179,11 +193,17 @@ func (c *ApiService) CreateRealtimeTranscription(CallSid string, params *CreateR
 	if params != nil && params.IntelligenceService != nil {
 		data.Set("IntelligenceService", *params.IntelligenceService)
 	}
+	if params != nil && params.ConversationConfiguration != nil {
+		data.Set("ConversationConfiguration", *params.ConversationConfiguration)
+	}
+	if params != nil && params.ConversationId != nil {
+		data.Set("ConversationId", *params.ConversationId)
+	}
 	if params != nil && params.EnableProviderData != nil {
 		data.Set("EnableProviderData", fmt.Sprint(*params.EnableProviderData))
 	}
 
-	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -196,6 +216,94 @@ func (c *ApiService) CreateRealtimeTranscription(CallSid string, params *CreateR
 	}
 
 	return ps, err
+}
+
+// CreateRealtimeTranscriptionWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) CreateRealtimeTranscriptionWithMetadata(CallSid string, params *CreateRealtimeTranscriptionParams) (*metadata.ResourceMetadata[ApiV2010RealtimeTranscription], error) {
+	path := "/2010-04-01/Accounts/{AccountSid}/Calls/{CallSid}/Transcriptions.json"
+	if params != nil && params.PathAccountSid != nil {
+		path = strings.Replace(path, "{"+"AccountSid"+"}", *params.PathAccountSid, -1)
+	} else {
+		path = strings.Replace(path, "{"+"AccountSid"+"}", c.requestHandler.Client.AccountSid(), -1)
+	}
+	path = strings.Replace(path, "{"+"CallSid"+"}", CallSid, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	if params != nil && params.Name != nil {
+		data.Set("Name", *params.Name)
+	}
+	if params != nil && params.Track != nil {
+		data.Set("Track", fmt.Sprint(*params.Track))
+	}
+	if params != nil && params.StatusCallbackUrl != nil {
+		data.Set("StatusCallbackUrl", *params.StatusCallbackUrl)
+	}
+	if params != nil && params.StatusCallbackMethod != nil {
+		data.Set("StatusCallbackMethod", *params.StatusCallbackMethod)
+	}
+	if params != nil && params.InboundTrackLabel != nil {
+		data.Set("InboundTrackLabel", *params.InboundTrackLabel)
+	}
+	if params != nil && params.OutboundTrackLabel != nil {
+		data.Set("OutboundTrackLabel", *params.OutboundTrackLabel)
+	}
+	if params != nil && params.PartialResults != nil {
+		data.Set("PartialResults", fmt.Sprint(*params.PartialResults))
+	}
+	if params != nil && params.LanguageCode != nil {
+		data.Set("LanguageCode", *params.LanguageCode)
+	}
+	if params != nil && params.TranscriptionEngine != nil {
+		data.Set("TranscriptionEngine", *params.TranscriptionEngine)
+	}
+	if params != nil && params.ProfanityFilter != nil {
+		data.Set("ProfanityFilter", fmt.Sprint(*params.ProfanityFilter))
+	}
+	if params != nil && params.SpeechModel != nil {
+		data.Set("SpeechModel", *params.SpeechModel)
+	}
+	if params != nil && params.Hints != nil {
+		data.Set("Hints", *params.Hints)
+	}
+	if params != nil && params.EnableAutomaticPunctuation != nil {
+		data.Set("EnableAutomaticPunctuation", fmt.Sprint(*params.EnableAutomaticPunctuation))
+	}
+	if params != nil && params.IntelligenceService != nil {
+		data.Set("IntelligenceService", *params.IntelligenceService)
+	}
+	if params != nil && params.ConversationConfiguration != nil {
+		data.Set("ConversationConfiguration", *params.ConversationConfiguration)
+	}
+	if params != nil && params.ConversationId != nil {
+		data.Set("ConversationId", *params.ConversationId)
+	}
+	if params != nil && params.EnableProviderData != nil {
+		data.Set("EnableProviderData", fmt.Sprint(*params.EnableProviderData))
+	}
+
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &ApiV2010RealtimeTranscription{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[ApiV2010RealtimeTranscription](
+		*ps,             // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Optional parameters for the method 'UpdateRealtimeTranscription'
@@ -235,7 +343,7 @@ func (c *ApiService) UpdateRealtimeTranscription(CallSid string, Sid string, par
 		data.Set("Status", fmt.Sprint(*params.Status))
 	}
 
-	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -248,4 +356,45 @@ func (c *ApiService) UpdateRealtimeTranscription(CallSid string, Sid string, par
 	}
 
 	return ps, err
+}
+
+// UpdateRealtimeTranscriptionWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) UpdateRealtimeTranscriptionWithMetadata(CallSid string, Sid string, params *UpdateRealtimeTranscriptionParams) (*metadata.ResourceMetadata[ApiV2010RealtimeTranscription], error) {
+	path := "/2010-04-01/Accounts/{AccountSid}/Calls/{CallSid}/Transcriptions/{Sid}.json"
+	if params != nil && params.PathAccountSid != nil {
+		path = strings.Replace(path, "{"+"AccountSid"+"}", *params.PathAccountSid, -1)
+	} else {
+		path = strings.Replace(path, "{"+"AccountSid"+"}", c.requestHandler.Client.AccountSid(), -1)
+	}
+	path = strings.Replace(path, "{"+"CallSid"+"}", CallSid, -1)
+	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	if params != nil && params.Status != nil {
+		data.Set("Status", fmt.Sprint(*params.Status))
+	}
+
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &ApiV2010RealtimeTranscription{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[ApiV2010RealtimeTranscription](
+		*ps,             // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }

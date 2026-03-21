@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/twilio/twilio-go/client"
+	"github.com/twilio/twilio-go/client/metadata"
 )
 
 // Optional parameters for the method 'CreateCredentialList'
@@ -48,7 +49,7 @@ func (c *ApiService) CreateCredentialList(TrunkSid string, params *CreateCredent
 		data.Set("CredentialListSid", *params.CredentialListSid)
 	}
 
-	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -61,6 +62,41 @@ func (c *ApiService) CreateCredentialList(TrunkSid string, params *CreateCredent
 	}
 
 	return ps, err
+}
+
+// CreateCredentialListWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) CreateCredentialListWithMetadata(TrunkSid string, params *CreateCredentialListParams) (*metadata.ResourceMetadata[TrunkingV1CredentialList], error) {
+	path := "/v1/Trunks/{TrunkSid}/CredentialLists"
+	path = strings.Replace(path, "{"+"TrunkSid"+"}", TrunkSid, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	if params != nil && params.CredentialListSid != nil {
+		data.Set("CredentialListSid", *params.CredentialListSid)
+	}
+
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &TrunkingV1CredentialList{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[TrunkingV1CredentialList](
+		*ps,             // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 //
@@ -74,7 +110,7 @@ func (c *ApiService) DeleteCredentialList(TrunkSid string, Sid string) error {
 		"Content-Type": "application/x-www-form-urlencoded",
 	}
 
-	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return err
 	}
@@ -82,6 +118,33 @@ func (c *ApiService) DeleteCredentialList(TrunkSid string, Sid string) error {
 	defer resp.Body.Close()
 
 	return nil
+}
+
+// DeleteCredentialListWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) DeleteCredentialListWithMetadata(TrunkSid string, Sid string) (*metadata.ResourceMetadata[bool], error) {
+	path := "/v1/Trunks/{TrunkSid}/CredentialLists/{Sid}"
+	path = strings.Replace(path, "{"+"TrunkSid"+"}", TrunkSid, -1)
+	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	metadataWrapper := metadata.NewResourceMetadata[bool](
+		true,            // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 //
@@ -95,7 +158,7 @@ func (c *ApiService) FetchCredentialList(TrunkSid string, Sid string) (*Trunking
 		"Content-Type": "application/x-www-form-urlencoded",
 	}
 
-	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -108,6 +171,38 @@ func (c *ApiService) FetchCredentialList(TrunkSid string, Sid string) (*Trunking
 	}
 
 	return ps, err
+}
+
+// FetchCredentialListWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) FetchCredentialListWithMetadata(TrunkSid string, Sid string) (*metadata.ResourceMetadata[TrunkingV1CredentialList], error) {
+	path := "/v1/Trunks/{TrunkSid}/CredentialLists/{Sid}"
+	path = strings.Replace(path, "{"+"TrunkSid"+"}", TrunkSid, -1)
+	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &TrunkingV1CredentialList{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[TrunkingV1CredentialList](
+		*ps,             // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Optional parameters for the method 'ListCredentialList'
@@ -149,7 +244,7 @@ func (c *ApiService) PageCredentialList(TrunkSid string, params *ListCredentialL
 		data.Set("Page", pageNumber)
 	}
 
-	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -162,6 +257,49 @@ func (c *ApiService) PageCredentialList(TrunkSid string, params *ListCredentialL
 	}
 
 	return ps, err
+}
+
+// PageCredentialListWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) PageCredentialListWithMetadata(TrunkSid string, params *ListCredentialListParams, pageToken, pageNumber string) (*metadata.ResourceMetadata[ListCredentialListResponse], error) {
+	path := "/v1/Trunks/{TrunkSid}/CredentialLists"
+
+	path = strings.Replace(path, "{"+"TrunkSid"+"}", TrunkSid, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	if params != nil && params.PageSize != nil {
+		data.Set("PageSize", fmt.Sprint(*params.PageSize))
+	}
+
+	if pageToken != "" {
+		data.Set("PageToken", pageToken)
+	}
+	if pageNumber != "" {
+		data.Set("Page", pageNumber)
+	}
+
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &ListCredentialListResponse{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[ListCredentialListResponse](
+		*ps,             // The page object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Lists CredentialList records from the API as a list. Unlike stream, this operation is eager and loads 'limit' records into memory before returning.
@@ -178,6 +316,29 @@ func (c *ApiService) ListCredentialList(TrunkSid string, params *ListCredentialL
 	}
 
 	return records, nil
+}
+
+// ListCredentialListWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) ListCredentialListWithMetadata(TrunkSid string, params *ListCredentialListParams) (*metadata.ResourceMetadata[[]TrunkingV1CredentialList], error) {
+	response, errors := c.StreamCredentialListWithMetadata(TrunkSid, params)
+	resource := response.GetResource()
+
+	records := make([]TrunkingV1CredentialList, 0)
+	for record := range resource {
+		records = append(records, record)
+	}
+
+	if err := <-errors; err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[[]TrunkingV1CredentialList](
+		records,
+		response.GetStatusCode(), // HTTP status code
+		response.GetHeaders(),    // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Streams CredentialList records from the API as a channel stream. This operation lazily loads records as efficiently as possible until the limit is reached.
@@ -200,6 +361,35 @@ func (c *ApiService) StreamCredentialList(TrunkSid string, params *ListCredentia
 	}
 
 	return recordChannel, errorChannel
+}
+
+// StreamCredentialListWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) StreamCredentialListWithMetadata(TrunkSid string, params *ListCredentialListParams) (*metadata.ResourceMetadata[chan TrunkingV1CredentialList], chan error) {
+	if params == nil {
+		params = &ListCredentialListParams{}
+	}
+	params.SetPageSize(client.ReadLimits(params.PageSize, params.Limit))
+
+	recordChannel := make(chan TrunkingV1CredentialList, 1)
+	errorChannel := make(chan error, 1)
+
+	response, err := c.PageCredentialListWithMetadata(TrunkSid, params, "", "")
+	if err != nil {
+		errorChannel <- err
+		close(recordChannel)
+		close(errorChannel)
+	} else {
+		resource := response.GetResource()
+		go c.streamCredentialList(&resource, params, recordChannel, errorChannel)
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[chan TrunkingV1CredentialList](
+		recordChannel,            // The stream
+		response.GetStatusCode(), // HTTP status code from page response
+		response.GetHeaders(),    // HTTP headers from page response
+	)
+
+	return metadataWrapper, errorChannel
 }
 
 func (c *ApiService) streamCredentialList(response *ListCredentialListResponse, params *ListCredentialListParams, recordChannel chan TrunkingV1CredentialList, errorChannel chan error) {
@@ -236,7 +426,7 @@ func (c *ApiService) getNextListCredentialListResponse(nextPageUrl string) (inte
 	if nextPageUrl == "" {
 		return nil, nil
 	}
-	resp, err := c.requestHandler.Get(nextPageUrl, nil, nil)
+	resp, err := c.requestHandler.Get(nextPageUrl, nil, nil, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}

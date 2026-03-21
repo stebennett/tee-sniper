@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+
+	"github.com/twilio/twilio-go/client/metadata"
 )
 
 // Optional parameters for the method 'FetchMedia'
@@ -46,7 +48,7 @@ func (c *ApiService) FetchMedia(Sid string, params *FetchMediaParams) (*Intellig
 		data.Set("Redacted", fmt.Sprint(*params.Redacted))
 	}
 
-	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -59,4 +61,39 @@ func (c *ApiService) FetchMedia(Sid string, params *FetchMediaParams) (*Intellig
 	}
 
 	return ps, err
+}
+
+// FetchMediaWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) FetchMediaWithMetadata(Sid string, params *FetchMediaParams) (*metadata.ResourceMetadata[IntelligenceV2Media], error) {
+	path := "/v2/Transcripts/{Sid}/Media"
+	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	if params != nil && params.Redacted != nil {
+		data.Set("Redacted", fmt.Sprint(*params.Redacted))
+	}
+
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &IntelligenceV2Media{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[IntelligenceV2Media](
+		*ps,             // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }

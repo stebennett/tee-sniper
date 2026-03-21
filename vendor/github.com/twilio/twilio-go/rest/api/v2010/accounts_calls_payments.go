@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+
+	"github.com/twilio/twilio-go/client/metadata"
 )
 
 // Optional parameters for the method 'CreatePayments'
@@ -57,6 +59,10 @@ type CreatePaymentsParams struct {
 	TokenType *string `json:"TokenType,omitempty"`
 	// Credit card types separated by space that Pay should accept. The default value is `visa mastercard amex`
 	ValidCardTypes *string `json:"ValidCardTypes,omitempty"`
+	// A comma-separated list of payment information fields that require the caller to enter the same value twice for confirmation. Supported values are `payment-card-number`, `expiration-date`, `security-code`, and `postal-code`.
+	RequireMatchingInputs *string `json:"RequireMatchingInputs,omitempty"`
+	// Whether to prompt the caller to confirm their payment information before submitting to the payment gateway. If `true`, the caller will hear the last 4 digits of their card or account number and must press 1 to confirm or 2 to cancel. Default is `false`.
+	Confirmation *string `json:"Confirmation,omitempty"`
 }
 
 func (params *CreatePaymentsParams) SetPathAccountSid(PathAccountSid string) *CreatePaymentsParams {
@@ -125,6 +131,14 @@ func (params *CreatePaymentsParams) SetTokenType(TokenType string) *CreatePaymen
 }
 func (params *CreatePaymentsParams) SetValidCardTypes(ValidCardTypes string) *CreatePaymentsParams {
 	params.ValidCardTypes = &ValidCardTypes
+	return params
+}
+func (params *CreatePaymentsParams) SetRequireMatchingInputs(RequireMatchingInputs string) *CreatePaymentsParams {
+	params.RequireMatchingInputs = &RequireMatchingInputs
+	return params
+}
+func (params *CreatePaymentsParams) SetConfirmation(Confirmation string) *CreatePaymentsParams {
+	params.Confirmation = &Confirmation
 	return params
 }
 
@@ -197,8 +211,14 @@ func (c *ApiService) CreatePayments(CallSid string, params *CreatePaymentsParams
 	if params != nil && params.ValidCardTypes != nil {
 		data.Set("ValidCardTypes", *params.ValidCardTypes)
 	}
+	if params != nil && params.RequireMatchingInputs != nil {
+		data.Set("RequireMatchingInputs", *params.RequireMatchingInputs)
+	}
+	if params != nil && params.Confirmation != nil {
+		data.Set("Confirmation", *params.Confirmation)
+	}
 
-	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -211,6 +231,103 @@ func (c *ApiService) CreatePayments(CallSid string, params *CreatePaymentsParams
 	}
 
 	return ps, err
+}
+
+// CreatePaymentsWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) CreatePaymentsWithMetadata(CallSid string, params *CreatePaymentsParams) (*metadata.ResourceMetadata[ApiV2010Payments], error) {
+	path := "/2010-04-01/Accounts/{AccountSid}/Calls/{CallSid}/Payments.json"
+	if params != nil && params.PathAccountSid != nil {
+		path = strings.Replace(path, "{"+"AccountSid"+"}", *params.PathAccountSid, -1)
+	} else {
+		path = strings.Replace(path, "{"+"AccountSid"+"}", c.requestHandler.Client.AccountSid(), -1)
+	}
+	path = strings.Replace(path, "{"+"CallSid"+"}", CallSid, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	if params != nil && params.IdempotencyKey != nil {
+		data.Set("IdempotencyKey", *params.IdempotencyKey)
+	}
+	if params != nil && params.StatusCallback != nil {
+		data.Set("StatusCallback", *params.StatusCallback)
+	}
+	if params != nil && params.BankAccountType != nil {
+		data.Set("BankAccountType", fmt.Sprint(*params.BankAccountType))
+	}
+	if params != nil && params.ChargeAmount != nil {
+		data.Set("ChargeAmount", fmt.Sprint(*params.ChargeAmount))
+	}
+	if params != nil && params.Currency != nil {
+		data.Set("Currency", *params.Currency)
+	}
+	if params != nil && params.Description != nil {
+		data.Set("Description", *params.Description)
+	}
+	if params != nil && params.Input != nil {
+		data.Set("Input", *params.Input)
+	}
+	if params != nil && params.MinPostalCodeLength != nil {
+		data.Set("MinPostalCodeLength", fmt.Sprint(*params.MinPostalCodeLength))
+	}
+	if params != nil && params.Parameter != nil {
+		v, err := json.Marshal(params.Parameter)
+
+		if err != nil {
+			return nil, err
+		}
+
+		data.Set("Parameter", string(v))
+	}
+	if params != nil && params.PaymentConnector != nil {
+		data.Set("PaymentConnector", *params.PaymentConnector)
+	}
+	if params != nil && params.PaymentMethod != nil {
+		data.Set("PaymentMethod", fmt.Sprint(*params.PaymentMethod))
+	}
+	if params != nil && params.PostalCode != nil {
+		data.Set("PostalCode", fmt.Sprint(*params.PostalCode))
+	}
+	if params != nil && params.SecurityCode != nil {
+		data.Set("SecurityCode", fmt.Sprint(*params.SecurityCode))
+	}
+	if params != nil && params.Timeout != nil {
+		data.Set("Timeout", fmt.Sprint(*params.Timeout))
+	}
+	if params != nil && params.TokenType != nil {
+		data.Set("TokenType", fmt.Sprint(*params.TokenType))
+	}
+	if params != nil && params.ValidCardTypes != nil {
+		data.Set("ValidCardTypes", *params.ValidCardTypes)
+	}
+	if params != nil && params.RequireMatchingInputs != nil {
+		data.Set("RequireMatchingInputs", *params.RequireMatchingInputs)
+	}
+	if params != nil && params.Confirmation != nil {
+		data.Set("Confirmation", *params.Confirmation)
+	}
+
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &ApiV2010Payments{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[ApiV2010Payments](
+		*ps,             // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Optional parameters for the method 'UpdatePayments'
@@ -277,7 +394,7 @@ func (c *ApiService) UpdatePayments(CallSid string, Sid string, params *UpdatePa
 		data.Set("Status", fmt.Sprint(*params.Status))
 	}
 
-	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -290,4 +407,54 @@ func (c *ApiService) UpdatePayments(CallSid string, Sid string, params *UpdatePa
 	}
 
 	return ps, err
+}
+
+// UpdatePaymentsWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) UpdatePaymentsWithMetadata(CallSid string, Sid string, params *UpdatePaymentsParams) (*metadata.ResourceMetadata[ApiV2010Payments], error) {
+	path := "/2010-04-01/Accounts/{AccountSid}/Calls/{CallSid}/Payments/{Sid}.json"
+	if params != nil && params.PathAccountSid != nil {
+		path = strings.Replace(path, "{"+"AccountSid"+"}", *params.PathAccountSid, -1)
+	} else {
+		path = strings.Replace(path, "{"+"AccountSid"+"}", c.requestHandler.Client.AccountSid(), -1)
+	}
+	path = strings.Replace(path, "{"+"CallSid"+"}", CallSid, -1)
+	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	if params != nil && params.IdempotencyKey != nil {
+		data.Set("IdempotencyKey", *params.IdempotencyKey)
+	}
+	if params != nil && params.StatusCallback != nil {
+		data.Set("StatusCallback", *params.StatusCallback)
+	}
+	if params != nil && params.Capture != nil {
+		data.Set("Capture", fmt.Sprint(*params.Capture))
+	}
+	if params != nil && params.Status != nil {
+		data.Set("Status", fmt.Sprint(*params.Status))
+	}
+
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &ApiV2010Payments{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[ApiV2010Payments](
+		*ps,             // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }

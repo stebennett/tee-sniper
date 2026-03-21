@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/twilio/twilio-go/client"
+	"github.com/twilio/twilio-go/client/metadata"
 )
 
 // Optional parameters for the method 'ListMetric'
@@ -80,7 +81,7 @@ func (c *ApiService) PageMetric(CallSid string, params *ListMetricParams, pageTo
 		data.Set("Page", pageNumber)
 	}
 
-	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -93,6 +94,55 @@ func (c *ApiService) PageMetric(CallSid string, params *ListMetricParams, pageTo
 	}
 
 	return ps, err
+}
+
+// PageMetricWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) PageMetricWithMetadata(CallSid string, params *ListMetricParams, pageToken, pageNumber string) (*metadata.ResourceMetadata[ListMetricResponse], error) {
+	path := "/v1/Voice/{CallSid}/Metrics"
+
+	path = strings.Replace(path, "{"+"CallSid"+"}", CallSid, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	if params != nil && params.Edge != nil {
+		data.Set("Edge", *params.Edge)
+	}
+	if params != nil && params.Direction != nil {
+		data.Set("Direction", *params.Direction)
+	}
+	if params != nil && params.PageSize != nil {
+		data.Set("PageSize", fmt.Sprint(*params.PageSize))
+	}
+
+	if pageToken != "" {
+		data.Set("PageToken", pageToken)
+	}
+	if pageNumber != "" {
+		data.Set("Page", pageNumber)
+	}
+
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &ListMetricResponse{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[ListMetricResponse](
+		*ps,             // The page object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Lists Metric records from the API as a list. Unlike stream, this operation is eager and loads 'limit' records into memory before returning.
@@ -109,6 +159,29 @@ func (c *ApiService) ListMetric(CallSid string, params *ListMetricParams) ([]Ins
 	}
 
 	return records, nil
+}
+
+// ListMetricWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) ListMetricWithMetadata(CallSid string, params *ListMetricParams) (*metadata.ResourceMetadata[[]InsightsV1Metric], error) {
+	response, errors := c.StreamMetricWithMetadata(CallSid, params)
+	resource := response.GetResource()
+
+	records := make([]InsightsV1Metric, 0)
+	for record := range resource {
+		records = append(records, record)
+	}
+
+	if err := <-errors; err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[[]InsightsV1Metric](
+		records,
+		response.GetStatusCode(), // HTTP status code
+		response.GetHeaders(),    // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Streams Metric records from the API as a channel stream. This operation lazily loads records as efficiently as possible until the limit is reached.
@@ -131,6 +204,35 @@ func (c *ApiService) StreamMetric(CallSid string, params *ListMetricParams) (cha
 	}
 
 	return recordChannel, errorChannel
+}
+
+// StreamMetricWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) StreamMetricWithMetadata(CallSid string, params *ListMetricParams) (*metadata.ResourceMetadata[chan InsightsV1Metric], chan error) {
+	if params == nil {
+		params = &ListMetricParams{}
+	}
+	params.SetPageSize(client.ReadLimits(params.PageSize, params.Limit))
+
+	recordChannel := make(chan InsightsV1Metric, 1)
+	errorChannel := make(chan error, 1)
+
+	response, err := c.PageMetricWithMetadata(CallSid, params, "", "")
+	if err != nil {
+		errorChannel <- err
+		close(recordChannel)
+		close(errorChannel)
+	} else {
+		resource := response.GetResource()
+		go c.streamMetric(&resource, params, recordChannel, errorChannel)
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[chan InsightsV1Metric](
+		recordChannel,            // The stream
+		response.GetStatusCode(), // HTTP status code from page response
+		response.GetHeaders(),    // HTTP headers from page response
+	)
+
+	return metadataWrapper, errorChannel
 }
 
 func (c *ApiService) streamMetric(response *ListMetricResponse, params *ListMetricParams, recordChannel chan InsightsV1Metric, errorChannel chan error) {
@@ -167,7 +269,7 @@ func (c *ApiService) getNextListMetricResponse(nextPageUrl string) (interface{},
 	if nextPageUrl == "" {
 		return nil, nil
 	}
-	resp, err := c.requestHandler.Get(nextPageUrl, nil, nil)
+	resp, err := c.requestHandler.Get(nextPageUrl, nil, nil, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}

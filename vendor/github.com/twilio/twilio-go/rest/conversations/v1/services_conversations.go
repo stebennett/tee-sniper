@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/twilio/twilio-go/client"
+	"github.com/twilio/twilio-go/client/metadata"
 )
 
 // Optional parameters for the method 'CreateServiceConversation'
@@ -148,7 +149,7 @@ func (c *ApiService) CreateServiceConversation(ChatServiceSid string, params *Cr
 	if params != nil && params.XTwilioWebhookEnabled != nil {
 		headers["X-Twilio-Webhook-Enabled"] = *params.XTwilioWebhookEnabled
 	}
-	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -161,6 +162,74 @@ func (c *ApiService) CreateServiceConversation(ChatServiceSid string, params *Cr
 	}
 
 	return ps, err
+}
+
+// CreateServiceConversationWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) CreateServiceConversationWithMetadata(ChatServiceSid string, params *CreateServiceConversationParams) (*metadata.ResourceMetadata[ConversationsV1ServiceConversation], error) {
+	path := "/v1/Services/{ChatServiceSid}/Conversations"
+	path = strings.Replace(path, "{"+"ChatServiceSid"+"}", ChatServiceSid, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	if params != nil && params.FriendlyName != nil {
+		data.Set("FriendlyName", *params.FriendlyName)
+	}
+	if params != nil && params.UniqueName != nil {
+		data.Set("UniqueName", *params.UniqueName)
+	}
+	if params != nil && params.Attributes != nil {
+		data.Set("Attributes", *params.Attributes)
+	}
+	if params != nil && params.MessagingServiceSid != nil {
+		data.Set("MessagingServiceSid", *params.MessagingServiceSid)
+	}
+	if params != nil && params.DateCreated != nil {
+		data.Set("DateCreated", fmt.Sprint((*params.DateCreated).Format(time.RFC3339)))
+	}
+	if params != nil && params.DateUpdated != nil {
+		data.Set("DateUpdated", fmt.Sprint((*params.DateUpdated).Format(time.RFC3339)))
+	}
+	if params != nil && params.State != nil {
+		data.Set("State", fmt.Sprint(*params.State))
+	}
+	if params != nil && params.TimersInactive != nil {
+		data.Set("Timers.Inactive", *params.TimersInactive)
+	}
+	if params != nil && params.TimersClosed != nil {
+		data.Set("Timers.Closed", *params.TimersClosed)
+	}
+	if params != nil && params.BindingsEmailAddress != nil {
+		data.Set("Bindings.Email.Address", *params.BindingsEmailAddress)
+	}
+	if params != nil && params.BindingsEmailName != nil {
+		data.Set("Bindings.Email.Name", *params.BindingsEmailName)
+	}
+
+	if params != nil && params.XTwilioWebhookEnabled != nil {
+		headers["X-Twilio-Webhook-Enabled"] = *params.XTwilioWebhookEnabled
+	}
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &ConversationsV1ServiceConversation{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[ConversationsV1ServiceConversation](
+		*ps,             // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Optional parameters for the method 'DeleteServiceConversation'
@@ -188,7 +257,7 @@ func (c *ApiService) DeleteServiceConversation(ChatServiceSid string, Sid string
 	if params != nil && params.XTwilioWebhookEnabled != nil {
 		headers["X-Twilio-Webhook-Enabled"] = *params.XTwilioWebhookEnabled
 	}
-	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return err
 	}
@@ -196,6 +265,36 @@ func (c *ApiService) DeleteServiceConversation(ChatServiceSid string, Sid string
 	defer resp.Body.Close()
 
 	return nil
+}
+
+// DeleteServiceConversationWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) DeleteServiceConversationWithMetadata(ChatServiceSid string, Sid string, params *DeleteServiceConversationParams) (*metadata.ResourceMetadata[bool], error) {
+	path := "/v1/Services/{ChatServiceSid}/Conversations/{Sid}"
+	path = strings.Replace(path, "{"+"ChatServiceSid"+"}", ChatServiceSid, -1)
+	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	if params != nil && params.XTwilioWebhookEnabled != nil {
+		headers["X-Twilio-Webhook-Enabled"] = *params.XTwilioWebhookEnabled
+	}
+	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	metadataWrapper := metadata.NewResourceMetadata[bool](
+		true,            // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Fetch a conversation from your service
@@ -209,7 +308,7 @@ func (c *ApiService) FetchServiceConversation(ChatServiceSid string, Sid string)
 		"Content-Type": "application/x-www-form-urlencoded",
 	}
 
-	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -222,6 +321,38 @@ func (c *ApiService) FetchServiceConversation(ChatServiceSid string, Sid string)
 	}
 
 	return ps, err
+}
+
+// FetchServiceConversationWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) FetchServiceConversationWithMetadata(ChatServiceSid string, Sid string) (*metadata.ResourceMetadata[ConversationsV1ServiceConversation], error) {
+	path := "/v1/Services/{ChatServiceSid}/Conversations/{Sid}"
+	path = strings.Replace(path, "{"+"ChatServiceSid"+"}", ChatServiceSid, -1)
+	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &ConversationsV1ServiceConversation{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[ConversationsV1ServiceConversation](
+		*ps,             // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Optional parameters for the method 'ListServiceConversation'
@@ -290,7 +421,7 @@ func (c *ApiService) PageServiceConversation(ChatServiceSid string, params *List
 		data.Set("Page", pageNumber)
 	}
 
-	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -303,6 +434,58 @@ func (c *ApiService) PageServiceConversation(ChatServiceSid string, params *List
 	}
 
 	return ps, err
+}
+
+// PageServiceConversationWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) PageServiceConversationWithMetadata(ChatServiceSid string, params *ListServiceConversationParams, pageToken, pageNumber string) (*metadata.ResourceMetadata[ListServiceConversationResponse], error) {
+	path := "/v1/Services/{ChatServiceSid}/Conversations"
+
+	path = strings.Replace(path, "{"+"ChatServiceSid"+"}", ChatServiceSid, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	if params != nil && params.StartDate != nil {
+		data.Set("StartDate", *params.StartDate)
+	}
+	if params != nil && params.EndDate != nil {
+		data.Set("EndDate", *params.EndDate)
+	}
+	if params != nil && params.State != nil {
+		data.Set("State", fmt.Sprint(*params.State))
+	}
+	if params != nil && params.PageSize != nil {
+		data.Set("PageSize", fmt.Sprint(*params.PageSize))
+	}
+
+	if pageToken != "" {
+		data.Set("PageToken", pageToken)
+	}
+	if pageNumber != "" {
+		data.Set("Page", pageNumber)
+	}
+
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &ListServiceConversationResponse{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[ListServiceConversationResponse](
+		*ps,             // The page object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Lists ServiceConversation records from the API as a list. Unlike stream, this operation is eager and loads 'limit' records into memory before returning.
@@ -319,6 +502,29 @@ func (c *ApiService) ListServiceConversation(ChatServiceSid string, params *List
 	}
 
 	return records, nil
+}
+
+// ListServiceConversationWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) ListServiceConversationWithMetadata(ChatServiceSid string, params *ListServiceConversationParams) (*metadata.ResourceMetadata[[]ConversationsV1ServiceConversation], error) {
+	response, errors := c.StreamServiceConversationWithMetadata(ChatServiceSid, params)
+	resource := response.GetResource()
+
+	records := make([]ConversationsV1ServiceConversation, 0)
+	for record := range resource {
+		records = append(records, record)
+	}
+
+	if err := <-errors; err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[[]ConversationsV1ServiceConversation](
+		records,
+		response.GetStatusCode(), // HTTP status code
+		response.GetHeaders(),    // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Streams ServiceConversation records from the API as a channel stream. This operation lazily loads records as efficiently as possible until the limit is reached.
@@ -341,6 +547,35 @@ func (c *ApiService) StreamServiceConversation(ChatServiceSid string, params *Li
 	}
 
 	return recordChannel, errorChannel
+}
+
+// StreamServiceConversationWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) StreamServiceConversationWithMetadata(ChatServiceSid string, params *ListServiceConversationParams) (*metadata.ResourceMetadata[chan ConversationsV1ServiceConversation], chan error) {
+	if params == nil {
+		params = &ListServiceConversationParams{}
+	}
+	params.SetPageSize(client.ReadLimits(params.PageSize, params.Limit))
+
+	recordChannel := make(chan ConversationsV1ServiceConversation, 1)
+	errorChannel := make(chan error, 1)
+
+	response, err := c.PageServiceConversationWithMetadata(ChatServiceSid, params, "", "")
+	if err != nil {
+		errorChannel <- err
+		close(recordChannel)
+		close(errorChannel)
+	} else {
+		resource := response.GetResource()
+		go c.streamServiceConversation(&resource, params, recordChannel, errorChannel)
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[chan ConversationsV1ServiceConversation](
+		recordChannel,            // The stream
+		response.GetStatusCode(), // HTTP status code from page response
+		response.GetHeaders(),    // HTTP headers from page response
+	)
+
+	return metadataWrapper, errorChannel
 }
 
 func (c *ApiService) streamServiceConversation(response *ListServiceConversationResponse, params *ListServiceConversationParams, recordChannel chan ConversationsV1ServiceConversation, errorChannel chan error) {
@@ -377,7 +612,7 @@ func (c *ApiService) getNextListServiceConversationResponse(nextPageUrl string) 
 	if nextPageUrl == "" {
 		return nil, nil
 	}
-	resp, err := c.requestHandler.Get(nextPageUrl, nil, nil)
+	resp, err := c.requestHandler.Get(nextPageUrl, nil, nil, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -516,7 +751,7 @@ func (c *ApiService) UpdateServiceConversation(ChatServiceSid string, Sid string
 	if params != nil && params.XTwilioWebhookEnabled != nil {
 		headers["X-Twilio-Webhook-Enabled"] = *params.XTwilioWebhookEnabled
 	}
-	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -529,4 +764,73 @@ func (c *ApiService) UpdateServiceConversation(ChatServiceSid string, Sid string
 	}
 
 	return ps, err
+}
+
+// UpdateServiceConversationWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) UpdateServiceConversationWithMetadata(ChatServiceSid string, Sid string, params *UpdateServiceConversationParams) (*metadata.ResourceMetadata[ConversationsV1ServiceConversation], error) {
+	path := "/v1/Services/{ChatServiceSid}/Conversations/{Sid}"
+	path = strings.Replace(path, "{"+"ChatServiceSid"+"}", ChatServiceSid, -1)
+	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	if params != nil && params.FriendlyName != nil {
+		data.Set("FriendlyName", *params.FriendlyName)
+	}
+	if params != nil && params.DateCreated != nil {
+		data.Set("DateCreated", fmt.Sprint((*params.DateCreated).Format(time.RFC3339)))
+	}
+	if params != nil && params.DateUpdated != nil {
+		data.Set("DateUpdated", fmt.Sprint((*params.DateUpdated).Format(time.RFC3339)))
+	}
+	if params != nil && params.Attributes != nil {
+		data.Set("Attributes", *params.Attributes)
+	}
+	if params != nil && params.MessagingServiceSid != nil {
+		data.Set("MessagingServiceSid", *params.MessagingServiceSid)
+	}
+	if params != nil && params.State != nil {
+		data.Set("State", fmt.Sprint(*params.State))
+	}
+	if params != nil && params.TimersInactive != nil {
+		data.Set("Timers.Inactive", *params.TimersInactive)
+	}
+	if params != nil && params.TimersClosed != nil {
+		data.Set("Timers.Closed", *params.TimersClosed)
+	}
+	if params != nil && params.UniqueName != nil {
+		data.Set("UniqueName", *params.UniqueName)
+	}
+	if params != nil && params.BindingsEmailAddress != nil {
+		data.Set("Bindings.Email.Address", *params.BindingsEmailAddress)
+	}
+	if params != nil && params.BindingsEmailName != nil {
+		data.Set("Bindings.Email.Name", *params.BindingsEmailName)
+	}
+
+	if params != nil && params.XTwilioWebhookEnabled != nil {
+		headers["X-Twilio-Webhook-Enabled"] = *params.XTwilioWebhookEnabled
+	}
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &ConversationsV1ServiceConversation{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[ConversationsV1ServiceConversation](
+		*ps,             // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }

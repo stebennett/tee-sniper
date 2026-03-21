@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/twilio/twilio-go/client"
+	"github.com/twilio/twilio-go/client/metadata"
 )
 
 // Optional parameters for the method 'CreateDestinationAlphaSender'
@@ -57,7 +58,7 @@ func (c *ApiService) CreateDestinationAlphaSender(ServiceSid string, params *Cre
 		data.Set("IsoCountryCode", *params.IsoCountryCode)
 	}
 
-	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -70,6 +71,44 @@ func (c *ApiService) CreateDestinationAlphaSender(ServiceSid string, params *Cre
 	}
 
 	return ps, err
+}
+
+// CreateDestinationAlphaSenderWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) CreateDestinationAlphaSenderWithMetadata(ServiceSid string, params *CreateDestinationAlphaSenderParams) (*metadata.ResourceMetadata[MessagingV1DestinationAlphaSender], error) {
+	path := "/v1/Services/{ServiceSid}/DestinationAlphaSenders"
+	path = strings.Replace(path, "{"+"ServiceSid"+"}", ServiceSid, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	if params != nil && params.AlphaSender != nil {
+		data.Set("AlphaSender", *params.AlphaSender)
+	}
+	if params != nil && params.IsoCountryCode != nil {
+		data.Set("IsoCountryCode", *params.IsoCountryCode)
+	}
+
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &MessagingV1DestinationAlphaSender{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[MessagingV1DestinationAlphaSender](
+		*ps,             // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 //
@@ -83,7 +122,7 @@ func (c *ApiService) DeleteDestinationAlphaSender(ServiceSid string, Sid string)
 		"Content-Type": "application/x-www-form-urlencoded",
 	}
 
-	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return err
 	}
@@ -91,6 +130,33 @@ func (c *ApiService) DeleteDestinationAlphaSender(ServiceSid string, Sid string)
 	defer resp.Body.Close()
 
 	return nil
+}
+
+// DeleteDestinationAlphaSenderWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) DeleteDestinationAlphaSenderWithMetadata(ServiceSid string, Sid string) (*metadata.ResourceMetadata[bool], error) {
+	path := "/v1/Services/{ServiceSid}/DestinationAlphaSenders/{Sid}"
+	path = strings.Replace(path, "{"+"ServiceSid"+"}", ServiceSid, -1)
+	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	metadataWrapper := metadata.NewResourceMetadata[bool](
+		true,            // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 //
@@ -104,7 +170,7 @@ func (c *ApiService) FetchDestinationAlphaSender(ServiceSid string, Sid string) 
 		"Content-Type": "application/x-www-form-urlencoded",
 	}
 
-	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -117,6 +183,38 @@ func (c *ApiService) FetchDestinationAlphaSender(ServiceSid string, Sid string) 
 	}
 
 	return ps, err
+}
+
+// FetchDestinationAlphaSenderWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) FetchDestinationAlphaSenderWithMetadata(ServiceSid string, Sid string) (*metadata.ResourceMetadata[MessagingV1DestinationAlphaSender], error) {
+	path := "/v1/Services/{ServiceSid}/DestinationAlphaSenders/{Sid}"
+	path = strings.Replace(path, "{"+"ServiceSid"+"}", ServiceSid, -1)
+	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &MessagingV1DestinationAlphaSender{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[MessagingV1DestinationAlphaSender](
+		*ps,             // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Optional parameters for the method 'ListDestinationAlphaSender'
@@ -167,7 +265,7 @@ func (c *ApiService) PageDestinationAlphaSender(ServiceSid string, params *ListD
 		data.Set("Page", pageNumber)
 	}
 
-	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -180,6 +278,52 @@ func (c *ApiService) PageDestinationAlphaSender(ServiceSid string, params *ListD
 	}
 
 	return ps, err
+}
+
+// PageDestinationAlphaSenderWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) PageDestinationAlphaSenderWithMetadata(ServiceSid string, params *ListDestinationAlphaSenderParams, pageToken, pageNumber string) (*metadata.ResourceMetadata[ListDestinationAlphaSenderResponse], error) {
+	path := "/v1/Services/{ServiceSid}/DestinationAlphaSenders"
+
+	path = strings.Replace(path, "{"+"ServiceSid"+"}", ServiceSid, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	if params != nil && params.IsoCountryCode != nil {
+		data.Set("IsoCountryCode", *params.IsoCountryCode)
+	}
+	if params != nil && params.PageSize != nil {
+		data.Set("PageSize", fmt.Sprint(*params.PageSize))
+	}
+
+	if pageToken != "" {
+		data.Set("PageToken", pageToken)
+	}
+	if pageNumber != "" {
+		data.Set("Page", pageNumber)
+	}
+
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &ListDestinationAlphaSenderResponse{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[ListDestinationAlphaSenderResponse](
+		*ps,             // The page object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Lists DestinationAlphaSender records from the API as a list. Unlike stream, this operation is eager and loads 'limit' records into memory before returning.
@@ -196,6 +340,29 @@ func (c *ApiService) ListDestinationAlphaSender(ServiceSid string, params *ListD
 	}
 
 	return records, nil
+}
+
+// ListDestinationAlphaSenderWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) ListDestinationAlphaSenderWithMetadata(ServiceSid string, params *ListDestinationAlphaSenderParams) (*metadata.ResourceMetadata[[]MessagingV1DestinationAlphaSender], error) {
+	response, errors := c.StreamDestinationAlphaSenderWithMetadata(ServiceSid, params)
+	resource := response.GetResource()
+
+	records := make([]MessagingV1DestinationAlphaSender, 0)
+	for record := range resource {
+		records = append(records, record)
+	}
+
+	if err := <-errors; err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[[]MessagingV1DestinationAlphaSender](
+		records,
+		response.GetStatusCode(), // HTTP status code
+		response.GetHeaders(),    // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Streams DestinationAlphaSender records from the API as a channel stream. This operation lazily loads records as efficiently as possible until the limit is reached.
@@ -218,6 +385,35 @@ func (c *ApiService) StreamDestinationAlphaSender(ServiceSid string, params *Lis
 	}
 
 	return recordChannel, errorChannel
+}
+
+// StreamDestinationAlphaSenderWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) StreamDestinationAlphaSenderWithMetadata(ServiceSid string, params *ListDestinationAlphaSenderParams) (*metadata.ResourceMetadata[chan MessagingV1DestinationAlphaSender], chan error) {
+	if params == nil {
+		params = &ListDestinationAlphaSenderParams{}
+	}
+	params.SetPageSize(client.ReadLimits(params.PageSize, params.Limit))
+
+	recordChannel := make(chan MessagingV1DestinationAlphaSender, 1)
+	errorChannel := make(chan error, 1)
+
+	response, err := c.PageDestinationAlphaSenderWithMetadata(ServiceSid, params, "", "")
+	if err != nil {
+		errorChannel <- err
+		close(recordChannel)
+		close(errorChannel)
+	} else {
+		resource := response.GetResource()
+		go c.streamDestinationAlphaSender(&resource, params, recordChannel, errorChannel)
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[chan MessagingV1DestinationAlphaSender](
+		recordChannel,            // The stream
+		response.GetStatusCode(), // HTTP status code from page response
+		response.GetHeaders(),    // HTTP headers from page response
+	)
+
+	return metadataWrapper, errorChannel
 }
 
 func (c *ApiService) streamDestinationAlphaSender(response *ListDestinationAlphaSenderResponse, params *ListDestinationAlphaSenderParams, recordChannel chan MessagingV1DestinationAlphaSender, errorChannel chan error) {
@@ -254,7 +450,7 @@ func (c *ApiService) getNextListDestinationAlphaSenderResponse(nextPageUrl strin
 	if nextPageUrl == "" {
 		return nil, nil
 	}
-	resp, err := c.requestHandler.Get(nextPageUrl, nil, nil)
+	resp, err := c.requestHandler.Get(nextPageUrl, nil, nil, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
