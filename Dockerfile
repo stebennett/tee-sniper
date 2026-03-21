@@ -1,5 +1,5 @@
 # Build stage
-FROM dhi.io/golang:1.25-alpine3.23-dev AS builder
+FROM dhi.io/golang:1.26-alpine3.23-dev AS builder
 
 WORKDIR /app
 COPY go.mod go.sum ./
