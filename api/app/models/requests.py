@@ -10,10 +10,6 @@ class LoginRequest(BaseModel):
         ...,
         description="AES-256-GCM encrypted 'username:pin' string, base64 encoded",
     )
-    base_url: str | None = Field(
-        default=None,
-        description="Optional base URL override for the booking site. Falls back to TSA_BASE_URL.",
-    )
 
 
 class BookRequest(BaseModel):

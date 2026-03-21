@@ -100,14 +100,13 @@ Authenticates user and returns access token.
 **Request:**
 ```json
 {
-  "credentials": "<encrypted_username:pin>",
-  "base_url": "https://custom-golf-course.com/"
+  "credentials": "<encrypted_username:pin>"
 }
 ```
 
 The `credentials` field contains `username:pin` encrypted with AES-256-GCM using a shared secret.
 
-The `base_url` field is optional. When omitted, falls back to the `TSA_BASE_URL` environment variable. This allows per-session flexibility for different golf course sites.
+The base URL is configured per deployment via the `TSA_BASE_URL` environment variable.
 
 **Response (200):**
 ```json
@@ -126,7 +125,7 @@ The `base_url` field is optional. When omitted, falls back to the `TSA_BASE_URL`
 
 **Implementation Notes:**
 - Decrypt credentials using shared secret (from environment variable)
-- Use `base_url` from request body, or fall back to `TSA_BASE_URL` setting
+- Use `base_url` from `TSA_BASE_URL` setting
 - Create a fresh `BookingClient` (no session exists yet)
 - Perform login to golf course website
 - Capture cookies from the client session

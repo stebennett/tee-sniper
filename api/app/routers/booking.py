@@ -1,7 +1,8 @@
 """Booking API route handlers."""
 
+import datetime
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import JSONResponse
@@ -18,6 +19,7 @@ from app.models.responses import (
     AddPartnersResponse,
     AvailabilityResponse,
     BookResponse,
+    ErrorResponse,
     LoginResponse,
     TimeSlotResponse,
 )
@@ -35,13 +37,16 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api", tags=["Booking"])
 
 
-def _convert_date_api_to_client(date_str: str) -> str:
-    """Convert date from API format (YYYY-MM-DD) to client format (DD-MM-YYYY)."""
-    parts = date_str.split("-")
-    return f"{parts[2]}-{parts[1]}-{parts[0]}"
-
-
-@router.post("/login", response_model=LoginResponse, status_code=status.HTTP_200_OK)
+@router.post(
+    "/login",
+    response_model=LoginResponse,
+    status_code=status.HTTP_200_OK,
+    responses={
+        400: {"model": ErrorResponse, "description": "Invalid or malformed credentials"},
+        401: {"model": ErrorResponse, "description": "Authentication failed"},
+        502: {"model": ErrorResponse, "description": "Upstream booking service error"},
+    },
+)
 async def login(
     body: LoginRequest,
     encryption: EncryptionService = Depends(get_encryption_service),
@@ -57,7 +62,7 @@ async def login(
             detail=f"Invalid credentials: {exc}",
         ) from exc
 
-    base_url = body.base_url or settings.base_url
+    base_url = settings.base_url
 
     client = BookingClient(base_url=base_url)
     try:
@@ -76,7 +81,7 @@ async def login(
         ) from exc
 
     token = await session_manager.store_session(cookies, base_url)
-    expires_at = datetime.now(timezone.utc) + timedelta(seconds=session_manager.ttl)
+    expires_at = datetime.datetime.now(timezone.utc) + timedelta(seconds=session_manager.ttl)
 
     return LoginResponse(access_token=token, expires_at=expires_at)
 
@@ -85,15 +90,27 @@ async def login(
     "/{date}/times",
     response_model=AvailabilityResponse,
     status_code=status.HTTP_200_OK,
+    responses={
+        401: {"model": ErrorResponse, "description": "Invalid or expired session"},
+        502: {"model": ErrorResponse, "description": "Upstream booking service error"},
+    },
 )
 async def get_times(
-    date: str,
-    start: str | None = Query(default=None, description="Start time filter (HH:MM)"),
-    end: str | None = Query(default=None, description="End time filter (HH:MM)"),
+    date: datetime.date,
+    start: str | None = Query(
+        default=None,
+        description="Start time filter (HH:MM)",
+        pattern=r"^\d{2}:\d{2}$",
+    ),
+    end: str | None = Query(
+        default=None,
+        description="End time filter (HH:MM)",
+        pattern=r"^\d{2}:\d{2}$",
+    ),
     client: BookingClient = Depends(get_booking_client),
 ) -> AvailabilityResponse:
     """Get available tee times for a given date."""
-    client_date = _convert_date_api_to_client(date)
+    client_date = date.strftime("%d-%m-%Y")
 
     try:
         slots = await client.get_availability(client_date)
@@ -120,7 +137,7 @@ async def get_times(
     ]
 
     return AvailabilityResponse(
-        date=date,
+        date=date.isoformat(),
         times=times,
         filtered_count=len(times),
         total_count=total_count,
@@ -131,15 +148,21 @@ async def get_times(
     "/{date}/time/{time}/book",
     response_model=BookResponse,
     status_code=status.HTTP_200_OK,
+    responses={
+        401: {"model": ErrorResponse, "description": "Invalid or expired session"},
+        404: {"model": ErrorResponse, "description": "No bookable slot found"},
+        422: {"model": ErrorResponse, "description": "Booking failed"},
+        502: {"model": ErrorResponse, "description": "Upstream booking service error"},
+    },
 )
 async def book_time(
-    date: str,
+    date: datetime.date,
     time: str,
     body: BookRequest,
     client: BookingClient = Depends(get_booking_client),
 ) -> BookResponse:
     """Book a specific tee time slot."""
-    client_date = _convert_date_api_to_client(date)
+    client_date = date.strftime("%d-%m-%Y")
 
     try:
         slots = await client.get_availability(client_date)
@@ -174,7 +197,7 @@ async def book_time(
 
     return BookResponse(
         booking_id=booking_id,
-        date=date,
+        date=date.isoformat(),
         time=time,
         slots_booked=body.num_slots,
     )
@@ -184,6 +207,11 @@ async def book_time(
     "/bookings/{booking_id}",
     response_model=AddPartnersResponse,
     status_code=status.HTTP_200_OK,
+    responses={
+        207: {"model": AddPartnersResponse, "description": "Partial success — some partners failed"},
+        401: {"model": ErrorResponse, "description": "Invalid or expired session"},
+        502: {"model": ErrorResponse, "description": "All partners failed to be added"},
+    },
 )
 async def add_partners(
     booking_id: str,

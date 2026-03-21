@@ -256,7 +256,7 @@ The `api/` directory contains a Python FastAPI service that exposes the booking 
 | `POST` | `/api/{date}/time/{time}/book` | Book a specific tee time slot |
 | `PATCH` | `/api/bookings/{booking_id}` | Add playing partners to a booking |
 
-All endpoints except `/health` and `/api/login` require a `Authorization: Bearer <token>` header obtained from the login endpoint.
+All endpoints except `/health` and `/api/login` require an `Authorization: Bearer <token>` header obtained from the login endpoint.
 
 ### API Configuration
 

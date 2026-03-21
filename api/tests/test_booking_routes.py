@@ -121,36 +121,7 @@ class TestLoginEndpoint:
         assert "expires_at" in data
         assert data["access_token"] == "token-uuid-123"
 
-    def test_login_custom_base_url(
-        self,
-        app_and_client: tuple[FastAPI, TestClient],
-        encrypted_credentials: str,
-        mock_session_manager: AsyncMock,
-    ) -> None:
-        application, client = app_and_client
-        application.dependency_overrides[get_session_manager] = lambda: mock_session_manager
-
-        with patch("app.routers.booking.BookingClient") as MockClient:
-            mock_instance = AsyncMock()
-            mock_instance.login.return_value = True
-            mock_instance.get_cookies = MagicMock(return_value={"session": "abc"})
-            mock_instance.__aenter__ = AsyncMock(return_value=mock_instance)
-            mock_instance.__aexit__ = AsyncMock(return_value=False)
-            MockClient.return_value = mock_instance
-
-            response = client.post(
-                "/api/login",
-                json={
-                    "credentials": encrypted_credentials,
-                    "base_url": "https://custom.example.com/",
-                },
-            )
-
-            MockClient.assert_called_once_with(base_url="https://custom.example.com/")
-
-        assert response.status_code == 200
-
-    def test_login_default_base_url_fallback(
+    def test_login_uses_configured_base_url(
         self,
         app_and_client: tuple[FastAPI, TestClient],
         encrypted_credentials: str,
@@ -170,6 +141,38 @@ class TestLoginEndpoint:
             response = client.post(
                 "/api/login",
                 json={"credentials": encrypted_credentials},
+            )
+
+            MockClient.assert_called_once_with(
+                base_url="https://test-golf-course.example.com/"
+            )
+
+        assert response.status_code == 200
+
+    def test_login_ignores_base_url_in_body(
+        self,
+        app_and_client: tuple[FastAPI, TestClient],
+        encrypted_credentials: str,
+        mock_session_manager: AsyncMock,
+    ) -> None:
+        """Verify that base_url in the request body is ignored (SSRF prevention)."""
+        application, client = app_and_client
+        application.dependency_overrides[get_session_manager] = lambda: mock_session_manager
+
+        with patch("app.routers.booking.BookingClient") as MockClient:
+            mock_instance = AsyncMock()
+            mock_instance.login.return_value = True
+            mock_instance.get_cookies = MagicMock(return_value={"session": "abc"})
+            mock_instance.__aenter__ = AsyncMock(return_value=mock_instance)
+            mock_instance.__aexit__ = AsyncMock(return_value=False)
+            MockClient.return_value = mock_instance
+
+            response = client.post(
+                "/api/login",
+                json={
+                    "credentials": encrypted_credentials,
+                    "base_url": "https://evil.example.com/",
+                },
             )
 
             MockClient.assert_called_once_with(
@@ -654,20 +657,61 @@ class TestAddPartnersEndpoint:
         assert data["partners_failed"] == []
 
 
-class TestDateConversion:
-    """Tests for the date conversion helper."""
+class TestDateValidation:
+    """Tests for date path parameter validation."""
 
-    def test_convert_standard_date(self) -> None:
-        from app.routers.booking import _convert_date_api_to_client
+    def test_date_conversion_via_endpoint(
+        self,
+        authed_client: TestClient,
+        mock_booking_client: AsyncMock,
+    ) -> None:
+        """Verify date is correctly converted from YYYY-MM-DD to DD-MM-YYYY."""
+        authed_client.get(
+            "/api/2024-03-05/times",
+            headers={"Authorization": "Bearer test-token"},
+        )
+        mock_booking_client.get_availability.assert_called_once_with("05-03-2024")
 
-        assert _convert_date_api_to_client("2024-01-22") == "22-01-2024"
+    def test_invalid_date_returns_422(
+        self,
+        authed_client: TestClient,
+    ) -> None:
+        response = authed_client.get(
+            "/api/not-a-date/times",
+            headers={"Authorization": "Bearer test-token"},
+        )
+        assert response.status_code == 422
 
-    def test_convert_end_of_year(self) -> None:
-        from app.routers.booking import _convert_date_api_to_client
+    def test_invalid_date_format_returns_422(
+        self,
+        authed_client: TestClient,
+    ) -> None:
+        response = authed_client.get(
+            "/api/22-01-2024/times",
+            headers={"Authorization": "Bearer test-token"},
+        )
+        assert response.status_code == 422
 
-        assert _convert_date_api_to_client("2024-12-31") == "31-12-2024"
 
-    def test_convert_single_digit_day(self) -> None:
-        from app.routers.booking import _convert_date_api_to_client
+class TestTimeFilterValidation:
+    """Tests for time filter query parameter validation."""
 
-        assert _convert_date_api_to_client("2024-03-05") == "05-03-2024"
+    def test_invalid_start_time_returns_422(
+        self,
+        authed_client: TestClient,
+    ) -> None:
+        response = authed_client.get(
+            "/api/2024-01-22/times?start=9am",
+            headers={"Authorization": "Bearer test-token"},
+        )
+        assert response.status_code == 422
+
+    def test_invalid_end_time_returns_422(
+        self,
+        authed_client: TestClient,
+    ) -> None:
+        response = authed_client.get(
+            "/api/2024-01-22/times?end=25:00:00",
+            headers={"Authorization": "Bearer test-token"},
+        )
+        assert response.status_code == 422

@@ -20,10 +20,14 @@ class TestGetSessionManager:
     @pytest.mark.asyncio
     async def test_returns_session_manager_instance(self, mock_redis):
         """get_session_manager should return a SessionManager instance."""
-        result = await get_session_manager(mock_redis)
+        from app.config import get_settings
+
+        settings = get_settings()
+        result = await get_session_manager(mock_redis, settings)
 
         assert isinstance(result, SessionManager)
         assert result.redis == mock_redis
+        assert result.ttl == settings.session_ttl
 
 
 class TestGetCurrentSession:
