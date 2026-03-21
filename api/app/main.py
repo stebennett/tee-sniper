@@ -12,6 +12,7 @@ from pythonjsonlogger import jsonlogger
 from app.config import get_settings
 from app.dependencies import close_redis_pool, get_redis
 from app.models.responses import HealthResponse
+from app.routers import booking_router
 
 
 def setup_logging() -> None:
@@ -89,6 +90,9 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # Register routers
+    app.include_router(booking_router)
 
     # Health check endpoint
     @app.get(

@@ -222,6 +222,17 @@ tee-sniper/
 │   └── teetimes/
 │       ├── teetimes.go       # Tee time filtering and selection logic
 │       └── teetimes_test.go
+├── api/                      # Python FastAPI service (see API section below)
+│   ├── app/
+│   │   ├── main.py           # FastAPI app entry point
+│   │   ├── config.py         # Settings via pydantic-settings
+│   │   ├── dependencies.py   # Dependency injection providers
+│   │   ├── models/           # Pydantic request/response/domain models
+│   │   ├── routers/
+│   │   │   └── booking.py    # All booking API endpoints
+│   │   ├── services/         # Booking client, session manager, encryption
+│   │   └── utils/            # HTML parser, user agents
+│   └── tests/                # Pytest test suite
 ├── testdata/                 # HTML fixtures for testing
 ├── .github/workflows/
 │   ├── build.yml             # CI build and test workflow
@@ -229,6 +240,52 @@ tee-sniper/
 ├── .env.example              # Environment variables template
 ├── run-teesniper.sh          # Convenience execution script
 └── go.mod                    # Go module definition
+```
+
+## API Service
+
+The `api/` directory contains a Python FastAPI service that exposes the booking functionality as a REST API. This is part of an ongoing migration to split the monolithic Go CLI into a separate API service and CLI client (see `docs/API_MIGRATION_PLAN.md`).
+
+### API Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/health` | Health check (includes Redis connectivity) |
+| `POST` | `/api/login` | Authenticate with booking site, returns Bearer token |
+| `GET` | `/api/{date}/times` | Get available tee times (with optional `start`/`end` filters) |
+| `POST` | `/api/{date}/time/{time}/book` | Book a specific tee time slot |
+| `PATCH` | `/api/bookings/{booking_id}` | Add playing partners to a booking |
+
+All endpoints except `/health` and `/api/login` require an `Authorization: Bearer <token>` header obtained from the login endpoint.
+
+### API Configuration
+
+Environment variables (prefixed with `TSA_`):
+
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| `TSA_SHARED_SECRET` | Shared secret for credential encryption | Yes | - |
+| `TSA_BASE_URL` | Golf course booking site URL | Yes | - |
+| `TSA_REDIS_URL` | Redis connection URL | No | `redis://localhost:6379/0` |
+| `TSA_SESSION_TTL` | Session TTL in seconds | No | `1800` |
+| `TSA_API_HOST` | API listen host | No | `0.0.0.0` |
+| `TSA_API_PORT` | API listen port | No | `8000` |
+| `TSA_LOG_LEVEL` | Log level (DEBUG, INFO, WARNING, ERROR) | No | `INFO` |
+| `TSA_LOG_FORMAT` | Log format (`json` or `text`) | No | `json` |
+
+### Running the API
+
+```bash
+cd api
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the API
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+# Run tests
+python -m pytest tests/ -v
 ```
 
 ## How It Works

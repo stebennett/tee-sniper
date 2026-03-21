@@ -71,17 +71,19 @@ async def close_redis_pool() -> None:
 
 async def get_session_manager(
     redis: Redis = Depends(get_redis),
+    settings: Settings = Depends(get_settings_dependency),
 ) -> SessionManager:
     """
     Get SessionManager instance.
 
     Args:
         redis: Redis client from dependency injection
+        settings: Application settings
 
     Returns:
         SessionManager: Session manager instance
     """
-    return SessionManager(redis)
+    return SessionManager(redis, ttl=settings.session_ttl)
 
 
 async def get_current_session(
