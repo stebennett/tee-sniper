@@ -25,10 +25,22 @@ def load_fixture(filename: str) -> str:
     return (FIXTURES_DIR / filename).read_text()
 
 
+CSRF_TOKEN_HTML = '<input type="hidden" name="_csrf_token" value="test-csrf-token-123">'
+
+
 @pytest.fixture
 def base_url() -> str:
     """Base URL for booking site."""
     return "https://booking.example.com"
+
+
+def mock_csrf_page(httpx_mock: HTTPXMock, base_url: str) -> None:
+    """Register a GET mock for the login page that returns a CSRF token."""
+    httpx_mock.add_response(
+        url=f"{base_url}/login.php",
+        method="GET",
+        html=CSRF_TOKEN_HTML,
+    )
 
 
 @pytest.fixture
@@ -96,6 +108,7 @@ class TestBookingClientLogin:
     @pytest.mark.asyncio
     async def test_login_success(self, httpx_mock: HTTPXMock, base_url: str):
         """Successful login returns True."""
+        mock_csrf_page(httpx_mock, base_url)
         httpx_mock.add_response(
             url=f"{base_url}/login.php",
             method="POST",
@@ -110,6 +123,7 @@ class TestBookingClientLogin:
     @pytest.mark.asyncio
     async def test_login_failure_raises_login_error(self, httpx_mock: HTTPXMock, base_url: str):
         """Failed login raises LoginError."""
+        mock_csrf_page(httpx_mock, base_url)
         httpx_mock.add_response(
             url=f"{base_url}/login.php",
             method="POST",
@@ -123,6 +137,7 @@ class TestBookingClientLogin:
     @pytest.mark.asyncio
     async def test_login_non_200_raises_login_error(self, httpx_mock: HTTPXMock, base_url: str):
         """Non-200 response raises LoginError."""
+        mock_csrf_page(httpx_mock, base_url)
         httpx_mock.add_response(
             url=f"{base_url}/login.php",
             method="POST",
@@ -137,7 +152,8 @@ class TestBookingClientLogin:
     async def test_login_sends_correct_form_data(
         self, httpx_mock: HTTPXMock, base_url: str
     ):
-        """Login sends expected form parameters."""
+        """Login sends expected form parameters including CSRF token."""
+        mock_csrf_page(httpx_mock, base_url)
         httpx_mock.add_response(
             url=f"{base_url}/login.php",
             method="POST",
@@ -147,13 +163,15 @@ class TestBookingClientLogin:
         async with BookingClient(base_url) as client:
             await client.login("testuser", "1234")
 
-        request = httpx_mock.get_request()
-        assert request is not None
-        content = request.content.decode()
+        # The POST is the second request (after the CSRF GET)
+        requests = httpx_mock.get_requests()
+        post_request = [r for r in requests if r.method == "POST"][0]
+        content = post_request.content.decode()
         assert "memberid=testuser" in content
         assert "pin=1234" in content
         assert "task=login" in content
         assert "Submit=Login" in content
+        assert "_csrf_token=test-csrf-token-123" in content
 
 
 class TestBookingClientGetAvailability:
@@ -465,6 +483,7 @@ class TestBookingClientCookies:
         self, httpx_mock: HTTPXMock, base_url: str
     ):
         """get_cookies returns cookies from session."""
+        mock_csrf_page(httpx_mock, base_url)
         httpx_mock.add_response(
             url=f"{base_url}/login.php",
             method="POST",
