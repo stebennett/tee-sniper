@@ -1,5 +1,7 @@
 """Booking client service for golf course website interaction."""
 
+import re
+
 import httpx
 
 from app.models.domain import TimeSlot
@@ -84,6 +86,22 @@ class BookingClient:
             await self._client.aclose()
             self._client = None
 
+    async def _get_csrf_token(self, url: str) -> str:
+        """Fetch a page and extract the CSRF token from its form.
+
+        Raises BookingClientError if the token cannot be found.
+        """
+        try:
+            resp = await self._client.get(url)
+        except httpx.HTTPError as exc:
+            raise BookingClientError(f"Failed to fetch CSRF token: {exc}") from exc
+
+        match = re.search(r'name="_csrf_token"\s+value="([^"]+)"', resp.text)
+        if not match:
+            raise BookingClientError("CSRF token not found on page")
+
+        return match.group(1)
+
     async def login(self, username: str, pin: str) -> bool:
         """Login to booking site.
 
@@ -95,6 +113,9 @@ class BookingClient:
         """
         await self._ensure_client()
 
+        login_url = f"{self.base_url}/login.php"
+        csrf_token = await self._get_csrf_token(login_url)
+
         form_data = {
             "task": "login",
             "topmenu": "1",
@@ -102,11 +123,12 @@ class BookingClient:
             "pin": pin,
             "cachemid": "1",
             "Submit": "Login",
+            "_csrf_token": csrf_token,
         }
 
         try:
             resp = await self._client.post(
-                f"{self.base_url}/login.php",
+                login_url,
                 data=form_data,
                 headers={"Content-Type": "application/x-www-form-urlencoded"},
             )

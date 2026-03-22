@@ -5,13 +5,10 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
+    env_file:
+      - .env
     environment:
       - TSA_REDIS_URL=redis://redis:6379/0
-      - TSA_SHARED_SECRET=${TSA_SHARED_SECRET}
-      - TSA_BASE_URL=${TSA_BASE_URL}
-      - TSA_DEBUG=false
-      - TSA_LOG_LEVEL=INFO
-      - TSA_LOG_FORMAT=json
     depends_on:
       redis:
         condition: service_healthy

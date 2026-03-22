@@ -63,7 +63,41 @@ func (w *BookingClient) addBrowserHeaders(req *http.Request) {
 	req.Header.Set("Upgrade-Insecure-Requests", "1")
 }
 
+func (w BookingClient) getCSRFToken(pageURL string) (string, error) {
+	req, err := http.NewRequest("GET", pageURL, nil)
+	if err != nil {
+		return "", fmt.Errorf("failed to create CSRF request: %w", err)
+	}
+
+	w.addBrowserHeaders(req)
+
+	resp, err := w.httpClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to fetch CSRF token: %w", err)
+	}
+	defer resp.Body.Close()
+
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse CSRF page: %w", err)
+	}
+
+	token, exists := doc.Find(`input[name="_csrf_token"]`).Attr("value")
+	if !exists || token == "" {
+		return "", fmt.Errorf("CSRF token not found on page")
+	}
+
+	return token, nil
+}
+
 func (w BookingClient) Login(username string, password string) (bool, error) {
+	loginURL := fmt.Sprintf("%s%s", w.baseUrl, loginUrl)
+
+	csrfToken, err := w.getCSRFToken(loginURL)
+	if err != nil {
+		return false, err
+	}
+
 	form := url.Values{}
 	form.Add("task", "login")
 	form.Add("topmenu", "1")
@@ -71,10 +105,9 @@ func (w BookingClient) Login(username string, password string) (bool, error) {
 	form.Add("pin", password)
 	form.Add("cachemid", "1")
 	form.Add("Submit", "Login")
+	form.Add("_csrf_token", csrfToken)
 
-	url := fmt.Sprintf("%s%s", w.baseUrl, loginUrl)
-
-	req, err := http.NewRequest("POST", url, strings.NewReader(form.Encode()))
+	req, err := http.NewRequest("POST", loginURL, strings.NewReader(form.Encode()))
 	if err != nil {
 		return false, err
 	}
@@ -82,7 +115,7 @@ func (w BookingClient) Login(username string, password string) (bool, error) {
 	w.addBrowserHeaders(req)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	slog.Debug("login request", slog.String("url", url))
+	slog.Debug("login request", slog.String("url", loginURL))
 
 	resp, err := w.httpClient.Do(req)
 	if err != nil {

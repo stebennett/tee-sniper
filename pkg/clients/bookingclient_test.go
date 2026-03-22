@@ -22,6 +22,9 @@ func loadFixture(t *testing.T, filename string) []byte {
 	return data
 }
 
+// csrfPageHTML is a minimal HTML page containing a CSRF token for login tests.
+const csrfPageHTML = `<html><body><form><input type="hidden" name="_csrf_token" value="test-csrf-token"></form></body></html>`
+
 // ============================================================================
 // NewBookingClient Tests
 // ============================================================================
@@ -67,7 +70,9 @@ func TestNewBookingClientHasCookieJar(t *testing.T) {
 
 func TestLoginSuccess(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/login.php" && r.Method == "POST" {
+		if r.URL.Path == "/login.php" && r.Method == "GET" {
+			w.Write([]byte(csrfPageHTML))
+		} else if r.URL.Path == "/login.php" && r.Method == "POST" {
 			w.WriteHeader(http.StatusOK)
 			w.Write(loadFixture(t, "login_success.html"))
 		}
@@ -85,7 +90,9 @@ func TestLoginSuccess(t *testing.T) {
 
 func TestLoginFailure(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/login.php" && r.Method == "POST" {
+		if r.URL.Path == "/login.php" && r.Method == "GET" {
+			w.Write([]byte(csrfPageHTML))
+		} else if r.URL.Path == "/login.php" && r.Method == "POST" {
 			w.WriteHeader(http.StatusOK)
 			w.Write(loadFixture(t, "login_failure.html"))
 		}
@@ -103,7 +110,11 @@ func TestLoginFailure(t *testing.T) {
 
 func TestLoginNon200Status(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusInternalServerError)
+		if r.URL.Path == "/login.php" && r.Method == "GET" {
+			w.Write([]byte(csrfPageHTML))
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
 	}))
 	defer server.Close()
 
@@ -131,7 +142,9 @@ func TestLoginFormParameters(t *testing.T) {
 	var capturedForm map[string][]string
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/login.php" && r.Method == "POST" {
+		if r.URL.Path == "/login.php" && r.Method == "GET" {
+			w.Write([]byte(csrfPageHTML))
+		} else if r.URL.Path == "/login.php" && r.Method == "POST" {
 			err := r.ParseForm()
 			require.NoError(t, err)
 			capturedForm = r.PostForm
@@ -154,13 +167,16 @@ func TestLoginFormParameters(t *testing.T) {
 	assert.Equal(t, []string{"mypin456"}, capturedForm["pin"])
 	assert.Equal(t, []string{"1"}, capturedForm["cachemid"])
 	assert.Equal(t, []string{"Login"}, capturedForm["Submit"])
+	assert.Equal(t, []string{"test-csrf-token"}, capturedForm["_csrf_token"])
 }
 
 func TestLoginSetsCorrectHeaders(t *testing.T) {
 	var capturedHeaders http.Header
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/login.php" {
+		if r.URL.Path == "/login.php" && r.Method == "GET" {
+			w.Write([]byte(csrfPageHTML))
+		} else if r.URL.Path == "/login.php" && r.Method == "POST" {
 			capturedHeaders = r.Header.Clone()
 			w.WriteHeader(http.StatusOK)
 			w.Write(loadFixture(t, "login_success.html"))
@@ -178,6 +194,24 @@ func TestLoginSetsCorrectHeaders(t *testing.T) {
 	assert.Equal(t, "application/x-www-form-urlencoded", capturedHeaders.Get("Content-Type"))
 	assert.NotEmpty(t, capturedHeaders.Get("Accept"))
 	assert.NotEmpty(t, capturedHeaders.Get("Accept-Language"))
+}
+
+func TestLoginCSRFTokenMissing(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/login.php" && r.Method == "GET" {
+			w.Write([]byte("<html><body><form></form></body></html>"))
+		}
+	}))
+	defer server.Close()
+
+	client, err := NewBookingClient(server.URL + "/")
+	require.NoError(t, err)
+
+	success, err := client.Login("testuser", "testpin")
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "CSRF token not found")
+	assert.False(t, success)
 }
 
 // ============================================================================
