@@ -18,6 +18,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+
+	"github.com/twilio/twilio-go/client/metadata"
 )
 
 //
@@ -29,7 +31,7 @@ func (c *ApiService) FetchConfigurationWebhook() (*ConversationsV1ConfigurationW
 		"Content-Type": "application/x-www-form-urlencoded",
 	}
 
-	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -42,6 +44,36 @@ func (c *ApiService) FetchConfigurationWebhook() (*ConversationsV1ConfigurationW
 	}
 
 	return ps, err
+}
+
+// FetchConfigurationWebhookWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) FetchConfigurationWebhookWithMetadata() (*metadata.ResourceMetadata[ConversationsV1ConfigurationWebhook], error) {
+	path := "/v1/Configuration/Webhooks"
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &ConversationsV1ConfigurationWebhook{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[ConversationsV1ConfigurationWebhook](
+		*ps,             // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Optional parameters for the method 'UpdateConfigurationWebhook'
@@ -106,7 +138,7 @@ func (c *ApiService) UpdateConfigurationWebhook(params *UpdateConfigurationWebho
 		data.Set("Target", fmt.Sprint(*params.Target))
 	}
 
-	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -119,4 +151,52 @@ func (c *ApiService) UpdateConfigurationWebhook(params *UpdateConfigurationWebho
 	}
 
 	return ps, err
+}
+
+// UpdateConfigurationWebhookWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) UpdateConfigurationWebhookWithMetadata(params *UpdateConfigurationWebhookParams) (*metadata.ResourceMetadata[ConversationsV1ConfigurationWebhook], error) {
+	path := "/v1/Configuration/Webhooks"
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	if params != nil && params.Method != nil {
+		data.Set("Method", *params.Method)
+	}
+	if params != nil && params.Filters != nil {
+		for _, item := range *params.Filters {
+			data.Add("Filters", item)
+		}
+	}
+	if params != nil && params.PreWebhookUrl != nil {
+		data.Set("PreWebhookUrl", *params.PreWebhookUrl)
+	}
+	if params != nil && params.PostWebhookUrl != nil {
+		data.Set("PostWebhookUrl", *params.PostWebhookUrl)
+	}
+	if params != nil && params.Target != nil {
+		data.Set("Target", fmt.Sprint(*params.Target))
+	}
+
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &ConversationsV1ConfigurationWebhook{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[ConversationsV1ConfigurationWebhook](
+		*ps,             // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }

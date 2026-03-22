@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/twilio/twilio-go/client"
+	"github.com/twilio/twilio-go/client/metadata"
 )
 
 // Optional parameters for the method 'CreateParticipant'
@@ -76,7 +77,7 @@ func (c *ApiService) CreateParticipant(ServiceSid string, SessionSid string, par
 		data.Set("ProxyIdentifierSid", *params.ProxyIdentifierSid)
 	}
 
-	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -89,6 +90,51 @@ func (c *ApiService) CreateParticipant(ServiceSid string, SessionSid string, par
 	}
 
 	return ps, err
+}
+
+// CreateParticipantWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) CreateParticipantWithMetadata(ServiceSid string, SessionSid string, params *CreateParticipantParams) (*metadata.ResourceMetadata[ProxyV1Participant], error) {
+	path := "/v1/Services/{ServiceSid}/Sessions/{SessionSid}/Participants"
+	path = strings.Replace(path, "{"+"ServiceSid"+"}", ServiceSid, -1)
+	path = strings.Replace(path, "{"+"SessionSid"+"}", SessionSid, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	if params != nil && params.Identifier != nil {
+		data.Set("Identifier", *params.Identifier)
+	}
+	if params != nil && params.FriendlyName != nil {
+		data.Set("FriendlyName", *params.FriendlyName)
+	}
+	if params != nil && params.ProxyIdentifier != nil {
+		data.Set("ProxyIdentifier", *params.ProxyIdentifier)
+	}
+	if params != nil && params.ProxyIdentifierSid != nil {
+		data.Set("ProxyIdentifierSid", *params.ProxyIdentifierSid)
+	}
+
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &ProxyV1Participant{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[ProxyV1Participant](
+		*ps,             // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Delete a specific Participant. This is a soft-delete. The participant remains associated with the session and cannot be re-added. Participants are only permanently deleted when the [Session](https://www.twilio.com/docs/proxy/api/session) is deleted.
@@ -103,7 +149,7 @@ func (c *ApiService) DeleteParticipant(ServiceSid string, SessionSid string, Sid
 		"Content-Type": "application/x-www-form-urlencoded",
 	}
 
-	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return err
 	}
@@ -111,6 +157,34 @@ func (c *ApiService) DeleteParticipant(ServiceSid string, SessionSid string, Sid
 	defer resp.Body.Close()
 
 	return nil
+}
+
+// DeleteParticipantWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) DeleteParticipantWithMetadata(ServiceSid string, SessionSid string, Sid string) (*metadata.ResourceMetadata[bool], error) {
+	path := "/v1/Services/{ServiceSid}/Sessions/{SessionSid}/Participants/{Sid}"
+	path = strings.Replace(path, "{"+"ServiceSid"+"}", ServiceSid, -1)
+	path = strings.Replace(path, "{"+"SessionSid"+"}", SessionSid, -1)
+	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	metadataWrapper := metadata.NewResourceMetadata[bool](
+		true,            // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Fetch a specific Participant.
@@ -125,7 +199,7 @@ func (c *ApiService) FetchParticipant(ServiceSid string, SessionSid string, Sid 
 		"Content-Type": "application/x-www-form-urlencoded",
 	}
 
-	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -138,6 +212,39 @@ func (c *ApiService) FetchParticipant(ServiceSid string, SessionSid string, Sid 
 	}
 
 	return ps, err
+}
+
+// FetchParticipantWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) FetchParticipantWithMetadata(ServiceSid string, SessionSid string, Sid string) (*metadata.ResourceMetadata[ProxyV1Participant], error) {
+	path := "/v1/Services/{ServiceSid}/Sessions/{SessionSid}/Participants/{Sid}"
+	path = strings.Replace(path, "{"+"ServiceSid"+"}", ServiceSid, -1)
+	path = strings.Replace(path, "{"+"SessionSid"+"}", SessionSid, -1)
+	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &ProxyV1Participant{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[ProxyV1Participant](
+		*ps,             // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Optional parameters for the method 'ListParticipant'
@@ -180,7 +287,7 @@ func (c *ApiService) PageParticipant(ServiceSid string, SessionSid string, param
 		data.Set("Page", pageNumber)
 	}
 
-	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -193,6 +300,50 @@ func (c *ApiService) PageParticipant(ServiceSid string, SessionSid string, param
 	}
 
 	return ps, err
+}
+
+// PageParticipantWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) PageParticipantWithMetadata(ServiceSid string, SessionSid string, params *ListParticipantParams, pageToken, pageNumber string) (*metadata.ResourceMetadata[ListParticipantResponse], error) {
+	path := "/v1/Services/{ServiceSid}/Sessions/{SessionSid}/Participants"
+
+	path = strings.Replace(path, "{"+"ServiceSid"+"}", ServiceSid, -1)
+	path = strings.Replace(path, "{"+"SessionSid"+"}", SessionSid, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	if params != nil && params.PageSize != nil {
+		data.Set("PageSize", fmt.Sprint(*params.PageSize))
+	}
+
+	if pageToken != "" {
+		data.Set("PageToken", pageToken)
+	}
+	if pageNumber != "" {
+		data.Set("Page", pageNumber)
+	}
+
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &ListParticipantResponse{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[ListParticipantResponse](
+		*ps,             // The page object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Lists Participant records from the API as a list. Unlike stream, this operation is eager and loads 'limit' records into memory before returning.
@@ -209,6 +360,29 @@ func (c *ApiService) ListParticipant(ServiceSid string, SessionSid string, param
 	}
 
 	return records, nil
+}
+
+// ListParticipantWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) ListParticipantWithMetadata(ServiceSid string, SessionSid string, params *ListParticipantParams) (*metadata.ResourceMetadata[[]ProxyV1Participant], error) {
+	response, errors := c.StreamParticipantWithMetadata(ServiceSid, SessionSid, params)
+	resource := response.GetResource()
+
+	records := make([]ProxyV1Participant, 0)
+	for record := range resource {
+		records = append(records, record)
+	}
+
+	if err := <-errors; err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[[]ProxyV1Participant](
+		records,
+		response.GetStatusCode(), // HTTP status code
+		response.GetHeaders(),    // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Streams Participant records from the API as a channel stream. This operation lazily loads records as efficiently as possible until the limit is reached.
@@ -231,6 +405,35 @@ func (c *ApiService) StreamParticipant(ServiceSid string, SessionSid string, par
 	}
 
 	return recordChannel, errorChannel
+}
+
+// StreamParticipantWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) StreamParticipantWithMetadata(ServiceSid string, SessionSid string, params *ListParticipantParams) (*metadata.ResourceMetadata[chan ProxyV1Participant], chan error) {
+	if params == nil {
+		params = &ListParticipantParams{}
+	}
+	params.SetPageSize(client.ReadLimits(params.PageSize, params.Limit))
+
+	recordChannel := make(chan ProxyV1Participant, 1)
+	errorChannel := make(chan error, 1)
+
+	response, err := c.PageParticipantWithMetadata(ServiceSid, SessionSid, params, "", "")
+	if err != nil {
+		errorChannel <- err
+		close(recordChannel)
+		close(errorChannel)
+	} else {
+		resource := response.GetResource()
+		go c.streamParticipant(&resource, params, recordChannel, errorChannel)
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[chan ProxyV1Participant](
+		recordChannel,            // The stream
+		response.GetStatusCode(), // HTTP status code from page response
+		response.GetHeaders(),    // HTTP headers from page response
+	)
+
+	return metadataWrapper, errorChannel
 }
 
 func (c *ApiService) streamParticipant(response *ListParticipantResponse, params *ListParticipantParams, recordChannel chan ProxyV1Participant, errorChannel chan error) {
@@ -267,7 +470,7 @@ func (c *ApiService) getNextListParticipantResponse(nextPageUrl string) (interfa
 	if nextPageUrl == "" {
 		return nil, nil
 	}
-	resp, err := c.requestHandler.Get(nextPageUrl, nil, nil)
+	resp, err := c.requestHandler.Get(nextPageUrl, nil, nil, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}

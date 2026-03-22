@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/twilio/twilio-go/client"
+	"github.com/twilio/twilio-go/client/metadata"
 )
 
 // Optional parameters for the method 'CreatePluginRelease'
@@ -56,7 +57,7 @@ func (c *ApiService) CreatePluginRelease(params *CreatePluginReleaseParams) (*Fl
 	if params != nil && params.FlexMetadata != nil {
 		headers["Flex-Metadata"] = *params.FlexMetadata
 	}
-	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -69,6 +70,43 @@ func (c *ApiService) CreatePluginRelease(params *CreatePluginReleaseParams) (*Fl
 	}
 
 	return ps, err
+}
+
+// CreatePluginReleaseWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) CreatePluginReleaseWithMetadata(params *CreatePluginReleaseParams) (*metadata.ResourceMetadata[FlexV1PluginRelease], error) {
+	path := "/v1/PluginService/Releases"
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	if params != nil && params.ConfigurationId != nil {
+		data.Set("ConfigurationId", *params.ConfigurationId)
+	}
+
+	if params != nil && params.FlexMetadata != nil {
+		headers["Flex-Metadata"] = *params.FlexMetadata
+	}
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &FlexV1PluginRelease{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[FlexV1PluginRelease](
+		*ps,             // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Optional parameters for the method 'FetchPluginRelease'
@@ -95,7 +133,7 @@ func (c *ApiService) FetchPluginRelease(Sid string, params *FetchPluginReleasePa
 	if params != nil && params.FlexMetadata != nil {
 		headers["Flex-Metadata"] = *params.FlexMetadata
 	}
-	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -108,6 +146,40 @@ func (c *ApiService) FetchPluginRelease(Sid string, params *FetchPluginReleasePa
 	}
 
 	return ps, err
+}
+
+// FetchPluginReleaseWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) FetchPluginReleaseWithMetadata(Sid string, params *FetchPluginReleaseParams) (*metadata.ResourceMetadata[FlexV1PluginRelease], error) {
+	path := "/v1/PluginService/Releases/{Sid}"
+	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	if params != nil && params.FlexMetadata != nil {
+		headers["Flex-Metadata"] = *params.FlexMetadata
+	}
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &FlexV1PluginRelease{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[FlexV1PluginRelease](
+		*ps,             // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Optional parameters for the method 'ListPluginRelease'
@@ -153,7 +225,7 @@ func (c *ApiService) PagePluginRelease(params *ListPluginReleaseParams, pageToke
 		data.Set("Page", pageNumber)
 	}
 
-	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -166,6 +238,47 @@ func (c *ApiService) PagePluginRelease(params *ListPluginReleaseParams, pageToke
 	}
 
 	return ps, err
+}
+
+// PagePluginReleaseWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) PagePluginReleaseWithMetadata(params *ListPluginReleaseParams, pageToken, pageNumber string) (*metadata.ResourceMetadata[ListPluginReleaseResponse], error) {
+	path := "/v1/PluginService/Releases"
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	if params != nil && params.PageSize != nil {
+		data.Set("PageSize", fmt.Sprint(*params.PageSize))
+	}
+
+	if pageToken != "" {
+		data.Set("PageToken", pageToken)
+	}
+	if pageNumber != "" {
+		data.Set("Page", pageNumber)
+	}
+
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &ListPluginReleaseResponse{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[ListPluginReleaseResponse](
+		*ps,             // The page object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Lists PluginRelease records from the API as a list. Unlike stream, this operation is eager and loads 'limit' records into memory before returning.
@@ -182,6 +295,29 @@ func (c *ApiService) ListPluginRelease(params *ListPluginReleaseParams) ([]FlexV
 	}
 
 	return records, nil
+}
+
+// ListPluginReleaseWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) ListPluginReleaseWithMetadata(params *ListPluginReleaseParams) (*metadata.ResourceMetadata[[]FlexV1PluginRelease], error) {
+	response, errors := c.StreamPluginReleaseWithMetadata(params)
+	resource := response.GetResource()
+
+	records := make([]FlexV1PluginRelease, 0)
+	for record := range resource {
+		records = append(records, record)
+	}
+
+	if err := <-errors; err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[[]FlexV1PluginRelease](
+		records,
+		response.GetStatusCode(), // HTTP status code
+		response.GetHeaders(),    // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Streams PluginRelease records from the API as a channel stream. This operation lazily loads records as efficiently as possible until the limit is reached.
@@ -204,6 +340,35 @@ func (c *ApiService) StreamPluginRelease(params *ListPluginReleaseParams) (chan 
 	}
 
 	return recordChannel, errorChannel
+}
+
+// StreamPluginReleaseWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) StreamPluginReleaseWithMetadata(params *ListPluginReleaseParams) (*metadata.ResourceMetadata[chan FlexV1PluginRelease], chan error) {
+	if params == nil {
+		params = &ListPluginReleaseParams{}
+	}
+	params.SetPageSize(client.ReadLimits(params.PageSize, params.Limit))
+
+	recordChannel := make(chan FlexV1PluginRelease, 1)
+	errorChannel := make(chan error, 1)
+
+	response, err := c.PagePluginReleaseWithMetadata(params, "", "")
+	if err != nil {
+		errorChannel <- err
+		close(recordChannel)
+		close(errorChannel)
+	} else {
+		resource := response.GetResource()
+		go c.streamPluginRelease(&resource, params, recordChannel, errorChannel)
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[chan FlexV1PluginRelease](
+		recordChannel,            // The stream
+		response.GetStatusCode(), // HTTP status code from page response
+		response.GetHeaders(),    // HTTP headers from page response
+	)
+
+	return metadataWrapper, errorChannel
 }
 
 func (c *ApiService) streamPluginRelease(response *ListPluginReleaseResponse, params *ListPluginReleaseParams, recordChannel chan FlexV1PluginRelease, errorChannel chan error) {
@@ -240,7 +405,7 @@ func (c *ApiService) getNextListPluginReleaseResponse(nextPageUrl string) (inter
 	if nextPageUrl == "" {
 		return nil, nil
 	}
-	resp, err := c.requestHandler.Get(nextPageUrl, nil, nil)
+	resp, err := c.requestHandler.Get(nextPageUrl, nil, nil, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}

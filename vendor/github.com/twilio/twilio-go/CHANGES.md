@@ -1,5 +1,85 @@
 twilio-go changelog
 ====================
+[2026-03-10] Version 1.30.3
+---------------------------
+**Library - Docs**
+- [PR #325](https://github.com/twilio/twilio-go/pull/325): Errorv1 bug fix preview. Thanks to [@manisha1997](https://github.com/manisha1997)!
+
+**Twiml**
+- Rename `recording_configuration` to `recording_configuration_id` attribute in `<Conference>`, `<Dial>`, `<Record>` verbs and `<Recording>` noun
+
+**Ace**
+- # ACE Signals API Changes
+- ## 2026-02-18
+- Initial release: POST /signals, GET/POST /signals/{signal_id}/results, GET /health
+- Enables OneAdmin integration for synchronous signal ingestion and policy result polling
+- Supports permission-based authorization for signal operations
+- Health endpoint available for monitoring without authentication
+
+**Api**
+- Added optional parameter `Confirmation` to Payments create endpoint to enable payment confirmation prompt before gateway submission
+- Added optional parameter `RequireMatchingInputs` to Payments create endpoint for input confirmation in agent-assisted payment flows
+- Added matcher capture types (`payment-card-number-matcher`, `expiration-date-matcher`, `security-code-matcher`, `postal-code-matcher`) to Payments update endpoint
+
+**Memory**
+- ## 2026-03-06
+- **Modified 1 path(s)**:
+- `/v1/Stores/{storeId}/Profiles/{profileId}/ConversationSummaries/{summaryId}` (added patch, get)
+
+
+[2026-02-18] Version 1.30.2
+---------------------------
+**Library - Chore**
+- [PR #321](https://github.com/twilio/twilio-go/pull/321): update tests for V1 error response. Thanks to [@tiwarishubham635](https://github.com/tiwarishubham635)!
+
+**Api**
+- Remove inequality examples from Calls StartTime and EndTime filter descriptions
+
+**Memory**
+- ## 2026-02-06
+- Minor updates (formatting, metadata)
+- ## 2026-02-06
+- Minor updates (formatting, metadata)
+- ## 2026-02-06
+- ## 2026-01-23
+- ## 2026-01-23
+- **Added 3 new path(s)**:
+- `/v1/Stores/{storeId}/Profiles/Imports` (ListProfileImportsV2, CreateProfilesImportV2)
+- `/v1/Stores/{storeId}/Profiles/Imports/{importId}` (FetchProfileImportV2)
+- **Removed 6 path(s)**:
+- `/v1/KnowledgeBases/{kbId}/Knowledge` (ListKnowledge, CreateKnowledge)
+- `/v1/KnowledgeBases/{kbId}/Search` (KnowledgeSearch)
+- `/v1/KnowledgeBases/{kbId}/Knowledge/{knowledgeId}` (RetrieveKnowledge, PatchKnowledge, DeleteKnowledge)
+- `/v1/KnowledgeBases/{kbId}/Knowledge/{knowledgeId}/Chunks` (ListKnowledgeChunks)
+- `/v1/ControlPlane/KnowledgeBases` (ListKnowledgeBases, CreateKnowledgeBase)
+- `/v1/ControlPlane/KnowledgeBases/{kbId}` (GetKnowledgeBase, UpdateKnowledgeBase, DeleteKnowledgeBase)
+- ## 2026-01-05
+- ## 2026-01-05
+- Initial release with 26 paths and 48 operations
+
+
+[2026-02-05] Version 1.30.1
+---------------------------
+**Library - Fix**
+- [PR #318](https://github.com/twilio/twilio-go/pull/318): region API domain processing. Thanks to [@manisha1997](https://github.com/manisha1997)!
+
+**Twiml**
+- Add `recording_configuration` attribute to `<Recording>` noun
+
+**Api**
+- Clarify the behavior of date filters with the Calls API
+- Added Phone Number `type` property to `/IncomingPhoneNumbers` resource
+
+**Memory**
+- ## 2026-01-23
+- No path changes (updated metadata only)
+- ## 2026-01-22
+- No path changes (updated metadata only)
+- ## 2026-01-22
+- **Modified 1 path(s)**:
+- `/v1/Stores/{storeId}/Profiles/{profileId}` (added delete)
+
+
 [2026-01-22] Version 1.30.0
 ---------------------------
 **Library - Chore**

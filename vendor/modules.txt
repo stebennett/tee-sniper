@@ -27,11 +27,12 @@ github.com/pmezard/go-difflib/difflib
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/assert/yaml
 github.com/stretchr/testify/require
-# github.com/twilio/twilio-go v1.30.0
+# github.com/twilio/twilio-go v1.30.3
 ## explicit; go 1.19
 github.com/twilio/twilio-go
 github.com/twilio/twilio-go/client
 github.com/twilio/twilio-go/client/form
+github.com/twilio/twilio-go/client/metadata
 github.com/twilio/twilio-go/rest/accounts/v1
 github.com/twilio/twilio-go/rest/api/v2010
 github.com/twilio/twilio-go/rest/assistants/v1

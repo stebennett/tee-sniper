@@ -18,6 +18,8 @@ import (
 	"encoding/json"
 	"net/url"
 	"strings"
+
+	"github.com/twilio/twilio-go/client/metadata"
 )
 
 // Fetch the Inbound Processing Region assigned to a phone number.
@@ -30,7 +32,7 @@ func (c *ApiService) FetchPhoneNumber(PhoneNumber string) (*RoutesV2PhoneNumber,
 		"Content-Type": "application/x-www-form-urlencoded",
 	}
 
-	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -43,6 +45,37 @@ func (c *ApiService) FetchPhoneNumber(PhoneNumber string) (*RoutesV2PhoneNumber,
 	}
 
 	return ps, err
+}
+
+// FetchPhoneNumberWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) FetchPhoneNumberWithMetadata(PhoneNumber string) (*metadata.ResourceMetadata[RoutesV2PhoneNumber], error) {
+	path := "/v2/PhoneNumbers/{PhoneNumber}"
+	path = strings.Replace(path, "{"+"PhoneNumber"+"}", PhoneNumber, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &RoutesV2PhoneNumber{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[RoutesV2PhoneNumber](
+		*ps,             // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Optional parameters for the method 'UpdatePhoneNumber'
@@ -79,7 +112,7 @@ func (c *ApiService) UpdatePhoneNumber(PhoneNumber string, params *UpdatePhoneNu
 		data.Set("FriendlyName", *params.FriendlyName)
 	}
 
-	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -92,4 +125,42 @@ func (c *ApiService) UpdatePhoneNumber(PhoneNumber string, params *UpdatePhoneNu
 	}
 
 	return ps, err
+}
+
+// UpdatePhoneNumberWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) UpdatePhoneNumberWithMetadata(PhoneNumber string, params *UpdatePhoneNumberParams) (*metadata.ResourceMetadata[RoutesV2PhoneNumber], error) {
+	path := "/v2/PhoneNumbers/{PhoneNumber}"
+	path = strings.Replace(path, "{"+"PhoneNumber"+"}", PhoneNumber, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	if params != nil && params.VoiceRegion != nil {
+		data.Set("VoiceRegion", *params.VoiceRegion)
+	}
+	if params != nil && params.FriendlyName != nil {
+		data.Set("FriendlyName", *params.FriendlyName)
+	}
+
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &RoutesV2PhoneNumber{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[RoutesV2PhoneNumber](
+		*ps,             // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }

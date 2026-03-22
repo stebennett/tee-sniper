@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/twilio/twilio-go/client"
+	"github.com/twilio/twilio-go/client/metadata"
 )
 
 // Optional parameters for the method 'CreateBucket'
@@ -58,7 +59,7 @@ func (c *ApiService) CreateBucket(ServiceSid string, RateLimitSid string, params
 		data.Set("Interval", fmt.Sprint(*params.Interval))
 	}
 
-	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -71,6 +72,45 @@ func (c *ApiService) CreateBucket(ServiceSid string, RateLimitSid string, params
 	}
 
 	return ps, err
+}
+
+// CreateBucketWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) CreateBucketWithMetadata(ServiceSid string, RateLimitSid string, params *CreateBucketParams) (*metadata.ResourceMetadata[VerifyV2Bucket], error) {
+	path := "/v2/Services/{ServiceSid}/RateLimits/{RateLimitSid}/Buckets"
+	path = strings.Replace(path, "{"+"ServiceSid"+"}", ServiceSid, -1)
+	path = strings.Replace(path, "{"+"RateLimitSid"+"}", RateLimitSid, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	if params != nil && params.Max != nil {
+		data.Set("Max", fmt.Sprint(*params.Max))
+	}
+	if params != nil && params.Interval != nil {
+		data.Set("Interval", fmt.Sprint(*params.Interval))
+	}
+
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &VerifyV2Bucket{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[VerifyV2Bucket](
+		*ps,             // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Delete a specific Bucket.
@@ -85,7 +125,7 @@ func (c *ApiService) DeleteBucket(ServiceSid string, RateLimitSid string, Sid st
 		"Content-Type": "application/x-www-form-urlencoded",
 	}
 
-	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return err
 	}
@@ -93,6 +133,34 @@ func (c *ApiService) DeleteBucket(ServiceSid string, RateLimitSid string, Sid st
 	defer resp.Body.Close()
 
 	return nil
+}
+
+// DeleteBucketWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) DeleteBucketWithMetadata(ServiceSid string, RateLimitSid string, Sid string) (*metadata.ResourceMetadata[bool], error) {
+	path := "/v2/Services/{ServiceSid}/RateLimits/{RateLimitSid}/Buckets/{Sid}"
+	path = strings.Replace(path, "{"+"ServiceSid"+"}", ServiceSid, -1)
+	path = strings.Replace(path, "{"+"RateLimitSid"+"}", RateLimitSid, -1)
+	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	metadataWrapper := metadata.NewResourceMetadata[bool](
+		true,            // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Fetch a specific Bucket.
@@ -107,7 +175,7 @@ func (c *ApiService) FetchBucket(ServiceSid string, RateLimitSid string, Sid str
 		"Content-Type": "application/x-www-form-urlencoded",
 	}
 
-	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -120,6 +188,39 @@ func (c *ApiService) FetchBucket(ServiceSid string, RateLimitSid string, Sid str
 	}
 
 	return ps, err
+}
+
+// FetchBucketWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) FetchBucketWithMetadata(ServiceSid string, RateLimitSid string, Sid string) (*metadata.ResourceMetadata[VerifyV2Bucket], error) {
+	path := "/v2/Services/{ServiceSid}/RateLimits/{RateLimitSid}/Buckets/{Sid}"
+	path = strings.Replace(path, "{"+"ServiceSid"+"}", ServiceSid, -1)
+	path = strings.Replace(path, "{"+"RateLimitSid"+"}", RateLimitSid, -1)
+	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &VerifyV2Bucket{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[VerifyV2Bucket](
+		*ps,             // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Optional parameters for the method 'ListBucket'
@@ -162,7 +263,7 @@ func (c *ApiService) PageBucket(ServiceSid string, RateLimitSid string, params *
 		data.Set("Page", pageNumber)
 	}
 
-	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -175,6 +276,50 @@ func (c *ApiService) PageBucket(ServiceSid string, RateLimitSid string, params *
 	}
 
 	return ps, err
+}
+
+// PageBucketWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) PageBucketWithMetadata(ServiceSid string, RateLimitSid string, params *ListBucketParams, pageToken, pageNumber string) (*metadata.ResourceMetadata[ListBucketResponse], error) {
+	path := "/v2/Services/{ServiceSid}/RateLimits/{RateLimitSid}/Buckets"
+
+	path = strings.Replace(path, "{"+"ServiceSid"+"}", ServiceSid, -1)
+	path = strings.Replace(path, "{"+"RateLimitSid"+"}", RateLimitSid, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	if params != nil && params.PageSize != nil {
+		data.Set("PageSize", fmt.Sprint(*params.PageSize))
+	}
+
+	if pageToken != "" {
+		data.Set("PageToken", pageToken)
+	}
+	if pageNumber != "" {
+		data.Set("Page", pageNumber)
+	}
+
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &ListBucketResponse{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[ListBucketResponse](
+		*ps,             // The page object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Lists Bucket records from the API as a list. Unlike stream, this operation is eager and loads 'limit' records into memory before returning.
@@ -191,6 +336,29 @@ func (c *ApiService) ListBucket(ServiceSid string, RateLimitSid string, params *
 	}
 
 	return records, nil
+}
+
+// ListBucketWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) ListBucketWithMetadata(ServiceSid string, RateLimitSid string, params *ListBucketParams) (*metadata.ResourceMetadata[[]VerifyV2Bucket], error) {
+	response, errors := c.StreamBucketWithMetadata(ServiceSid, RateLimitSid, params)
+	resource := response.GetResource()
+
+	records := make([]VerifyV2Bucket, 0)
+	for record := range resource {
+		records = append(records, record)
+	}
+
+	if err := <-errors; err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[[]VerifyV2Bucket](
+		records,
+		response.GetStatusCode(), // HTTP status code
+		response.GetHeaders(),    // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Streams Bucket records from the API as a channel stream. This operation lazily loads records as efficiently as possible until the limit is reached.
@@ -213,6 +381,35 @@ func (c *ApiService) StreamBucket(ServiceSid string, RateLimitSid string, params
 	}
 
 	return recordChannel, errorChannel
+}
+
+// StreamBucketWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) StreamBucketWithMetadata(ServiceSid string, RateLimitSid string, params *ListBucketParams) (*metadata.ResourceMetadata[chan VerifyV2Bucket], chan error) {
+	if params == nil {
+		params = &ListBucketParams{}
+	}
+	params.SetPageSize(client.ReadLimits(params.PageSize, params.Limit))
+
+	recordChannel := make(chan VerifyV2Bucket, 1)
+	errorChannel := make(chan error, 1)
+
+	response, err := c.PageBucketWithMetadata(ServiceSid, RateLimitSid, params, "", "")
+	if err != nil {
+		errorChannel <- err
+		close(recordChannel)
+		close(errorChannel)
+	} else {
+		resource := response.GetResource()
+		go c.streamBucket(&resource, params, recordChannel, errorChannel)
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[chan VerifyV2Bucket](
+		recordChannel,            // The stream
+		response.GetStatusCode(), // HTTP status code from page response
+		response.GetHeaders(),    // HTTP headers from page response
+	)
+
+	return metadataWrapper, errorChannel
 }
 
 func (c *ApiService) streamBucket(response *ListBucketResponse, params *ListBucketParams, recordChannel chan VerifyV2Bucket, errorChannel chan error) {
@@ -249,7 +446,7 @@ func (c *ApiService) getNextListBucketResponse(nextPageUrl string) (interface{},
 	if nextPageUrl == "" {
 		return nil, nil
 	}
-	resp, err := c.requestHandler.Get(nextPageUrl, nil, nil)
+	resp, err := c.requestHandler.Get(nextPageUrl, nil, nil, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -299,7 +496,7 @@ func (c *ApiService) UpdateBucket(ServiceSid string, RateLimitSid string, Sid st
 		data.Set("Interval", fmt.Sprint(*params.Interval))
 	}
 
-	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -312,4 +509,44 @@ func (c *ApiService) UpdateBucket(ServiceSid string, RateLimitSid string, Sid st
 	}
 
 	return ps, err
+}
+
+// UpdateBucketWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) UpdateBucketWithMetadata(ServiceSid string, RateLimitSid string, Sid string, params *UpdateBucketParams) (*metadata.ResourceMetadata[VerifyV2Bucket], error) {
+	path := "/v2/Services/{ServiceSid}/RateLimits/{RateLimitSid}/Buckets/{Sid}"
+	path = strings.Replace(path, "{"+"ServiceSid"+"}", ServiceSid, -1)
+	path = strings.Replace(path, "{"+"RateLimitSid"+"}", RateLimitSid, -1)
+	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	if params != nil && params.Max != nil {
+		data.Set("Max", fmt.Sprint(*params.Max))
+	}
+	if params != nil && params.Interval != nil {
+		data.Set("Interval", fmt.Sprint(*params.Interval))
+	}
+
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &VerifyV2Bucket{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[VerifyV2Bucket](
+		*ps,             // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }

@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/twilio/twilio-go/client"
+	"github.com/twilio/twilio-go/client/metadata"
 )
 
 // Optional parameters for the method 'CreateRoleAssignment'
@@ -53,7 +54,7 @@ func (c *ApiService) CreateRoleAssignment(OrganizationSid string, params *Create
 		body = b
 	}
 
-	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, body...)
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion, body...)
 	if err != nil {
 		return nil, err
 	}
@@ -68,6 +69,46 @@ func (c *ApiService) CreateRoleAssignment(OrganizationSid string, params *Create
 	return ps, err
 }
 
+// CreateRoleAssignmentWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) CreateRoleAssignmentWithMetadata(OrganizationSid string, params *CreateRoleAssignmentParams) (*metadata.ResourceMetadata[PublicApiRoleAssignmentResponse], error) {
+	path := "/Organizations/{OrganizationSid}/RoleAssignments"
+	path = strings.Replace(path, "{"+"OrganizationSid"+"}", OrganizationSid, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/json",
+	}
+
+	body := []byte{}
+	if params != nil && params.PublicApiCreateRoleAssignmentRequest != nil {
+		b, err := json.Marshal(*params.PublicApiCreateRoleAssignmentRequest)
+		if err != nil {
+			return nil, err
+		}
+		body = b
+	}
+
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion, body...)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &PublicApiRoleAssignmentResponse{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[PublicApiRoleAssignmentResponse](
+		*ps,             // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
+}
+
 // Delete a role assignment for the given organization
 func (c *ApiService) DeleteRoleAssignment(OrganizationSid string, Sid string) error {
 	path := "/Organizations/{OrganizationSid}/RoleAssignments/{Sid}"
@@ -79,7 +120,7 @@ func (c *ApiService) DeleteRoleAssignment(OrganizationSid string, Sid string) er
 		"Content-Type": "application/x-www-form-urlencoded",
 	}
 
-	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return err
 	}
@@ -87,6 +128,33 @@ func (c *ApiService) DeleteRoleAssignment(OrganizationSid string, Sid string) er
 	defer resp.Body.Close()
 
 	return nil
+}
+
+// DeleteRoleAssignmentWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) DeleteRoleAssignmentWithMetadata(OrganizationSid string, Sid string) (*metadata.ResourceMetadata[bool], error) {
+	path := "/Organizations/{OrganizationSid}/RoleAssignments/{Sid}"
+	path = strings.Replace(path, "{"+"OrganizationSid"+"}", OrganizationSid, -1)
+	path = strings.Replace(path, "{"+"Sid"+"}", Sid, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	metadataWrapper := metadata.NewResourceMetadata[bool](
+		true,            // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Optional parameters for the method 'ListRoleAssignments'
@@ -146,7 +214,7 @@ func (c *ApiService) PageRoleAssignments(OrganizationSid string, params *ListRol
 		data.Set("Page", pageNumber)
 	}
 
-	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -159,6 +227,55 @@ func (c *ApiService) PageRoleAssignments(OrganizationSid string, params *ListRol
 	}
 
 	return ps, err
+}
+
+// PageRoleAssignmentsWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) PageRoleAssignmentsWithMetadata(OrganizationSid string, params *ListRoleAssignmentsParams, pageToken, pageNumber string) (*metadata.ResourceMetadata[PublicApiCreateRoleAssignmentResponsePage], error) {
+	path := "/Organizations/{OrganizationSid}/RoleAssignments"
+
+	path = strings.Replace(path, "{"+"OrganizationSid"+"}", OrganizationSid, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	if params != nil && params.PageSize != nil {
+		data.Set("PageSize", fmt.Sprint(*params.PageSize))
+	}
+	if params != nil && params.Identity != nil {
+		data.Set("Identity", *params.Identity)
+	}
+	if params != nil && params.Scope != nil {
+		data.Set("Scope", *params.Scope)
+	}
+
+	if pageToken != "" {
+		data.Set("PageToken", pageToken)
+	}
+	if pageNumber != "" {
+		data.Set("Page", pageNumber)
+	}
+
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &PublicApiCreateRoleAssignmentResponsePage{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[PublicApiCreateRoleAssignmentResponsePage](
+		*ps,             // The page object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Lists RoleAssignments records from the API as a list. Unlike stream, this operation is eager and loads 'limit' records into memory before returning.
@@ -175,6 +292,29 @@ func (c *ApiService) ListRoleAssignments(OrganizationSid string, params *ListRol
 	}
 
 	return records, nil
+}
+
+// ListRoleAssignmentsWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) ListRoleAssignmentsWithMetadata(OrganizationSid string, params *ListRoleAssignmentsParams) (*metadata.ResourceMetadata[[]PublicApiRoleAssignmentResponse], error) {
+	response, errors := c.StreamRoleAssignmentsWithMetadata(OrganizationSid, params)
+	resource := response.GetResource()
+
+	records := make([]PublicApiRoleAssignmentResponse, 0)
+	for record := range resource {
+		records = append(records, record)
+	}
+
+	if err := <-errors; err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[[]PublicApiRoleAssignmentResponse](
+		records,
+		response.GetStatusCode(), // HTTP status code
+		response.GetHeaders(),    // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Streams RoleAssignments records from the API as a channel stream. This operation lazily loads records as efficiently as possible until the limit is reached.
@@ -197,6 +337,35 @@ func (c *ApiService) StreamRoleAssignments(OrganizationSid string, params *ListR
 	}
 
 	return recordChannel, errorChannel
+}
+
+// StreamRoleAssignmentsWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) StreamRoleAssignmentsWithMetadata(OrganizationSid string, params *ListRoleAssignmentsParams) (*metadata.ResourceMetadata[chan PublicApiRoleAssignmentResponse], chan error) {
+	if params == nil {
+		params = &ListRoleAssignmentsParams{}
+	}
+	params.SetPageSize(client.ReadLimits(params.PageSize, params.Limit))
+
+	recordChannel := make(chan PublicApiRoleAssignmentResponse, 1)
+	errorChannel := make(chan error, 1)
+
+	response, err := c.PageRoleAssignmentsWithMetadata(OrganizationSid, params, "", "")
+	if err != nil {
+		errorChannel <- err
+		close(recordChannel)
+		close(errorChannel)
+	} else {
+		resource := response.GetResource()
+		go c.streamRoleAssignments(&resource, params, recordChannel, errorChannel)
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[chan PublicApiRoleAssignmentResponse](
+		recordChannel,            // The stream
+		response.GetStatusCode(), // HTTP status code from page response
+		response.GetHeaders(),    // HTTP headers from page response
+	)
+
+	return metadataWrapper, errorChannel
 }
 
 func (c *ApiService) streamRoleAssignments(response *PublicApiCreateRoleAssignmentResponsePage, params *ListRoleAssignmentsParams, recordChannel chan PublicApiRoleAssignmentResponse, errorChannel chan error) {
@@ -233,7 +402,7 @@ func (c *ApiService) getNextPublicApiCreateRoleAssignmentResponsePage(nextPageUr
 	if nextPageUrl == "" {
 		return nil, nil
 	}
-	resp, err := c.requestHandler.Get(nextPageUrl, nil, nil)
+	resp, err := c.requestHandler.Get(nextPageUrl, nil, nil, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}

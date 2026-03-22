@@ -18,6 +18,8 @@ import (
 	"encoding/json"
 	"net/url"
 	"strings"
+
+	"github.com/twilio/twilio-go/client/metadata"
 )
 
 // Optional parameters for the method 'CreateSafelist'
@@ -44,7 +46,7 @@ func (c *ApiService) CreateSafelist(params *CreateSafelistParams) (*VerifyV2Safe
 		data.Set("PhoneNumber", *params.PhoneNumber)
 	}
 
-	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -57,6 +59,40 @@ func (c *ApiService) CreateSafelist(params *CreateSafelistParams) (*VerifyV2Safe
 	}
 
 	return ps, err
+}
+
+// CreateSafelistWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) CreateSafelistWithMetadata(params *CreateSafelistParams) (*metadata.ResourceMetadata[VerifyV2Safelist], error) {
+	path := "/v2/SafeList/Numbers"
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	if params != nil && params.PhoneNumber != nil {
+		data.Set("PhoneNumber", *params.PhoneNumber)
+	}
+
+	resp, err := c.requestHandler.Post(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &VerifyV2Safelist{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[VerifyV2Safelist](
+		*ps,             // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Remove a phone number from SafeList.
@@ -69,7 +105,7 @@ func (c *ApiService) DeleteSafelist(PhoneNumber string) error {
 		"Content-Type": "application/x-www-form-urlencoded",
 	}
 
-	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return err
 	}
@@ -77,6 +113,32 @@ func (c *ApiService) DeleteSafelist(PhoneNumber string) error {
 	defer resp.Body.Close()
 
 	return nil
+}
+
+// DeleteSafelistWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) DeleteSafelistWithMetadata(PhoneNumber string) (*metadata.ResourceMetadata[bool], error) {
+	path := "/v2/SafeList/Numbers/{PhoneNumber}"
+	path = strings.Replace(path, "{"+"PhoneNumber"+"}", PhoneNumber, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	resp, err := c.requestHandler.Delete(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	metadataWrapper := metadata.NewResourceMetadata[bool](
+		true,            // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }
 
 // Check if a phone number exists in SafeList.
@@ -89,7 +151,7 @@ func (c *ApiService) FetchSafelist(PhoneNumber string) (*VerifyV2Safelist, error
 		"Content-Type": "application/x-www-form-urlencoded",
 	}
 
-	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers)
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -102,4 +164,35 @@ func (c *ApiService) FetchSafelist(PhoneNumber string) (*VerifyV2Safelist, error
 	}
 
 	return ps, err
+}
+
+// FetchSafelistWithMetadata returns response with metadata like status code and response headers
+func (c *ApiService) FetchSafelistWithMetadata(PhoneNumber string) (*metadata.ResourceMetadata[VerifyV2Safelist], error) {
+	path := "/v2/SafeList/Numbers/{PhoneNumber}"
+	path = strings.Replace(path, "{"+"PhoneNumber"+"}", PhoneNumber, -1)
+
+	data := url.Values{}
+	headers := map[string]interface{}{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	resp, err := c.requestHandler.Get(c.baseURL+path, data, headers, c.apiVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	ps := &VerifyV2Safelist{}
+	if err := json.NewDecoder(resp.Body).Decode(ps); err != nil {
+		return nil, err
+	}
+
+	metadataWrapper := metadata.NewResourceMetadata[VerifyV2Safelist](
+		*ps,             // The resource object
+		resp.StatusCode, // HTTP status code
+		resp.Header,     // HTTP headers
+	)
+
+	return metadataWrapper, nil
 }

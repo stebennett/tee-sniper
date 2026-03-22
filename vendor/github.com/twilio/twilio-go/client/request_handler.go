@@ -2,7 +2,6 @@
 package client
 
 import (
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -10,10 +9,9 @@ import (
 )
 
 type RequestHandler struct {
-	Client     BaseClient
-	Edge       string
-	Region     string
-	ApiVersion string // Stores the API version (e.g., "v1.0") for the service
+	Client BaseClient
+	Edge   string
+	Region string
 }
 
 func NewRequestHandler(client BaseClient) *RequestHandler {
@@ -24,36 +22,11 @@ func NewRequestHandler(client BaseClient) *RequestHandler {
 	}
 }
 
-// SetApiVersion sets the API version for the service
-func (c *RequestHandler) SetApiVersion(apiVersion string) {
-	c.ApiVersion = apiVersion
-}
-
 func (c *RequestHandler) sendRequest(method string, rawURL string, data url.Values,
-	headers map[string]interface{}, body ...byte) (*http.Response, error) {
-	// If API version is set, add it to request headers
-	if c.ApiVersion != "" && headers != nil {
-		headers["X-Twilio-ApiVersion"] = c.ApiVersion
-	}
-	if (c.Edge == "" && c.Region != "") || (c.Edge != "" && c.Region == "") {
-		log.Println("For regional processing, DNS is of format product.city.region.twilio.com; otherwise use product.twilio.com.")
-	}
-	if c.Edge == "" && c.Region != "" {
-		log.Println("Setting default `Edge` for the provided `region`")
-		var regionToEdge = map[string]string{
-			"au1": "sydney",
-			"br1": "sao-paulo",
-			"de1": "frankfurt",
-			"ie1": "dublin",
-			"jp1": "tokyo",
-			"jp2": "osaka",
-			"sg1": "singapore",
-			"us1": "ashburn",
-			"us2": "umatilla",
-		}
-		if edge, ok := regionToEdge[c.Region]; ok {
-			c.Edge = edge
-		}
+	headers map[string]interface{}, apiVersion string, body ...byte) (*http.Response, error) {
+	// If API version is provided, add it to request headers
+	if apiVersion != "" && headers != nil {
+		headers["X-Twilio-ApiVersion"] = apiVersion
 	}
 	parsedURL, err := c.BuildUrl(rawURL)
 	if err != nil {
@@ -113,22 +86,22 @@ func (c *RequestHandler) BuildUrl(rawURL string) (string, error) {
 	return u.String(), nil
 }
 
-func (c *RequestHandler) Post(path string, bodyData url.Values, headers map[string]interface{}, body ...byte) (*http.Response, error) {
-	return c.sendRequest(http.MethodPost, path, bodyData, headers, body...)
+func (c *RequestHandler) Post(path string, bodyData url.Values, headers map[string]interface{}, apiVersion string, body ...byte) (*http.Response, error) {
+	return c.sendRequest(http.MethodPost, path, bodyData, headers, apiVersion, body...)
 }
 
-func (c *RequestHandler) Put(path string, bodyData url.Values, headers map[string]interface{}, body ...byte) (*http.Response, error) {
-	return c.sendRequest(http.MethodPut, path, bodyData, headers, body...)
+func (c *RequestHandler) Put(path string, bodyData url.Values, headers map[string]interface{}, apiVersion string, body ...byte) (*http.Response, error) {
+	return c.sendRequest(http.MethodPut, path, bodyData, headers, apiVersion, body...)
 }
 
-func (c *RequestHandler) Patch(path string, bodyData url.Values, headers map[string]interface{}, body ...byte) (*http.Response, error) {
-	return c.sendRequest(http.MethodPatch, path, bodyData, headers, body...)
+func (c *RequestHandler) Patch(path string, bodyData url.Values, headers map[string]interface{}, apiVersion string, body ...byte) (*http.Response, error) {
+	return c.sendRequest(http.MethodPatch, path, bodyData, headers, apiVersion, body...)
 }
 
-func (c *RequestHandler) Get(path string, queryData url.Values, headers map[string]interface{}) (*http.Response, error) {
-	return c.sendRequest(http.MethodGet, path, queryData, headers)
+func (c *RequestHandler) Get(path string, queryData url.Values, headers map[string]interface{}, apiVersion string) (*http.Response, error) {
+	return c.sendRequest(http.MethodGet, path, queryData, headers, apiVersion)
 }
 
-func (c *RequestHandler) Delete(path string, queryData url.Values, headers map[string]interface{}) (*http.Response, error) {
-	return c.sendRequest(http.MethodDelete, path, queryData, headers)
+func (c *RequestHandler) Delete(path string, queryData url.Values, headers map[string]interface{}, apiVersion string) (*http.Response, error) {
+	return c.sendRequest(http.MethodDelete, path, queryData, headers, apiVersion)
 }
