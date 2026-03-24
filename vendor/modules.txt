@@ -27,7 +27,7 @@ github.com/pmezard/go-difflib/difflib
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/assert/yaml
 github.com/stretchr/testify/require
-# github.com/twilio/twilio-go v1.30.3
+# github.com/twilio/twilio-go v1.30.4
 ## explicit; go 1.19
 github.com/twilio/twilio-go
 github.com/twilio/twilio-go/client
@@ -50,6 +50,7 @@ github.com/twilio/twilio-go/rest/frontline/v1
 github.com/twilio/twilio-go/rest/iam/scim
 github.com/twilio/twilio-go/rest/iam/v1
 github.com/twilio/twilio-go/rest/insights/v1
+github.com/twilio/twilio-go/rest/insights/v2
 github.com/twilio/twilio-go/rest/intelligence/v2
 github.com/twilio/twilio-go/rest/ip_messaging/v1
 github.com/twilio/twilio-go/rest/ip_messaging/v2
