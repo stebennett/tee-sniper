@@ -787,7 +787,7 @@ func TestAddBrowserHeadersSetsAllHeaders(t *testing.T) {
 	assert.Contains(t, req.Header.Get("User-Agent"), "Mozilla")
 	assert.Equal(t, "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", req.Header.Get("Accept"))
 	assert.Equal(t, "en-US,en;q=0.5", req.Header.Get("Accept-Language"))
-	assert.Equal(t, "gzip, deflate", req.Header.Get("Accept-Encoding"))
+	assert.Empty(t, req.Header.Get("Accept-Encoding"), "Accept-Encoding should not be set manually; Go handles gzip decompression automatically")
 	assert.Equal(t, "keep-alive", req.Header.Get("Connection"))
 	assert.Equal(t, "1", req.Header.Get("Upgrade-Insecure-Requests"))
 }

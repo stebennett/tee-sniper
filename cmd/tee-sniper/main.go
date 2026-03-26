@@ -69,8 +69,11 @@ func (a *App) Run() error {
 	if err != nil {
 		return fmt.Errorf("login failed: %w", err)
 	}
+	if !ok {
+		return fmt.Errorf("login failed: invalid credentials or unexpected response")
+	}
 
-	slog.Info("login completed", slog.Bool("success", ok))
+	slog.Info("login completed")
 
 	nextBookableDate := a.Clock.Now().AddDate(0, 0, a.Config.DaysAhead)
 	dateStr := nextBookableDate.Format("02-01-2006")
