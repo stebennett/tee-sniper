@@ -58,7 +58,10 @@ func (w *BookingClient) addBrowserHeaders(req *http.Request) {
 	req.Header.Set("User-Agent", w.userAgent)
 	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
 	req.Header.Set("Accept-Language", "en-US,en;q=0.5")
-	req.Header.Set("Accept-Encoding", "gzip, deflate")
+	// Note: Do NOT set Accept-Encoding manually. Go's HTTP client handles
+	// gzip decompression automatically when this header is absent. Setting it
+	// explicitly disables automatic decompression, causing compressed responses
+	// to be passed as raw bytes to goquery, which then finds no elements.
 	req.Header.Set("Connection", "keep-alive")
 	req.Header.Set("Upgrade-Insecure-Requests", "1")
 }
@@ -134,6 +137,11 @@ func (w BookingClient) Login(username string, password string) (bool, error) {
 	}
 
 	pageTitle := doc.Find("title").Text()
+	slog.Debug("login response",
+		slog.String("page_title", pageTitle),
+		slog.Int("status_code", resp.StatusCode),
+		slog.String("content_encoding", resp.Header.Get("Content-Encoding")),
+	)
 	return strings.HasPrefix(pageTitle, "Welcome"), nil
 }
 
@@ -160,6 +168,12 @@ func (w BookingClient) GetCourseAvailability(dateStr string) ([]models.TimeSlot,
 
 	defer resp.Body.Close()
 
+	slog.Debug("availability response",
+		slog.Int("status_code", resp.StatusCode),
+		slog.String("content_encoding", resp.Header.Get("Content-Encoding")),
+		slog.String("content_type", resp.Header.Get("Content-Type")),
+	)
+
 	if resp.StatusCode != 200 {
 		return slots, fmt.Errorf("invalid status code returned %d", resp.StatusCode)
 	}
@@ -168,6 +182,15 @@ func (w BookingClient) GetCourseAvailability(dateStr string) ([]models.TimeSlot,
 	if err != nil {
 		return slots, err
 	}
+
+	pageTitle := doc.Find("title").Text()
+	totalRows := doc.Find("tr").Length()
+	bookableRows := doc.Find("tr.bookable").Length()
+	slog.Debug("parsed availability page",
+		slog.String("page_title", pageTitle),
+		slog.Int("total_tr_elements", totalRows),
+		slog.Int("bookable_rows", bookableRows),
+	)
 
 	doc.Find("tr.bookable").Each(func(i int, s *goquery.Selection) {
 		bookingButton := s.Find("a.inlineBooking").Length() != 0

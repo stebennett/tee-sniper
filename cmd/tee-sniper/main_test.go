@@ -139,6 +139,21 @@ func TestRunLoginError(t *testing.T) {
 	assert.Contains(t, err.Error(), "login failed")
 }
 
+func TestRunLoginUnsuccessful(t *testing.T) {
+	app, mockBooking, _, ctrl := createTestApp(t, defaultTestConfig(), time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
+	defer ctrl.Finish()
+
+	mockBooking.EXPECT().
+		Login("testuser", "1234").
+		Return(false, nil)
+
+	err := app.Run()
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "login failed")
+	assert.Contains(t, err.Error(), "invalid credentials or unexpected response")
+}
+
 func TestRunGetAvailabilityError(t *testing.T) {
 	app, mockBooking, _, ctrl := createTestApp(t, defaultTestConfig(), time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC))
 	defer ctrl.Finish()
