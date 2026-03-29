@@ -6,6 +6,7 @@ import "github.com/stebennett/tee-sniper/pkg/models"
 
 // Compile-time verification that concrete types implement interfaces
 var _ BookingService = (*BookingClient)(nil)
+var _ BookingService = (*APIClient)(nil)
 var _ SMSService = (*TwilioClient)(nil)
 
 // BookingService defines the interface for booking operations.

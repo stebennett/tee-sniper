@@ -208,10 +208,23 @@ func main() {
 
 	logger.Init(conf.LogLevel)
 
-	bookingClient, err := clients.NewBookingClient(conf.BaseUrl)
-	if err != nil {
-		slog.Error("failed to create booking client", slog.String("error", err.Error()))
+	if err := conf.Validate(); err != nil {
+		slog.Error("configuration error", slog.String("error", err.Error()))
 		os.Exit(1)
+	}
+
+	var bookingClient clients.BookingService
+	if conf.UseAPIMode() {
+		slog.Info("using API client mode", slog.String("api_url", conf.APIURL))
+		bookingClient = clients.NewAPIClient(conf.APIURL, conf.SharedSecret)
+	} else {
+		slog.Info("using direct booking client mode")
+		bc, err := clients.NewBookingClient(conf.BaseUrl)
+		if err != nil {
+			slog.Error("failed to create booking client", slog.String("error", err.Error()))
+			os.Exit(1)
+		}
+		bookingClient = bc
 	}
 
 	twilioClient := clients.NewTwilioClient()
