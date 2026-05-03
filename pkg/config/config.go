@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	flags "github.com/jessevdk/go-flags"
@@ -21,7 +22,10 @@ type Config struct {
 
 	Username string `short:"u" long:"username" env:"TS_USERNAME" required:"true" description:"The username to use for booking"`
 	Pin      string `short:"p" long:"pin" env:"TS_PIN" required:"true" description:"The pin associated with the username for booking"`
-	BaseUrl  string `short:"b" long:"baseurl" env:"TS_BASEURL" required:"true" description:"The host for the booking website"`
+	BaseUrl  string `short:"b" long:"baseurl" env:"TS_BASEURL" description:"The host for the booking website"`
+
+	APIURL       string `long:"api-url" env:"TS_API_URL" description:"API base URL (enables API client mode)"`
+	SharedSecret string `long:"shared-secret" env:"TS_SHARED_SECRET" description:"Shared secret for API credential encryption"`
 
 	FromNumber      string `short:"f" long:"fromnumber" env:"TS_FROM_NUMBER" required:"true" description:"The number to send the confirmation SMS from"`
 	ToNumber        string `short:"n" long:"tonumber" env:"TS_TO_NUMBER" required:"true" description:"The number to send the confirmation SMS to"`
@@ -41,6 +45,22 @@ func GetConfig() (Config, error) {
 	}
 
 	return c, nil
+}
+
+// UseAPIMode returns true if API client mode is enabled.
+func (c Config) UseAPIMode() bool {
+	return c.APIURL != ""
+}
+
+// Validate checks that the configuration is valid.
+func (c Config) Validate() error {
+	if c.APIURL != "" && c.SharedSecret == "" {
+		return fmt.Errorf("--shared-secret is required when using --api-url")
+	}
+	if c.APIURL == "" && c.BaseUrl == "" {
+		return fmt.Errorf("--baseurl is required when not using --api-url")
+	}
+	return nil
 }
 
 func (c Config) GetPlayingPartnersList() []string {

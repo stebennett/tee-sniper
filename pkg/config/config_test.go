@@ -320,6 +320,64 @@ func TestGetConfigCliArgsOverrideEnvVars(t *testing.T) {
 	assert.Equal(t, "envuser", cfg.Username, "Env var should be used when CLI arg not provided")
 }
 
+func TestUseAPIMode(t *testing.T) {
+	tests := []struct {
+		name     string
+		apiURL   string
+		expected bool
+	}{
+		{name: "empty api url returns false", apiURL: "", expected: false},
+		{name: "set api url returns true", apiURL: "http://localhost:8000", expected: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := Config{APIURL: tt.apiURL}
+			assert.Equal(t, tt.expected, cfg.UseAPIMode())
+		})
+	}
+}
+
+func TestValidate(t *testing.T) {
+	tests := []struct {
+		name      string
+		cfg       Config
+		expectErr string
+	}{
+		{
+			name:      "direct mode with baseurl is valid",
+			cfg:       Config{BaseUrl: "https://example.com"},
+			expectErr: "",
+		},
+		{
+			name:      "api mode with shared secret is valid",
+			cfg:       Config{APIURL: "http://localhost:8000", SharedSecret: "secret"},
+			expectErr: "",
+		},
+		{
+			name:      "api mode without shared secret is invalid",
+			cfg:       Config{APIURL: "http://localhost:8000"},
+			expectErr: "--shared-secret is required when using --api-url",
+		},
+		{
+			name:      "direct mode without baseurl is invalid",
+			cfg:       Config{},
+			expectErr: "--baseurl is required when not using --api-url",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.cfg.Validate()
+			if tt.expectErr == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tt.expectErr)
+			}
+		})
+	}
+}
+
 func TestGetConfigDryRunEnvVar(t *testing.T) {
 	// Save original os.Args and restore after test
 	originalArgs := os.Args
