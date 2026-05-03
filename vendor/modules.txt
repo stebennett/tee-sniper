@@ -27,7 +27,7 @@ github.com/pmezard/go-difflib/difflib
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/assert/yaml
 github.com/stretchr/testify/require
-# github.com/twilio/twilio-go v1.30.4
+# github.com/twilio/twilio-go v1.30.5
 ## explicit; go 1.19
 github.com/twilio/twilio-go
 github.com/twilio/twilio-go/client
