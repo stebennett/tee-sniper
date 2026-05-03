@@ -74,7 +74,7 @@ jobs:
 
     - name: Extract metadata for Go Docker image
       id: meta
-      uses: docker/metadata-action@v5
+      uses: docker/metadata-action@v6
       with:
         images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
         tags: |
@@ -94,7 +94,7 @@ jobs:
 
     - name: Extract metadata for API Docker image
       id: meta-api
-      uses: docker/metadata-action@v5
+      uses: docker/metadata-action@v6
       with:
         images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-api
         tags: |
