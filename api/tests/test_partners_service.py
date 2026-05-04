@@ -29,6 +29,7 @@ def test_load_returns_empty_when_file_invalid_json(tmp_path: Path, caplog: pytes
     with caplog.at_level("WARNING"):
         result = service.load()
     assert result == []
+    assert any("partners file" in r.message.lower() for r in caplog.records)
 
 
 def test_load_returns_partners_sorted_by_name(tmp_path: Path) -> None:
