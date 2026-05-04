@@ -31,6 +31,10 @@ class Settings(BaseSettings):
     # Golf course booking site
     base_url: str  # Base URL of the golf course booking site
 
+    # Path to JSON file mapping partner IDs to display names.
+    # Format: {"id1": "Alice Smith", "id2": "Bob Jones"}
+    partners_file: str | None = None
+
     # Logging
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
     log_format: Literal["json", "text"] = "json"
