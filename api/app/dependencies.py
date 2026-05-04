@@ -27,6 +27,15 @@ def get_encryption_service() -> EncryptionService:
     return EncryptionService(settings.shared_secret)
 
 
+@lru_cache
+def get_partners_service() -> "PartnersService":
+    """Get cached PartnersService instance."""
+    from app.services.partners import PartnersService
+
+    settings = get_settings()
+    return PartnersService(settings.partners_file)
+
+
 def get_settings_dependency() -> Settings:
     """Dependency for injecting settings into routes."""
     return get_settings()

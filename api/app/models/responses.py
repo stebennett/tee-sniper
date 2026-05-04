@@ -68,6 +68,19 @@ class AddPartnersResponse(BaseModel):
     message: str = Field(..., description="Status message")
 
 
+class PartnerResponse(BaseModel):
+    """A configured playing partner."""
+
+    id: str = Field(..., description="Partner identifier used by the booking site")
+    name: str = Field(..., description="Human-readable partner name")
+
+
+class PartnersListResponse(BaseModel):
+    """Response listing configured playing partners."""
+
+    partners: list[PartnerResponse] = Field(..., description="Configured partners, sorted by name")
+
+
 class ErrorResponse(BaseModel):
     """Standard error response."""
 
