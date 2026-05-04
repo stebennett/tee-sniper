@@ -1,0 +1,18 @@
+Tee-Sniper API installed.
+
+Release:    {{ .Release.Name }}
+Namespace:  {{ .Release.Namespace }}
+Chart:      {{ .Chart.Name }}-{{ .Chart.Version }} (appVersion {{ .Chart.AppVersion }})
+
+The API is reachable in-cluster at:
+  {{ include "tee-sniper-api.internalUrl" . }}
+
+Required Secrets (must already exist in namespace {{ .Release.Namespace }}):
+  - {{ .Values.api.existingSecret }} (keys: shared-secret)
+  - {{ .Values.cli.existingSecret }} (keys: username, pin, twilio-account-sid, twilio-auth-token, to-number, from-number, shared-secret)
+{{- if .Values.redis.enabled }}
+  - {{ .Values.redis.auth.existingSecret }} (keys: {{ .Values.redis.auth.existingSecretPasswordKey }})
+{{- end }}
+
+Verify pods are healthy:
+  kubectl -n {{ .Release.Namespace }} get pods -l app.kubernetes.io/instance={{ .Release.Name }}

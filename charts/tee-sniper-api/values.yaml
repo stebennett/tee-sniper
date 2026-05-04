@@ -1,0 +1,51 @@
+api:
+  image:
+    repository: ghcr.io/stebennett/tee-sniper-api
+    tag: ""
+    pullPolicy: IfNotPresent
+  replicas: 2
+  resources:
+    requests:
+      memory: 128Mi
+      cpu: 100m
+    limits:
+      memory: 256Mi
+      cpu: 500m
+  config:
+    logLevel: INFO
+  existingSecret: tee-sniper-api
+  service:
+    port: 80
+    targetPort: 8000
+
+cli:
+  image:
+    repository: ghcr.io/stebennett/tee-sniper-cli
+    tag: ""
+    pullPolicy: IfNotPresent
+  existingSecret: tee-sniper-cli
+
+cronjobs: []
+
+redis:
+  enabled: true
+  architecture: standalone
+  auth:
+    enabled: true
+    existingSecret: redis-auth
+    existingSecretPasswordKey: password
+  master:
+    persistence:
+      enabled: true
+      storageClass: local-path
+      size: 1Gi
+
+networkPolicy:
+  enabled: false
+  apiAllowedClients:
+    matchLabels:
+      tee-sniper.io/api-client: "true"
+
+serviceAccount:
+  create: true
+  name: ""

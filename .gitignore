@@ -22,3 +22,7 @@ go.work
 .env
 
 .worktrees/
+
+# Helm: don't commit pulled subcharts (Chart.lock pins them)
+charts/*/charts/
+charts/*/*.tgz
