@@ -57,6 +57,7 @@ mcp/
     test_auth.py
     test_dates.py
     test_tools.py           # uses respx to mock the REST API
+  Dockerfile                # publishes the MCP server as a runnable image
 ```
 
 ## Configuration
@@ -211,7 +212,57 @@ endpoints all already exist.
 - `tests/test_tools.py` — each tool: happy path, error mapping, dry-run
   pass-through. HTTP mocked with `respx`.
 - No live-API integration tests in CI (matches existing `api/` test style).
-- New CI job that runs `cd mcp && uv sync && uv run pytest`.
+
+## CI / CD
+
+Mirrors the existing per-component pattern (`build.yml` for Go, `api-build.yml`
+for the Python API, `release.yml` for tagged Docker publishes).
+
+### `.github/workflows/mcp-build.yml` (new)
+
+Runs on pushes / PRs that touch `mcp/**` or the workflow itself.
+
+- `actions/setup-python@v6` (3.14, matching `api-build.yml`).
+- Install `uv` (`astral-sh/setup-uv` action).
+- `cd mcp && uv sync --all-extras --dev`.
+- `uv run pytest` (with coverage).
+- Build Docker image (no push) to verify the `mcp/Dockerfile` is healthy on
+  every PR — same shape as the `build` job in `api-build.yml`.
+
+### `mcp/Dockerfile` (new)
+
+Slim Python image (`python:3.14-slim`), `uv pip install` the project, default
+`CMD` is `tee-sniper-mcp` so MetaMCP / Docker-based MCP clients can run it as
+`docker run -i --rm -e TSA_USERNAME=... ghcr.io/<repo>-mcp tee-sniper-mcp`.
+
+### Updates to `release.yml`
+
+Add a third image build/push step (matching the existing Go and API blocks):
+
+- Image name: `${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-mcp`.
+- Context: `./mcp`.
+- Same semver tagging (`{{version}}`, `{{major}}.{{minor}}`, `latest`).
+- Same dual-registry login (GHCR + `dhi.io`) already configured in the workflow.
+
+### Updates to `build.yml`
+
+Add `mcp/**` to the existing `paths-ignore` list so Go pushes don't re-run for
+MCP-only changes (mirrors the existing `api/**` exclusion).
+
+### Release artefacts
+
+Each tagged release will publish three Docker images to GHCR:
+
+| Image | Purpose |
+|---|---|
+| `<repo>` | Go CLI (existing). |
+| `<repo>-api` | FastAPI service (existing). |
+| `<repo>-mcp` | New: MCP server, runnable via `docker run` or pulled by MetaMCP. |
+
+Publishing to PyPI / `uvx`-from-PyPI is **out of scope** for this spec — local
+users run via `uv run` against the source checkout, MetaMCP / containerised
+users run via the Docker image. PyPI can be added later without affecting any
+of the design above.
 
 ## Implementation phases
 
@@ -221,8 +272,10 @@ Each phase is its own PR. Per `CLAUDE.md` workflow conventions.
 |---|---|---|
 | **A** — partners endpoint | `mcp/phaseA-partners-endpoint` | `GET /api/partners`, `TSA_PARTNERS_FILE` config, tests. No `mcp/` changes. |
 | **B** — MCP scaffold | `mcp/phaseB-scaffold` | `mcp/pyproject.toml`, `config.py`, `auth.py`, `api_client.py`, `dates.py` + their tests. No tools wired yet. |
-| **C** — tools | `mcp/phaseC-tools` | `tools.py` + `server.py` entrypoint; `tests/test_tools.py`. Server is end-to-end runnable. |
-| **D** — docs & CI | `mcp/phaseD-docs-ci` | `mcp/README.md` with sample `claude_desktop_config.json` + MetaMCP snippet; new GitHub Actions job; update top-level `README.md` + `CLAUDE.md`; **delete `docs/MCP_PLAN.md`** (superseded). |
+| **C** — tools | `mcp/phaseC-tools` | `tools.py` + `server.py` entrypoint; `tests/test_tools.py`. Server is end-to-end runnable via `uv run`. |
+| **D** — Docker + CI | `mcp/phaseD-docker-ci` | `mcp/Dockerfile`, new `.github/workflows/mcp-build.yml`, update `release.yml` to publish `<repo>-mcp` image, update `build.yml` `paths-ignore`. |
+| **E** — docs | `mcp/phaseE-docs` | `mcp/README.md` with `uv run` + Docker + sample `claude_desktop_config.json` + MetaMCP snippets; update top-level `README.md` + `CLAUDE.md`; **delete `docs/MCP_PLAN.md`** (superseded). |
 
-Phase B can begin in parallel with Phase A review. Phase C depends on B. Phase D
-depends on A + C.
+Phase B can begin in parallel with Phase A review. Phase C depends on B.
+Phase D depends on C (needs a buildable project to image). Phase E depends
+on A + C.
