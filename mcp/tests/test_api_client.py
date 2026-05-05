@@ -86,6 +86,22 @@ async def test_non_401_error_surfaces(config: Config) -> None:
 
 
 @respx.mock
+async def test_list_body_error_does_not_crash(config: Config) -> None:
+    respx.post("http://api.test/api/login").mock(return_value=_login_response())
+    respx.get("http://api.test/api/x").mock(
+        return_value=httpx.Response(
+            422,
+            json=[{"loc": ["body", "date"], "msg": "invalid", "type": "value_error"}],
+        )
+    )
+
+    async with httpx.AsyncClient() as http:
+        api = ApiClient(config, AuthManager(config, http), http)
+        with pytest.raises(ApiError):
+            await api.get("/api/x")
+
+
+@respx.mock
 async def test_post_passes_json_body(config: Config) -> None:
     respx.post("http://api.test/api/login").mock(return_value=_login_response())
     book = respx.post("http://api.test/api/2026-05-10/time/08:00/book").mock(

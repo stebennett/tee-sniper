@@ -79,6 +79,9 @@ class ApiClient:
     @staticmethod
     def _extract_detail(response: httpx.Response) -> str:
         try:
-            return response.json().get("detail", response.text)
+            body = response.json()
         except ValueError:
             return response.text or response.reason_phrase
+        if isinstance(body, dict):
+            return body.get("detail", response.text)
+        return response.text or response.reason_phrase
