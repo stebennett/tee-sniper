@@ -30,10 +30,11 @@ def _login_response() -> httpx.Response:
 
 @pytest.fixture
 async def tools(config: Config):
-    async with httpx.AsyncClient() as http:
-        respx.post("http://api.test/api/login").mock(return_value=_login_response())
-        api = ApiClient(config, AuthManager(config, http), http)
-        yield Tools(config=config, api=api, today=lambda: dt.date(2026, 5, 4))
+    with respx.MockRouter(assert_all_called=False) as router:
+        router.post("http://api.test/api/login").mock(return_value=_login_response())
+        async with httpx.AsyncClient() as http:
+            api = ApiClient(config, AuthManager(config, http), http)
+            yield Tools(config=config, api=api, today=lambda: dt.date(2026, 5, 4))
 
 
 @respx.mock
