@@ -1,0 +1,6 @@
+.venv
+.python-version
+tests
+conftest.py
+**/__pycache__
+*.egg-info
