@@ -54,6 +54,19 @@ def test_load_config_raises_when_missing_required(monkeypatch: pytest.MonkeyPatc
         load_config()
 
 
+def test_config_repr_does_not_leak_secrets() -> None:
+    cfg = Config(
+        api_base_url="http://x",
+        username="alice",
+        pin="1234",
+        shared_secret="s3cret",
+        time_bands_override=None,
+    )
+    r = repr(cfg)
+    assert "1234" not in r
+    assert "s3cret" not in r
+
+
 def test_load_config_raises_on_invalid_time_bands_json(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("TSA_API_BASE_URL", "http://x")
     monkeypatch.setenv("TSA_USERNAME", "u")

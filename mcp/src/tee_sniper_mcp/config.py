@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 class ConfigError(Exception):
@@ -17,8 +17,8 @@ class Config:
 
     api_base_url: str
     username: str
-    pin: str
-    shared_secret: str
+    pin: str = field(repr=False)
+    shared_secret: str = field(repr=False)
     time_bands_override: dict[str, list[str]] | None
 
 
