@@ -18,6 +18,9 @@ tee-sniper-mcp = "tee_sniper_mcp.server:main"
 dev = [
     "pytest>=8",
     "pytest-asyncio>=0.24",
+    # Required transitively by the cross-package roundtrip test in
+    # tests/test_auth.py: importing app.services.encryption triggers
+    # api/app/services/__init__.py which imports session_manager (uses redis).
     "redis>=7.4.0",
     "respx>=0.21",
 ]
