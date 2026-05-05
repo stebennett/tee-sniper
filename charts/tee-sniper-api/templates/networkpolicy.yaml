@@ -1,0 +1,52 @@
+{{- if .Values.networkPolicy.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "tee-sniper-api.fullname" . }}-api-ingress
+  labels:
+    {{- include "tee-sniper-api.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "tee-sniper-api.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: api
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "tee-sniper-api.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: cli
+        - podSelector:
+            {{- toYaml .Values.networkPolicy.apiAllowedClients | nindent 12 }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.api.service.targetPort }}
+{{- if .Values.redis.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "tee-sniper-api.fullname" . }}-redis-ingress
+  labels:
+    {{- include "tee-sniper-api.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: redis
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "tee-sniper-api.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: api
+      ports:
+        - protocol: TCP
+          port: 6379
+{{- end }}
+{{- end }}
