@@ -170,6 +170,42 @@ async def test_api_error_surfaces_as_error_dict(tools: Tools) -> None:
     assert "upstream broken" in result["error"]
 
 
+@respx.mock
+async def test_find_tee_times_handles_malformed_api_response(tools: Tools) -> None:
+    respx.get("http://api.test/api/2026-05-05/times").mock(
+        return_value=httpx.Response(200, json={})
+    )
+
+    result = await tools.find_tee_times(date="tomorrow")
+
+    assert "error" in result
+    assert "unexpected API response" in result["error"]
+
+
+@respx.mock
+async def test_book_tee_time_handles_malformed_api_response(tools: Tools) -> None:
+    respx.post("http://api.test/api/2026-05-05/time/08:00/book").mock(
+        return_value=httpx.Response(200, json={})
+    )
+
+    result = await tools.book_tee_time(date="tomorrow", time="8am")
+
+    assert "error" in result
+    assert "unexpected API response" in result["error"]
+
+
+@respx.mock
+async def test_add_partners_handles_malformed_api_response(tools: Tools) -> None:
+    respx.patch("http://api.test/api/bookings/b-1").mock(
+        return_value=httpx.Response(200, json={})
+    )
+
+    result = await tools.add_partners(booking_id="b-1", partner_ids=["id1"])
+
+    assert "error" in result
+    assert "unexpected API response" in result["error"]
+
+
 async def test_server_registers_all_four_tools() -> None:
     from tee_sniper_mcp.server import build_server
 

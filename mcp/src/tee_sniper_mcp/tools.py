@@ -61,11 +61,14 @@ class Tools:
         except ApiError as exc:
             return {"error": str(exc)}
 
-        slots = [
-            {"time": slot["time"], "can_book": slot["can_book"]}
-            for slot in response.get("times", [])
-        ]
-        return {"date": response["date"], "slots": slots}
+        try:
+            slots = [
+                {"time": slot["time"], "can_book": slot["can_book"]}
+                for slot in response.get("times", [])
+            ]
+            return {"date": response["date"], "slots": slots}
+        except (KeyError, TypeError) as exc:
+            return {"error": f"unexpected API response: {exc}"}
 
     async def book_tee_time(
         self,
@@ -92,13 +95,16 @@ class Tools:
         except ApiError as exc:
             return {"error": str(exc)}
 
-        return {
-            "booking_id": response["booking_id"],
-            "date": response["date"],
-            "time": response["time"],
-            "num_slots": response["slots_booked"],
-            "dry_run": dry_run,
-        }
+        try:
+            return {
+                "booking_id": response["booking_id"],
+                "date": response["date"],
+                "time": response["time"],
+                "num_slots": response["slots_booked"],
+                "dry_run": dry_run,
+            }
+        except (KeyError, TypeError) as exc:
+            return {"error": f"unexpected API response: {exc}"}
 
     async def list_partners(self) -> dict[str, Any]:
         """List configured playing partners."""
@@ -126,8 +132,11 @@ class Tools:
         except ApiError as exc:
             return {"error": str(exc)}
 
-        return {
-            "booking_id": response["booking_id"],
-            "partners_added": response.get("partners_added", []),
-            "partners_failed": response.get("partners_failed", []),
-        }
+        try:
+            return {
+                "booking_id": response["booking_id"],
+                "partners_added": response.get("partners_added", []),
+                "partners_failed": response.get("partners_failed", []),
+            }
+        except (KeyError, TypeError) as exc:
+            return {"error": f"unexpected API response: {exc}"}
