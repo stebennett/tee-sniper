@@ -1042,11 +1042,11 @@ Expected: both report 0 errors.
 helm template testrel charts/tee-sniper-api -f charts/tee-sniper-api/values-prod.yaml | \
   yq 'select(.kind == "Deployment") | .spec.replicas'
 helm template testrel charts/tee-sniper-api -f charts/tee-sniper-api/values-prod.yaml | \
-  yq '[. | select(.kind == "CronJob")] | length' | head -1
+  grep -c "^kind: CronJob$"
 helm template testrel charts/tee-sniper-api -f charts/tee-sniper-api/values-dev.yaml | \
   yq 'select(.kind == "Deployment") | .spec.replicas'
 helm template testrel charts/tee-sniper-api -f charts/tee-sniper-api/values-dev.yaml | \
-  yq '[. | select(.kind == "CronJob")] | length' | head -1
+  grep -c "^kind: CronJob$"
 ```
 
 Expected:
