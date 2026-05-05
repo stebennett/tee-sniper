@@ -535,7 +535,7 @@ git commit -m "feat(helm): add API Deployment, Service, ServiceAccount, ConfigMa
           "required": ["repository", "tag", "pullPolicy"],
           "properties": {
             "repository": { "type": "string", "minLength": 1 },
-            "tag": { "type": "string", "not": { "enum": ["latest"] } },
+            "tag": { "type": "string", "not": { "pattern": "^[Ll][Aa][Tt][Ee][Ss][Tt]$" } },
             "pullPolicy": { "type": "string", "enum": ["Always", "IfNotPresent", "Never"] }
           }
         },
@@ -569,7 +569,7 @@ git commit -m "feat(helm): add API Deployment, Service, ServiceAccount, ConfigMa
           "required": ["repository", "tag", "pullPolicy"],
           "properties": {
             "repository": { "type": "string", "minLength": 1 },
-            "tag": { "type": "string", "not": { "enum": ["latest"] } },
+            "tag": { "type": "string", "not": { "pattern": "^[Ll][Aa][Tt][Ee][Ss][Tt]$" } },
             "pullPolicy": { "type": "string", "enum": ["Always", "IfNotPresent", "Never"] }
           }
         },
@@ -582,7 +582,7 @@ git commit -m "feat(helm): add API Deployment, Service, ServiceAccount, ConfigMa
         "type": "object",
         "required": ["name", "schedule", "args"],
         "properties": {
-          "name": { "type": "string", "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" },
+          "name": { "type": "string", "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$", "maxLength": 40 },
           "schedule": { "type": "string", "minLength": 1 },
           "suspend": { "type": "boolean" },
           "args": { "type": "array", "items": { "type": "string" } },
@@ -591,7 +591,7 @@ git commit -m "feat(helm): add API Deployment, Service, ServiceAccount, ConfigMa
             "type": "object",
             "properties": {
               "repository": { "type": "string", "minLength": 1 },
-              "tag": { "type": "string", "not": { "enum": ["latest"] } }
+              "tag": { "type": "string", "not": { "pattern": "^[Ll][Aa][Tt][Ee][Ss][Tt]$" } }
             },
             "required": ["repository", "tag"]
           }
