@@ -2,7 +2,24 @@
 
 Local stdio MCP server that exposes tee-sniper booking operations
 (`find_tee_times`, `book_tee_time`, `list_partners`, `add_partners`) to LLM
-clients. It is a thin client of the FastAPI service in `../api/`.
+clients (Claude Desktop, MetaMCP, etc.). It is a thin HTTP client of the
+FastAPI service in `../api/`.
+
+## Architecture
+
+```
+┌──────────────┐  stdio MCP  ┌────────────────┐  HTTP   ┌─────────────┐
+│  MCP client  │ ──────────► │  mcp/ (uv run) │ ──────► │  FastAPI    │
+│  (Claude /   │             │  - tools       │         │  api/*      │
+│   MetaMCP)   │             │  - auth state  │         └─────────────┘
+└──────────────┘             │  - date parser │
+                             └────────────────┘
+```
+
+The server logs in lazily on the first authenticated tool call, caches the
+bearer token in memory for the lifetime of the process, and refreshes once on
+401. MetaMCP keeps the child process alive across tool calls within a session,
+so a typical booking flow performs exactly one login.
 
 ## Tools
 
@@ -105,3 +122,20 @@ servers:
 cd mcp
 uv run pytest -v
 ```
+
+The cross-package roundtrip test (`tests/test_auth.py::test_encrypt_credentials_roundtrip`)
+imports `app.services.encryption` from `../api/` to verify our local AES-GCM
+encryption produces output the API can decrypt. `mcp/conftest.py` puts `api/`
+on `sys.path` for this test; the `redis` dev dependency in `pyproject.toml` is
+present because importing through `app/services/__init__.py` triggers the
+import of `session_manager.py`, which uses redis.
+
+## Notes
+
+- Requires Python 3.14 (matches `api/`).
+- Built on FastMCP ≥ 3.1; tested against 3.2.x. Tools are introspected via
+  `mcp.list_tools()`.
+- Configuration errors at startup exit with code 2 and print
+  `tee-sniper-mcp: configuration error: …` to stderr.
+- The Docker image uses `pip install .` (no lock file), so transitive deps are
+  resolved at build time from the floor pins in `pyproject.toml`.
