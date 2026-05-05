@@ -79,5 +79,8 @@ class AuthManager:
             raise AuthError(f"login failed ({response.status_code}): {detail}")
 
         body = response.json()
-        self._token = body["access_token"]
-        self._expires_at = dt.datetime.fromisoformat(body["expires_at"])
+        try:
+            self._token = body["access_token"]
+            self._expires_at = dt.datetime.fromisoformat(body["expires_at"])
+        except (KeyError, ValueError) as exc:
+            raise AuthError(f"unexpected login response: {exc}") from exc

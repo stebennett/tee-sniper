@@ -75,3 +75,15 @@ async def test_login_failure_raises(config: Config) -> None:
         auth = AuthManager(config, client)
         with pytest.raises(AuthError, match="bad creds"):
             await auth.get_token()
+
+
+@respx.mock
+async def test_unexpected_login_body_raises_auth_error(config: Config) -> None:
+    respx.post("http://api.test/api/login").mock(
+        return_value=httpx.Response(200, json={"foo": "bar"})
+    )
+
+    async with httpx.AsyncClient() as client:
+        auth = AuthManager(config, client)
+        with pytest.raises(AuthError, match="unexpected login response"):
+            await auth.get_token()
