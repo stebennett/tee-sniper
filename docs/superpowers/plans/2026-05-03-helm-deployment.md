@@ -153,6 +153,8 @@ cronjobs: []
 redis:
   enabled: true
   architecture: standalone
+  networkPolicy:
+    enabled: false                  # umbrella manages Redis NetworkPolicy via our template
   auth:
     enabled: true
     existingSecret: redis-auth
