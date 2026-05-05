@@ -168,3 +168,22 @@ async def test_api_error_surfaces_as_error_dict(tools: Tools) -> None:
 
     assert "error" in result
     assert "upstream broken" in result["error"]
+
+
+async def test_server_registers_all_four_tools() -> None:
+    from tee_sniper_mcp.server import build_server
+
+    # Build with stub config (no env mutation needed because we pass it directly).
+    cfg = Config(
+        api_base_url="http://api.test",
+        username="u",
+        pin="p",
+        shared_secret="s",
+        time_bands_override=None,
+    )
+
+    async with build_server(config=cfg) as mcp:
+        registered = await mcp.list_tools()
+
+    names = {t.name for t in registered}
+    assert names == {"find_tee_times", "book_tee_time", "list_partners", "add_partners"}
