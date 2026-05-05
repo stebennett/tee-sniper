@@ -16,6 +16,7 @@ api:
       cpu: 500m
   config:
     logLevel: INFO
+    baseUrl: ""
   existingSecret: tee-sniper-api
   service:
     port: 80

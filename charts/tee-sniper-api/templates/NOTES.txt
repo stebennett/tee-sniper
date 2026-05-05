@@ -7,6 +7,12 @@ Chart:      {{ .Chart.Name }}-{{ .Chart.Version }} (appVersion {{ .Chart.AppVers
 The API is reachable in-cluster at:
   {{ include "tee-sniper-api.internalUrl" . }}
 
+{{- if not .Values.api.config.baseUrl }}
+
+WARNING: api.config.baseUrl is empty. The API pod will crash on startup
+until you set it to the booking site URL (e.g. https://golf.example.com/).
+{{- end }}
+
 Required Secrets (must already exist in namespace {{ .Release.Namespace }}):
   - {{ .Values.api.existingSecret }} (keys: shared-secret)
   - {{ .Values.cli.existingSecret }} (keys: username, pin, twilio-account-sid, twilio-auth-token, to-number, from-number, shared-secret)

@@ -135,6 +135,7 @@ api:
       cpu: 500m
   config:
     logLevel: INFO
+    baseUrl: ""
   existingSecret: tee-sniper-api
   service:
     port: 80
@@ -350,6 +351,7 @@ metadata:
   name: {{ include "tee-sniper-api.serviceAccountName" . }}
   labels:
     {{- include "tee-sniper-api.labels" . | nindent 4 }}
+automountServiceAccountToken: false
 {{- end }}
 ```
 
@@ -364,7 +366,10 @@ metadata:
     {{- include "tee-sniper-api.labels" . | nindent 4 }}
 data:
   TSA_LOG_LEVEL: {{ .Values.api.config.logLevel | quote }}
+  TSA_BASE_URL: {{ .Values.api.config.baseUrl | quote }}
 ```
+
+> The Python API requires `TSA_BASE_URL` (no default in `api/app/config.py`); operators set `api.config.baseUrl` in their values file.
 
 - [ ] **Step 3: Create `templates/deployment.yaml`**
 
@@ -389,6 +394,7 @@ spec:
         app.kubernetes.io/component: api
     spec:
       serviceAccountName: {{ include "tee-sniper-api.serviceAccountName" . }}
+      automountServiceAccountToken: false
       containers:
         - name: api
           image: {{ include "tee-sniper-api.apiImage" . | quote }}
@@ -537,9 +543,10 @@ git commit -m "feat(helm): add API Deployment, Service, ServiceAccount, ConfigMa
         "resources": { "type": "object" },
         "config": {
           "type": "object",
-          "required": ["logLevel"],
+          "required": ["logLevel", "baseUrl"],
           "properties": {
-            "logLevel": { "type": "string", "enum": ["DEBUG", "INFO", "WARNING", "ERROR"] }
+            "logLevel": { "type": "string", "enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] },
+            "baseUrl": { "type": "string" }
           }
         },
         "existingSecret": { "type": "string", "minLength": 1 },
