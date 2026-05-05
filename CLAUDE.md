@@ -141,3 +141,31 @@ When implementing the Docker migration plan (see `docs/DOCKER_PLAN.md`):
 3. Phase dependencies:
    - Phase 1 (Docker) must be complete before Phase 3 (CI/CD)
    - Phase 2 (Config refactor) can run in parallel with Phase 3
+
+### MCP Server (Local)
+
+**Location:** `mcp/` (Python project, managed with `uv`, run via `uv run tee-sniper-mcp`).
+
+```bash
+# Install + run tests
+cd mcp && uv sync --all-extras --dev && uv run pytest
+
+# Run the server
+cd mcp && uv run tee-sniper-mcp
+```
+
+The MCP server is a stdio-only client of the REST API. It encrypts credentials
+locally with the same AES-256-GCM scheme as `api/app/services/encryption.py`,
+calls `/api/login` lazily, caches the bearer token in memory, and proxies four
+tools (`find_tee_times`, `book_tee_time`, `list_partners`, `add_partners`) to
+the existing endpoints. See `mcp/README.md` for the full tool reference.
+
+## MCP Migration Workflow
+
+When implementing the MCP plan (see `docs/superpowers/plans/2026-05-04-local-mcp-server.md`):
+
+1. **Each phase must be completed in a separate PR.**
+2. Per-phase: branch from `main`, implement tasks, run `cd mcp && uv run pytest`,
+   commit, open PR, wait for review.
+3. Phase order: A (API endpoint) → B (scaffold) → C (tools) → D (Docker+CI) → E (docs).
+   B can run in parallel with A review; C depends on B; D depends on C; E depends on A+C.
