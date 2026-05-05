@@ -26,7 +26,7 @@ helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo update
 ```
 
-> **Note on Bitnami Redis chart version:** This plan pins to `20.6.2`. Before using it, run `helm search repo bitnami/redis --versions | head -5` and either confirm `20.6.2` is still available or substitute the latest `20.x` release. Update the version in `Chart.yaml` accordingly. Do not use `latest` or a floating version.
+> **Note on Bitnami Redis chart version:** This plan pins to `25.4.1` (Bitnami 25.x ⇒ Redis 8.x). The chart only uses Redis as a session store (GET/SET/EXPIRE), so the Redis major version is not behaviour-sensitive for this app. Before using `25.4.1`, run `helm search repo bitnami/redis --versions | head -5` and confirm it is still published; if not, substitute a current stable `25.x` release. Do not use `latest` or a floating version.
 
 ---
 
@@ -92,7 +92,7 @@ maintainers:
   - name: Steve Bennett
 dependencies:
   - name: redis
-    version: 20.6.2
+    version: 25.4.1
     repository: https://charts.bitnami.com/bitnami
     condition: redis.enabled
 ```
@@ -117,6 +117,9 @@ README.md.gotmpl
 - [ ] **Step 3: Create `charts/tee-sniper-api/values.yaml` skeleton**
 
 ```yaml
+nameOverride: ""
+fullnameOverride: ""
+
 api:
   image:
     repository: ghcr.io/stebennett/tee-sniper-api
@@ -294,7 +297,7 @@ Run from repo root:
 helm dep update charts/tee-sniper-api
 ```
 
-Expected: creates `charts/tee-sniper-api/Chart.lock` and `charts/tee-sniper-api/charts/redis-20.6.2.tgz`. If the Bitnami repo no longer publishes 20.6.2, this command fails — replace `20.6.2` in `Chart.yaml` with a current `20.x` version from `helm search repo bitnami/redis --versions` and rerun.
+Expected: creates `charts/tee-sniper-api/Chart.lock` and `charts/tee-sniper-api/charts/redis-25.4.1.tgz`. If the Bitnami repo no longer publishes 25.4.1, this command fails — replace `25.4.1` in `Chart.yaml` with a current `25.x` version from `helm search repo bitnami/redis --versions` and rerun.
 
 - [ ] **Step 8: Lint the chart**
 
