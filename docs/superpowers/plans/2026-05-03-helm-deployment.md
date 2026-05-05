@@ -109,9 +109,10 @@ dependencies:
 *.tmp
 *.bak
 *.orig
-*.tgz
 README.md.gotmpl
 ```
+
+> **Note:** Do NOT include `*.tgz` in `.helmignore`. Helm 4 treats `.helmignore` patterns as a filter when resolving subchart dependencies, so ignoring `*.tgz` makes subchart packages invisible and breaks `helm template`. The packaging-output `.tgz` files (e.g., `tee-sniper-api-0.1.0.tgz`) are kept out of git via `.gitignore`, not `.helmignore`.
 
 - [ ] **Step 3: Create `charts/tee-sniper-api/values.yaml` skeleton**
 
