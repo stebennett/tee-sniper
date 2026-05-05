@@ -1,0 +1,20 @@
+api:
+  replicas: 2
+  config:
+    logLevel: INFO
+
+cronjobs:
+  - name: example-saturday
+    schedule: "0 7 * * 5"
+    args:
+      - "-b=https://CHANGE-ME.example.com/"
+      - "-d=8"
+      - "-t=09:00"
+      - "-e=11:00"
+    suspend: true
+
+networkPolicy:
+  enabled: true
+  apiAllowedClients:
+    matchLabels:
+      tee-sniper.io/api-client: "true"
