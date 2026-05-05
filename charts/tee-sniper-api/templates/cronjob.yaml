@@ -32,10 +32,10 @@ spec:
               image: {{ include "tee-sniper-api.cliImage" (dict "ctx" $ "entry" $entry) | quote }}
               imagePullPolicy: {{ $.Values.cli.image.pullPolicy }}
               args:
-                - "--api-url={{ include "tee-sniper-api.internalUrl" $ }}"
                 {{- range $arg := $entry.args }}
                 - {{ $arg | quote }}
                 {{- end }}
+                - "--api-url={{ include "tee-sniper-api.internalUrl" $ }}"
               env:
                 - name: TS_SHARED_SECRET
                   valueFrom:

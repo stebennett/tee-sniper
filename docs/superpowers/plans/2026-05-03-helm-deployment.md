@@ -681,7 +681,13 @@ git commit -m "feat(helm): add values.schema.json with tag and field validation"
 **Files:**
 - Create: `charts/tee-sniper-api/templates/cronjob.yaml`
 
-> **Integration check before starting:** This template wires the `tee-sniper-cli` secret keys (`username`, `pin`, `twilio-account-sid`, `twilio-auth-token`, `to-number`, `from-number`) into env vars named `TEESNIPER_USERNAME`, `TEESNIPER_PIN`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TEESNIPER_TO_NUMBER`, `TEESNIPER_FROM_NUMBER`. The CLI must either (a) read these env vars directly in API-client mode, or (b) the operator must pass them as args with `$(VAR)` substitution. Before writing this template, run `grep -r "os.Getenv\|getenv" cmd/ pkg/` and check `pkg/config/config.go` to confirm what env var names (if any) the CLI accepts. If the CLI is args-only, document in the README that operators must add `-u=$(TEESNIPER_USERNAME) -p=$(TEESNIPER_PIN)` etc. to each cronjob entry's `args` list.
+> **CLI env var convention:** The Go CLI uses go-flags with `env:"TS_*"` tags (`pkg/config/config.go`). Verified env var names:
+> - `TS_USERNAME`, `TS_PIN`, `TS_BASEURL`, `TS_TO_NUMBER`, `TS_FROM_NUMBER`, `TS_PARTNERS`
+> - `TS_API_URL`, `TS_SHARED_SECRET`
+> - `TS_DAYS_AHEAD`, `TS_TIME_START`, `TS_TIME_END`
+> - `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` (read directly by Twilio SDK)
+>
+> The CronJob template below mounts secret keys into the `TS_*` env vars the CLI expects, and passes the in-cluster API URL via `--api-url=` arg.
 
 - [ ] **Step 1: Create `templates/cronjob.yaml`**
 
@@ -719,22 +725,22 @@ spec:
               image: {{ include "tee-sniper-api.cliImage" (dict "ctx" $ "entry" $entry) | quote }}
               imagePullPolicy: {{ $.Values.cli.image.pullPolicy }}
               args:
-                - "--api-url={{ include "tee-sniper-api.internalUrl" $ }}"
                 {{- range $arg := $entry.args }}
                 - {{ $arg | quote }}
                 {{- end }}
+                - "--api-url={{ include "tee-sniper-api.internalUrl" $ }}"
               env:
-                - name: TSA_SHARED_SECRET
+                - name: TS_SHARED_SECRET
                   valueFrom:
                     secretKeyRef:
                       name: {{ $.Values.cli.existingSecret }}
                       key: shared-secret
-                - name: TEESNIPER_USERNAME
+                - name: TS_USERNAME
                   valueFrom:
                     secretKeyRef:
                       name: {{ $.Values.cli.existingSecret }}
                       key: username
-                - name: TEESNIPER_PIN
+                - name: TS_PIN
                   valueFrom:
                     secretKeyRef:
                       name: {{ $.Values.cli.existingSecret }}
@@ -749,12 +755,12 @@ spec:
                     secretKeyRef:
                       name: {{ $.Values.cli.existingSecret }}
                       key: twilio-auth-token
-                - name: TEESNIPER_TO_NUMBER
+                - name: TS_TO_NUMBER
                   valueFrom:
                     secretKeyRef:
                       name: {{ $.Values.cli.existingSecret }}
                       key: to-number
-                - name: TEESNIPER_FROM_NUMBER
+                - name: TS_FROM_NUMBER
                   valueFrom:
                     secretKeyRef:
                       name: {{ $.Values.cli.existingSecret }}
@@ -797,7 +803,7 @@ helm template testrel charts/tee-sniper-api -f /tmp/cronjob-test.yaml > /tmp/ren
 yq 'select(.kind == "CronJob") | .metadata.name' /tmp/render.yaml
 yq 'select(.kind == "CronJob" and .metadata.name == "testrel-tee-sniper-api-saturday-morning") | .spec.schedule' /tmp/render.yaml
 yq 'select(.kind == "CronJob" and .metadata.name == "testrel-tee-sniper-api-sunday-afternoon") | .spec.jobTemplate.spec.template.spec.containers[0].image' /tmp/render.yaml
-yq 'select(.kind == "CronJob" and .metadata.name == "testrel-tee-sniper-api-saturday-morning") | .spec.jobTemplate.spec.template.spec.containers[0].args[0]' /tmp/render.yaml
+yq 'select(.kind == "CronJob" and .metadata.name == "testrel-tee-sniper-api-saturday-morning") | .spec.jobTemplate.spec.template.spec.containers[0].args[-1]' /tmp/render.yaml
 ```
 
 Expected:
@@ -808,6 +814,8 @@ testrel-tee-sniper-api-sunday-afternoon
 ghcr.io/stebennett/tee-sniper-cli:0.2.0
 --api-url=http://testrel-tee-sniper-api.default.svc.cluster.local
 ```
+
+> The chart-injected `--api-url=` is rendered as the LAST arg so user-supplied entries in `args:` cannot accidentally override the in-cluster service URL (go-flags resolves duplicate flags to the last value).
 
 - [ ] **Step 4: Validate against schemas**
 
