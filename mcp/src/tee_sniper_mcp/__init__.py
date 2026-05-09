@@ -1,3 +1,6 @@
 """Local stdio MCP server for tee-sniper."""
 
-__version__ = "0.1.0"
+try:
+    from tee_sniper_mcp._version import __version__
+except ImportError:
+    __version__ = "0.0.0+unknown"

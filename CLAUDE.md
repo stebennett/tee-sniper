@@ -144,7 +144,7 @@ When implementing the Docker migration plan (see `docs/DOCKER_PLAN.md`):
 
 ### MCP Server (Local)
 
-**Location:** `mcp/` (Python 3.14 project, managed with `uv`, runnable via `uv run tee-sniper-mcp` or the `ghcr.io/<repo>-mcp` Docker image).
+**Location:** `mcp/` (Python 3.14 project, managed with `uv`, runnable via `uv run tee-sniper-mcp`, the `ghcr.io/<repo>-mcp` Docker image, or the `tee_sniper_mcp-<version>-py3-none-any.whl` attached to each `v*.*.*` GitHub Release — see `mcp/README.md` for install commands). Version is derived from the git tag via `hatch-vcs`.
 
 ```bash
 # Install + run mcp tests
