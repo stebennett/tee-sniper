@@ -69,7 +69,7 @@ jobs:
           /tmp/smoke/bin/tee-sniper-mcp --version
 
       - name: Upload artefacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: mcp-dist-${{ github.sha }}
           path: mcp/dist/*
