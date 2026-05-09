@@ -20,19 +20,56 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
+        fetch-tags: true
 
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
         go-version: '1.26'
 
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.14'
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v3
+
     - name: Get version from tag
       id: version
-      run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+      run: |
+        echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        echo "VERSION_NUMBER=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
     - name: Build for Linux amd64
       run: |
         GOOS=linux GOARCH=amd64 go build -o tee-sniper-linux-amd64 ./cmd/tee-sniper
+
+    - name: Build MCP wheel + sdist
+      run: |
+        cd mcp
+        uv build
+
+    - name: Verify MCP wheel version matches tag
+      run: |
+        tag="${{ steps.version.outputs.VERSION_NUMBER }}"
+        whl=$(ls mcp/dist/*.whl)
+        case "$(basename "$whl")" in
+          tee_sniper_mcp-${tag}-*) echo "ok: $whl" ;;
+          *) echo "wheel $whl does not match tag $tag"; exit 1 ;;
+        esac
+
+    - name: Resolve MCP artefact paths
+      id: mcp_artefacts
+      run: |
+        wheel=$(ls mcp/dist/*.whl)
+        sdist=$(ls mcp/dist/*.tar.gz)
+        echo "wheel=${wheel}" >> "$GITHUB_OUTPUT"
+        echo "wheel_name=$(basename "${wheel}")" >> "$GITHUB_OUTPUT"
+        echo "sdist=${sdist}" >> "$GITHUB_OUTPUT"
+        echo "sdist_name=$(basename "${sdist}")" >> "$GITHUB_OUTPUT"
 
     - name: Create Release
       id: create_release
@@ -54,6 +91,26 @@ jobs:
         asset_path: ./tee-sniper-linux-amd64
         asset_name: tee-sniper-linux-amd64
         asset_content_type: application/octet-stream
+
+    - name: Upload MCP wheel
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ${{ steps.mcp_artefacts.outputs.wheel }}
+        asset_name: ${{ steps.mcp_artefacts.outputs.wheel_name }}
+        asset_content_type: application/zip
+
+    - name: Upload MCP sdist
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ${{ steps.mcp_artefacts.outputs.sdist }}
+        asset_name: ${{ steps.mcp_artefacts.outputs.sdist_name }}
+        asset_content_type: application/gzip
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v4
@@ -125,7 +182,8 @@ jobs:
     - name: Build and push MCP Docker image
       uses: docker/build-push-action@v7
       with:
-        context: ./mcp
+        context: .
+        file: ./mcp/Dockerfile
         push: true
         tags: ${{ steps.meta-mcp.outputs.tags }}
         labels: ${{ steps.meta-mcp.outputs.labels }}
