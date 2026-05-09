@@ -27,7 +27,7 @@ github.com/pmezard/go-difflib/difflib
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/assert/yaml
 github.com/stretchr/testify/require
-# github.com/twilio/twilio-go v1.30.5
+# github.com/twilio/twilio-go v1.30.9
 ## explicit; go 1.19
 github.com/twilio/twilio-go
 github.com/twilio/twilio-go/client
@@ -43,6 +43,7 @@ github.com/twilio/twilio-go/rest/chat/v3
 github.com/twilio/twilio-go/rest/content/v1
 github.com/twilio/twilio-go/rest/content/v2
 github.com/twilio/twilio-go/rest/conversations/v1
+github.com/twilio/twilio-go/rest/conversations/v2
 github.com/twilio/twilio-go/rest/events/v1
 github.com/twilio/twilio-go/rest/flex/v1
 github.com/twilio/twilio-go/rest/flex/v2
@@ -51,13 +52,17 @@ github.com/twilio/twilio-go/rest/iam/scim
 github.com/twilio/twilio-go/rest/iam/v1
 github.com/twilio/twilio-go/rest/insights/v1
 github.com/twilio/twilio-go/rest/insights/v2
+github.com/twilio/twilio-go/rest/insights/v3
 github.com/twilio/twilio-go/rest/intelligence/v2
+github.com/twilio/twilio-go/rest/intelligence/v3
 github.com/twilio/twilio-go/rest/ip_messaging/v1
 github.com/twilio/twilio-go/rest/ip_messaging/v2
 github.com/twilio/twilio-go/rest/knowledge/v1
+github.com/twilio/twilio-go/rest/knowledge/v2
 github.com/twilio/twilio-go/rest/lookups/v1
 github.com/twilio/twilio-go/rest/lookups/v2
 github.com/twilio/twilio-go/rest/marketplace/v1
+github.com/twilio/twilio-go/rest/memory/v1
 github.com/twilio/twilio-go/rest/messaging/v1
 github.com/twilio/twilio-go/rest/messaging/v2
 github.com/twilio/twilio-go/rest/messaging/v3
@@ -86,6 +91,7 @@ github.com/twilio/twilio-go/rest/verify/v2
 github.com/twilio/twilio-go/rest/verify/v3
 github.com/twilio/twilio-go/rest/video/v1
 github.com/twilio/twilio-go/rest/voice/v1
+github.com/twilio/twilio-go/rest/voice/v3
 github.com/twilio/twilio-go/rest/wireless/v1
 # golang.org/x/net v0.47.0
 ## explicit; go 1.24.0
