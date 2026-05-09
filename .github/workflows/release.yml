@@ -187,5 +187,7 @@ jobs:
         push: true
         tags: ${{ steps.meta-mcp.outputs.tags }}
         labels: ${{ steps.meta-mcp.outputs.labels }}
+        build-args: |
+          VERSION=${{ steps.version.outputs.VERSION_NUMBER }}
         cache-from: type=gha
         cache-to: type=gha,mode=max

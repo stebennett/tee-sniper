@@ -189,6 +189,8 @@ import of `session_manager.py`, which uses redis.
 - The console script is `tee_sniper_mcp.cli:main`; it answers `--version`
   before importing the FastMCP runtime stack.
 - The Docker image is multi-stage: the builder produces a wheel via
-  `python -m build` (so `hatch-vcs` can resolve a version from `.git/`), and
-  the runtime stage installs that wheel. Build context is the repo root —
-  `docker build -f mcp/Dockerfile .` from there.
+  `python -m build`, the runtime stage installs it. The version is supplied
+  by the `VERSION` build-arg (forwarded to `hatch-vcs` via
+  `SETUPTOOLS_SCM_PRETEND_VERSION`), so the image does not need `.git/` in
+  context. Build context is the repo root —
+  `docker build -f mcp/Dockerfile --build-arg VERSION=<x.y.z> .`.

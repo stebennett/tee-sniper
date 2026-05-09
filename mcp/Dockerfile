@@ -1,7 +1,10 @@
 # syntax=docker/dockerfile:1.7
 
-# Build context: repository root (so `.git/` is available for hatch-vcs).
-# Build with: docker build -f mcp/Dockerfile .
+# Build context: repository root.
+# Build with: docker build -f mcp/Dockerfile --build-arg VERSION=<x.y.z> .
+#
+# VERSION is forwarded to hatch-vcs via SETUPTOOLS_SCM_PRETEND_VERSION so the
+# image does not need .git/ available at build time.
 
 FROM python:3.14-slim AS builder
 
@@ -12,12 +15,9 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /build
 
-# git is needed by hatch-vcs to derive the version from tags at build time.
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends git \
-    && rm -rf /var/lib/apt/lists/*
+ARG VERSION=0.0.0+unknown
+ENV SETUPTOOLS_SCM_PRETEND_VERSION=${VERSION}
 
-COPY .git ./.git
 COPY mcp/pyproject.toml mcp/README.md ./
 COPY mcp/src ./src
 
