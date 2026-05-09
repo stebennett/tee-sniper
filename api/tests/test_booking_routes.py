@@ -715,3 +715,67 @@ class TestTimeFilterValidation:
             headers={"Authorization": "Bearer test-token"},
         )
         assert response.status_code == 422
+
+
+class TestPartnersEndpoint:
+    """Tests for GET /api/partners."""
+
+    def test_returns_partners_list_when_authed(
+        self,
+        app_and_client: tuple,
+        tmp_path,
+    ) -> None:
+        from app.dependencies import get_current_session, get_partners_service
+        from app.services.partners import PartnersService
+
+        app, client = app_and_client
+        f = tmp_path / "partners.json"
+        f.write_text('{"id1": "Alice", "id2": "Bob"}')
+        app.dependency_overrides[get_partners_service] = lambda: PartnersService(str(f))
+        app.dependency_overrides[get_current_session] = lambda: {"base_url": "https://example.com/", "cookies": {}}
+
+        try:
+            response = client.get(
+                "/api/partners",
+                headers={"Authorization": "Bearer test-token"},
+            )
+        finally:
+            app.dependency_overrides.pop(get_partners_service, None)
+            app.dependency_overrides.pop(get_current_session, None)
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body == {
+            "partners": [
+                {"id": "id1", "name": "Alice"},
+                {"id": "id2", "name": "Bob"},
+            ]
+        }
+
+    def test_returns_empty_when_no_file_configured(
+        self,
+        app_and_client: tuple,
+    ) -> None:
+        from app.dependencies import get_current_session, get_partners_service
+        from app.services.partners import PartnersService
+
+        app, client = app_and_client
+        app.dependency_overrides[get_partners_service] = lambda: PartnersService(None)
+        app.dependency_overrides[get_current_session] = lambda: {"base_url": "https://example.com/", "cookies": {}}
+
+        try:
+            response = client.get(
+                "/api/partners",
+                headers={"Authorization": "Bearer test-token"},
+            )
+        finally:
+            app.dependency_overrides.pop(get_partners_service, None)
+            app.dependency_overrides.pop(get_current_session, None)
+
+        assert response.status_code == 200
+        assert response.json() == {"partners": []}
+
+    def test_requires_auth(self, app_and_client: tuple) -> None:
+        _app, client = app_and_client
+        response = client.get("/api/partners")
+        assert response.status_code == 401  # No auth header → 401 Unauthorized

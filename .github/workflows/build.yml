@@ -5,14 +5,16 @@ on:
     branches: [ main ]
     paths-ignore:
       - 'api/**'
-      - 'k8s/**'
       - 'docs/**'
+      - 'k8s/**'
+      - 'mcp/**'
   pull_request:
     branches: [ main ]
     paths-ignore:
       - 'api/**'
-      - 'k8s/**'
       - 'docs/**'
+      - 'k8s/**'
+      - 'mcp/**'
 
 jobs:
   build:

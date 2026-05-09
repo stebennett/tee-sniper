@@ -288,6 +288,21 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 python -m pytest tests/ -v
 ```
 
+## MCP server (local)
+
+`mcp/` is a stdio MCP server that exposes tee-sniper booking operations to
+LLM clients (Claude Desktop, MetaMCP, etc.) by calling the REST API.
+
+```bash
+cd mcp
+uv sync
+TSA_API_BASE_URL=http://localhost:8000 TSA_USERNAME=... TSA_PIN=... TSA_SHARED_SECRET=... \
+  uv run tee-sniper-mcp
+```
+
+See `mcp/README.md` for tool reference, time-of-day bands, and Claude
+Desktop / MetaMCP configuration snippets.
+
 ## How It Works
 
 1. **Authentication**: Logs into the golf course booking website using provided credentials

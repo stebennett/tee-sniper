@@ -10,7 +10,9 @@ from fastapi.responses import JSONResponse
 from app.config import Settings
 from app.dependencies import (
     get_booking_client,
+    get_current_session,
     get_encryption_service,
+    get_partners_service,
     get_session_manager,
     get_settings_dependency,
 )
@@ -21,8 +23,11 @@ from app.models.responses import (
     BookResponse,
     ErrorResponse,
     LoginResponse,
+    PartnerResponse,
+    PartnersListResponse,
     TimeSlotResponse,
 )
+from app.services.partners import PartnersService
 from app.services.booking_client import (
     BookingClient,
     BookingClientError,
@@ -263,3 +268,21 @@ async def add_partners(
         )
 
     return response
+
+
+@router.get(
+    "/partners",
+    response_model=PartnersListResponse,
+    status_code=status.HTTP_200_OK,
+    responses={
+        401: {"model": ErrorResponse, "description": "Invalid or expired session"},
+    },
+)
+async def list_partners(
+    _session: dict = Depends(get_current_session),
+    partners: PartnersService = Depends(get_partners_service),
+) -> PartnersListResponse:
+    """List configured playing partners (id → name)."""
+    return PartnersListResponse(
+        partners=[PartnerResponse(**p) for p in partners.load()],
+    )
