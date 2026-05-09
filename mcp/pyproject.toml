@@ -1,6 +1,6 @@
 [project]
 name = "tee-sniper-mcp"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Local MCP server that exposes tee-sniper booking operations to LLM clients."
 requires-python = ">=3.14"
 readme = "README.md"
@@ -12,7 +12,7 @@ dependencies = [
 ]
 
 [project.scripts]
-tee-sniper-mcp = "tee_sniper_mcp.server:main"
+tee-sniper-mcp = "tee_sniper_mcp.cli:main"
 
 [dependency-groups]
 dev = [
@@ -26,8 +26,15 @@ dev = [
 ]
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+raw-options = { root = "..", tag_regex = "^v(?P<version>\\d+\\.\\d+\\.\\d+)$" }
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/tee_sniper_mcp/_version.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/tee_sniper_mcp"]

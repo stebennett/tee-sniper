@@ -1,0 +1,5 @@
+src/tee_sniper_mcp/_version.py
+dist/
+*.egg-info/
+.venv/
+__pycache__/
