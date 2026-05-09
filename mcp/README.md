@@ -62,6 +62,29 @@ uv sync
 uv run tee-sniper-mcp
 ```
 
+### Install from a GitHub Release
+
+Each `v*.*.*` tag publishes `tee_sniper_mcp-<version>-py3-none-any.whl` and a
+matching sdist as Release assets. Because this repo is private, you need a
+GitHub PAT with `Contents: Read` on the repo (classic PAT: `repo` scope; fine-
+grained: `Contents` read-only) to download them.
+
+```bash
+export GH_TOKEN=ghp_...
+VERSION=0.1.0
+WHEEL_URL="https://${GH_TOKEN}@github.com/<owner>/tee-sniper/releases/download/v${VERSION}/tee_sniper_mcp-${VERSION}-py3-none-any.whl"
+
+# persistent install
+uv tool install "${WHEEL_URL}"
+tee-sniper-mcp --version
+
+# or, one-shot via uvx (no install)
+uvx --from "${WHEEL_URL}" tee-sniper-mcp --version
+```
+
+`uv tool install` and `uvx` both require Python 3.14 available; uv will fetch
+it automatically.
+
 ### Via Docker
 
 ```bash
@@ -92,6 +115,8 @@ docker run --rm -i \
 
 ## MetaMCP config
 
+### Via Docker
+
 ```yaml
 servers:
   tee-sniper:
@@ -110,6 +135,27 @@ servers:
       - TSA_SHARED_SECRET
       - ghcr.io/<owner>/tee-sniper-mcp:latest
     env:
+      TSA_API_BASE_URL: http://api:8000
+      TSA_USERNAME: ...
+      TSA_PIN: ...
+      TSA_SHARED_SECRET: ...
+```
+
+### Via uvx (Release wheel)
+
+Substitute `<version>` and provide `GH_TOKEN` in the environment running
+MetaMCP (the URL embeds it for the download).
+
+```yaml
+servers:
+  tee-sniper:
+    command: uvx
+    args:
+      - --from
+      - https://${GH_TOKEN}@github.com/<owner>/tee-sniper/releases/download/v<version>/tee_sniper_mcp-<version>-py3-none-any.whl
+      - tee-sniper-mcp
+    env:
+      GH_TOKEN: ghp_...
       TSA_API_BASE_URL: http://api:8000
       TSA_USERNAME: ...
       TSA_PIN: ...
@@ -137,5 +183,12 @@ import of `session_manager.py`, which uses redis.
   `mcp.list_tools()`.
 - Configuration errors at startup exit with code 2 and print
   `tee-sniper-mcp: configuration error: …` to stderr.
-- The Docker image uses `pip install .` (no lock file), so transitive deps are
-  resolved at build time from the floor pins in `pyproject.toml`.
+- The package version is derived from the most recent `v*.*.*` git tag via
+  `hatch-vcs`. Untagged builds produce a PEP 440 dev version like
+  `0.1.dev3+g<sha>`; the build needs git history (`fetch-depth: 0`).
+- The console script is `tee_sniper_mcp.cli:main`; it answers `--version`
+  before importing the FastMCP runtime stack.
+- The Docker image is multi-stage: the builder produces a wheel via
+  `python -m build` (so `hatch-vcs` can resolve a version from `.git/`), and
+  the runtime stage installs that wheel. Build context is the repo root —
+  `docker build -f mcp/Dockerfile .` from there.
