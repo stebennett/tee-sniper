@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "tee-sniper-api.fullname" . }}
+  labels:
+    {{- include "tee-sniper-api.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  replicas: {{ .Values.api.replicas }}
+  selector:
+    matchLabels:
+      {{- include "tee-sniper-api.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: api
+  template:
+    metadata:
+      labels:
+        {{- include "tee-sniper-api.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: api
+    spec:
+      serviceAccountName: {{ include "tee-sniper-api.serviceAccountName" . }}
+      automountServiceAccountToken: false
+      containers:
+        - name: api
+          image: {{ include "tee-sniper-api.apiImage" . | quote }}
+          imagePullPolicy: {{ .Values.api.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.api.service.targetPort }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "tee-sniper-api.fullname" . }}-config
+          env:
+            - name: TSA_SHARED_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.api.existingSecret }}
+                  key: shared-secret
+            {{- if .Values.redis.enabled }}
+            - name: TSA_REDIS_HOST
+              value: {{ printf "%s-redis-master" .Release.Name | quote }}
+            - name: TSA_REDIS_PORT
+              value: "6379"
+            - name: TSA_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.auth.existingSecret }}
+                  key: {{ .Values.redis.auth.existingSecretPasswordKey }}
+            - name: TSA_REDIS_URL
+              value: "redis://:$(TSA_REDIS_PASSWORD)@$(TSA_REDIS_HOST):$(TSA_REDIS_PORT)/0"
+            {{- end }}
+          resources:
+            {{- toYaml .Values.api.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20

@@ -1,0 +1,21 @@
+api:
+  replicas: 1
+  resources:
+    requests:
+      memory: 64Mi
+      cpu: 50m
+    limits:
+      memory: 128Mi
+      cpu: 250m
+  config:
+    logLevel: DEBUG
+
+cronjobs: []
+
+redis:
+  master:
+    persistence:
+      size: 256Mi
+
+networkPolicy:
+  enabled: false

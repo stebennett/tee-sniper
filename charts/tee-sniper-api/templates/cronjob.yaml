@@ -1,0 +1,78 @@
+{{- range $entry := .Values.cronjobs }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "tee-sniper-api.fullname" $ }}-{{ $entry.name }}
+  labels:
+    {{- include "tee-sniper-api.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: cli
+    tee-sniper.io/cronjob: {{ $entry.name | quote }}
+spec:
+  schedule: {{ $entry.schedule | quote }}
+  suspend: {{ $entry.suspend | default false }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            {{- include "tee-sniper-api.selectorLabels" $ | nindent 12 }}
+            app.kubernetes.io/component: cli
+            tee-sniper.io/cronjob: {{ $entry.name | quote }}
+        spec:
+          restartPolicy: OnFailure
+          serviceAccountName: {{ include "tee-sniper-api.serviceAccountName" $ }}
+          automountServiceAccountToken: false
+          containers:
+            - name: cli
+              image: {{ include "tee-sniper-api.cliImage" (dict "ctx" $ "entry" $entry) | quote }}
+              imagePullPolicy: {{ $.Values.cli.image.pullPolicy }}
+              args:
+                {{- range $arg := $entry.args }}
+                - {{ $arg | quote }}
+                {{- end }}
+                - "--api-url={{ include "tee-sniper-api.internalUrl" $ }}"
+              env:
+                - name: TS_SHARED_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ $.Values.cli.existingSecret }}
+                      key: shared-secret
+                - name: TS_USERNAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ $.Values.cli.existingSecret }}
+                      key: username
+                - name: TS_PIN
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ $.Values.cli.existingSecret }}
+                      key: pin
+                - name: TWILIO_ACCOUNT_SID
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ $.Values.cli.existingSecret }}
+                      key: twilio-account-sid
+                - name: TWILIO_AUTH_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ $.Values.cli.existingSecret }}
+                      key: twilio-auth-token
+                - name: TS_TO_NUMBER
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ $.Values.cli.existingSecret }}
+                      key: to-number
+                - name: TS_FROM_NUMBER
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ $.Values.cli.existingSecret }}
+                      key: from-number
+                {{- with $entry.env }}
+                {{- toYaml . | nindent 16 }}
+                {{- end }}
+{{- end }}

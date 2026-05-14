@@ -1,0 +1,17 @@
+apiVersion: v2
+name: tee-sniper-api
+description: Tee-sniper API service, Redis, and scheduled booking CronJobs.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+kubeVersion: ">=1.27.0"
+home: https://github.com/stebennett/tee-sniper
+sources:
+  - https://github.com/stebennett/tee-sniper
+maintainers:
+  - name: Steve Bennett
+dependencies:
+  - name: redis
+    version: 25.4.1
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled

@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "tee-sniper-api.fullname" . }}-config
+  labels:
+    {{- include "tee-sniper-api.labels" . | nindent 4 }}
+data:
+  TSA_LOG_LEVEL: {{ .Values.api.config.logLevel | quote }}
+  TSA_BASE_URL: {{ .Values.api.config.baseUrl | quote }}
