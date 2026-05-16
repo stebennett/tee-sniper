@@ -374,6 +374,14 @@ The project includes GitHub Actions workflows:
 - **Build** (`.github/workflows/build.yml`): Runs on push to main and pull requests. Executes build and test steps.
 - **Release** (`.github/workflows/release.yml`): Triggers on version tags (v*.*.*). Builds Linux binary, creates GitHub release, and pushes Docker image to GitHub Container Registry.
 
+## Roadmap
+
+Planned follow-up work (see `docs/superpowers/specs/` for designs):
+
+- [ ] **Wanted tee-times** — persisted booking requests (one-shot by date, or recurring by day-of-week) processed by a daily worker. Design: `docs/superpowers/specs/2026-05-16-wanted-tee-times-design.md`.
+- [ ] **Decommission the Go CLI** — replace `cmd/tee-sniper/`, `pkg/`, `run-teesniper.sh`, and the Go CI with the Python worker once it is proven at parity (separate spec to follow).
+- [ ] **MCP tools for wanted tee-times** — expose create/list/delete of wanted-slots via the MCP server (separate spec to follow).
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
