@@ -89,7 +89,7 @@ class _CreateBase(BaseModel):
     notify: Notify | None = None
 
     @model_validator(mode="after")
-    def _window(self):
+    def _window(self) -> "_CreateBase":
         if self.end_time <= self.start_time:
             raise ValueError("end_time must be after start_time")
         return self
@@ -112,6 +112,13 @@ class PatchWantedRequest(BaseModel):
     notify: Notify | None = None
     disabled: bool | None = None
     credentials: str | None = None
+
+    @model_validator(mode="after")
+    def _window(self) -> "PatchWantedRequest":
+        if self.start_time is not None and self.end_time is not None:
+            if self.end_time <= self.start_time:
+                raise ValueError("end_time must be after start_time")
+        return self
 
 
 class WantedResponse(BaseModel):
@@ -136,4 +143,4 @@ class WantedResponse(BaseModel):
         data = slot.model_dump()
         data.pop("credentials")
         data["has_credentials"] = bool(slot.credentials)
-        return cls(**data)
+        return cls.model_validate(data)

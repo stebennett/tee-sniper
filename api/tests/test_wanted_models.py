@@ -112,3 +112,44 @@ def test_attempt_and_outcome_enum_serialize():
         booking_id="bk-1",
     )
     assert att.model_dump()["outcome"] == "booked"
+
+
+def test_one_shot_slot_requires_target_date():
+    with pytest.raises(ValidationError):
+        WantedSlot(
+            id="33333333-3333-3333-3333-333333333333",
+            kind=WantedKind.ONE_SHOT,
+            start_time="08:00",
+            end_time="10:00",
+            num_slots=1,
+            partners=[],
+            credentials="blob",
+            notify=None,
+            status=WantedStatus.PENDING,
+            attempts=[],
+            created_at=datetime.datetime(2026, 5, 16, tzinfo=datetime.timezone.utc),
+            updated_at=datetime.datetime(2026, 5, 16, tzinfo=datetime.timezone.utc),
+        )
+
+
+def test_recurring_slot_missing_day_of_week_rejected():
+    with pytest.raises(ValidationError):
+        WantedSlot(
+            id="44444444-4444-4444-4444-444444444444",
+            kind=WantedKind.RECURRING,
+            start_time="08:00",
+            end_time="10:00",
+            num_slots=1,
+            partners=[],
+            credentials="blob",
+            notify=None,
+            status=WantedStatus.PENDING,
+            attempts=[],
+            created_at=datetime.datetime(2026, 5, 16, tzinfo=datetime.timezone.utc),
+            updated_at=datetime.datetime(2026, 5, 16, tzinfo=datetime.timezone.utc),
+        )
+
+
+def test_patch_request_rejects_end_before_start_when_both_provided():
+    with pytest.raises(ValidationError):
+        PatchWantedRequest(start_time="10:00", end_time="08:00")
