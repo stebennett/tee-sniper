@@ -6,7 +6,7 @@ import pytest
 import pytest_asyncio
 from fakeredis import aioredis
 
-from app.models.wanted import Notify, WantedKind, WantedSlot, WantedStatus
+from app.models.wanted import WantedKind, WantedSlot, WantedStatus
 from app.services.wanted_store import WantedStore
 
 
@@ -78,3 +78,10 @@ async def test_one_shot_gets_ttl_recurring_does_not(store: WantedStore):
                              target_date=None, day_of_week=5))
     assert await store.redis.ttl("wanted:one") > 0
     assert await store.redis.ttl("wanted:rec") == -1
+
+
+def test_ttl_seconds_is_pinned_relative_to_today():
+    from fakeredis import aioredis
+    s = WantedStore(aioredis.FakeRedis(decode_responses=True))
+    slot = _slot("t", target_date=datetime.date(2026, 6, 1))
+    assert s._ttl_seconds(slot, today=datetime.date(2026, 5, 16)) == 46 * 24 * 3600

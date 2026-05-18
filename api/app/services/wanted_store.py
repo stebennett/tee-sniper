@@ -13,6 +13,8 @@ logger = logging.getLogger(__name__)
 class WantedStore:
     """CRUD for WantedSlot records, with a set index for enumeration."""
 
+    # Slot IDs are UUIDs (assigned by the router); an id of "index" would
+    # collide with INDEX_KEY. UUIDs make that impossible in practice.
     KEY_PREFIX = "wanted:"
     INDEX_KEY = "wanted:index"
     ONE_SHOT_GRACE_DAYS = 30
@@ -23,11 +25,12 @@ class WantedStore:
     def _key(self, slot_id: str) -> str:
         return f"{self.KEY_PREFIX}{slot_id}"
 
-    def _ttl_seconds(self, slot: WantedSlot) -> int | None:
+    def _ttl_seconds(self, slot: WantedSlot, today: datetime.date | None = None) -> int | None:
         if slot.kind is not WantedKind.ONE_SHOT or slot.target_date is None:
             return None
+        today = today or datetime.date.today()
         expiry = slot.target_date + datetime.timedelta(days=self.ONE_SHOT_GRACE_DAYS)
-        delta = expiry - datetime.date.today()
+        delta = expiry - today
         return max(int(delta.total_seconds()), 60)
 
     async def create(self, slot: WantedSlot) -> None:
@@ -37,6 +40,7 @@ class WantedStore:
 
     async def update(self, slot: WantedSlot) -> None:
         await self._write(slot)
+        await self.redis.sadd(self.INDEX_KEY, slot.id)
 
     async def _write(self, slot: WantedSlot) -> None:
         ttl = self._ttl_seconds(slot)
@@ -58,7 +62,7 @@ class WantedStore:
         for slot_id in ids:
             slot = await self.get(slot_id)
             if slot is None:
-                await self.redis.srem(self.INDEX_KEY, slot_id)  # prune expired
+                await self.redis.srem(self.INDEX_KEY, slot_id)  # record expired in Redis but the index entry survived; drop it
                 continue
             result.append(slot)
         return result
