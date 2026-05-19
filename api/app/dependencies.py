@@ -36,7 +36,7 @@ def get_partners_service() -> "PartnersService":
     return PartnersService(settings.partners_file)
 
 
-def make_redis_client():
+def make_redis_client() -> Redis:
     """Construct a standalone Redis client (no pooling) for CLI use."""
     from redis.asyncio import Redis as _Redis
 
@@ -44,14 +44,14 @@ def make_redis_client():
     return _Redis.from_url(settings.redis_url, decode_responses=True)
 
 
-def make_wanted_store(redis):
+def make_wanted_store(redis: Redis) -> "WantedStore":
     """Construct a WantedStore for the given Redis client."""
     from app.services.wanted_store import WantedStore
 
     return WantedStore(redis)
 
 
-def make_sms_notifier():
+def make_sms_notifier() -> "SmsNotifier":
     """Construct an SmsNotifier from settings."""
     from app.services.notifications import SmsNotifier
 

@@ -20,7 +20,8 @@ def test_main_wires_dependencies_and_invokes_run_once():
         main()
 
     run_once_mock.assert_awaited_once()
-    _, kwargs = run_once_mock.call_args
+    args, kwargs = run_once_mock.call_args
+    assert args[0] is fake_store
     assert kwargs["base_url"] == "https://golf.example.com"
     assert "client_factory" in kwargs
     fake_redis.aclose.assert_awaited_once()
