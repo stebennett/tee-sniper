@@ -5,7 +5,6 @@ from fakeredis import aioredis
 from fastapi.testclient import TestClient
 
 from app.dependencies import get_current_session, get_wanted_store
-from app.main import create_app
 from app.services.wanted_store import WantedStore
 
 
@@ -14,6 +13,8 @@ def client():
     from app.config import get_settings
 
     get_settings.cache_clear()
+    from app.main import create_app
+
     app = create_app()
     redis = aioredis.FakeRedis(decode_responses=True)
     store = WantedStore(redis)
