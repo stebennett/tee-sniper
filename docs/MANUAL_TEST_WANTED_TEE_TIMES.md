@@ -62,23 +62,24 @@ fix Redis first.
 ## 3. Encrypt credentials & log in
 
 The API never takes a plaintext PIN; it expects the same AES-256-GCM blob
-format used everywhere. Generate it with the project's `EncryptionService`:
+format used everywhere. Generate it with the helper script
+`api/encrypt_credentials.py` (it reads `TSA_SHARED_SECRET` from `--secret`,
+the environment, or the repo-root `.env`):
 
 ```bash
-export TSA_SHARED_SECRET="$(grep -E '^TSA_SHARED_SECRET=' .env | cut -d= -f2-)"
-read -r -p "Member ID: " MEMBER_ID
-read -r -s -p "PIN: " PIN; echo
+# Prompts for member ID and PIN (PIN input is hidden):
+ENCRYPTED=$(api/.venv/bin/python api/encrypt_credentials.py)
 
-ENCRYPTED=$(TSA_SECRET="$TSA_SHARED_SECRET" U="$MEMBER_ID" P="$PIN" \
-  python3 -c "import os,sys; sys.path.insert(0,'api'); \
-from app.services.encryption import EncryptionService; \
-print(EncryptionService(os.environ['TSA_SECRET']).encrypt_credentials(os.environ['U'],os.environ['P']))")
+# Or non-interactively:
+# ENCRYPTED=$(api/.venv/bin/python api/encrypt_credentials.py -u <MEMBER_ID> -p <PIN>)
 
 echo "Encrypted blob length: ${#ENCRYPTED}"
 ```
 
-> If the import fails, run it via the API venv instead:
-> `api/.venv/bin/python3 -c "..."` (same snippet, drop the `sys.path.insert`).
+> No venv? `python3 api/encrypt_credentials.py` works too, as long as the
+> `cryptography` package is importable. Run `api/.venv/bin/python
+> api/encrypt_credentials.py --curl` to also print a ready-to-paste
+> `{"credentials": "..."}` JSON body. See `--help` for all options.
 
 Log in and capture the bearer token:
 
