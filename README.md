@@ -258,6 +258,20 @@ The `api/` directory contains a Python FastAPI service that exposes the booking 
 
 All endpoints except `/health` and `/api/login` require an `Authorization: Bearer <token>` header obtained from the login endpoint.
 
+#### Wanted tee-times
+
+Register a request to auto-book a slot when it becomes available:
+
+- `POST /api/wanted?kind=one_shot|recurring` — create a request
+- `GET /api/wanted[?status=pending|booked|expired|disabled]` — list requests
+- `GET /api/wanted/{id}` — fetch one (incl. attempt history)
+- `PATCH /api/wanted/{id}` — update window/partners/notify or disable
+- `DELETE /api/wanted/{id}` — remove
+
+A daily worker (`python -m app.cli.worker`, deployed as the opt-in
+`worker` Helm CronJob) processes due requests, books a matching slot, records
+the outcome, and optionally sends a Twilio SMS.
+
 ### API Configuration
 
 Environment variables (prefixed with `TSA_`):
@@ -378,7 +392,7 @@ The project includes GitHub Actions workflows:
 
 Planned follow-up work (see `docs/superpowers/specs/` for designs):
 
-- [ ] **Wanted tee-times** — persisted booking requests (one-shot by date, or recurring by day-of-week) processed by a daily worker. Design: `docs/superpowers/specs/2026-05-16-wanted-tee-times-design.md`.
+- [x] **Wanted tee-times** — persisted booking requests (one-shot by date, or recurring by day-of-week) processed by a daily worker. Design: `docs/superpowers/specs/2026-05-16-wanted-tee-times-design.md`.
 - [ ] **Decommission the Go CLI** — replace `cmd/tee-sniper/`, `pkg/`, `run-teesniper.sh`, and the Go CI with the Python worker once it is proven at parity (separate spec to follow).
 - [ ] **MCP tools for wanted tee-times** — expose create/list/delete of wanted-slots via the MCP server (separate spec to follow).
 

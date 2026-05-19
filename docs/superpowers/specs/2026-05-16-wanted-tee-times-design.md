@@ -1,6 +1,6 @@
 # Wanted Tee-Times Design
 
-**Status:** Draft
+**Status:** Implemented
 **Date:** 2026-05-16
 **Related:** Extends `api/` (FastAPI service). Follow-up spec will decommission the Go CLI.
 

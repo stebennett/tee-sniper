@@ -29,6 +29,9 @@ cd api && .venv/bin/python -m pytest tests/ -v
 
 # Run specific Python test file
 cd api && .venv/bin/python -m pytest tests/test_booking_routes.py -v
+
+# Run the wanted-slot worker once (needs TSA_* env, see api/app/config.py)
+cd api && .venv/bin/python -m app.cli.worker
 ```
 
 ### Building
@@ -122,6 +125,19 @@ When implementing the API migration plan (see `docs/API_MIGRATION_PLAN.md`):
    - Push branch and create PR for review
    - Wait for PR to be reviewed and merged before starting next phase
 3. Completed phases: 1 (Foundation), 2 (Redis), 3 (Booking Client), 4 (API Endpoints)
+
+## Wanted Tee-Times
+
+Persisted auto-booking requests. Spec:
+`docs/superpowers/specs/2026-05-16-wanted-tee-times-design.md`.
+Plan: `docs/superpowers/plans/2026-05-16-wanted-tee-times.md`.
+
+- Models: `api/app/models/wanted.py`
+- Store: `api/app/services/wanted_store.py` (Redis `wanted:{id}` + `wanted:index`)
+- Scheduling predicate: `api/app/services/scheduling.py` (`is_due`, 8-day window)
+- Worker: `api/app/services/worker.py` (`run_once`), CLI `app/cli/worker.py`
+- Router: `api/app/routers/wanted.py` (`/api/wanted`)
+- Deploy: opt-in `worker` CronJob in `charts/tee-sniper-api`
 
 ## Docker Migration Workflow
 
