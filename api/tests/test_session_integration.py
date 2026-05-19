@@ -35,9 +35,20 @@ def redis_available() -> bool:
         return False
 
 
+# Skip all tests in this module if Redis is not available — but only as a
+# local-dev convenience. When TSA_REQUIRE_REDIS=1 (set by CI), an unreachable
+# Redis is a hard error instead of a silent skip, so a broken Redis service
+# can never quietly stop regression-testing session handling.
+_redis_ok = redis_available()
+if os.environ.get("TSA_REQUIRE_REDIS") == "1" and not _redis_ok:
+    raise RuntimeError(
+        "TSA_REQUIRE_REDIS=1 but Redis is unreachable: session integration "
+        "tests would be silently skipped. Failing loudly instead."
+    )
+
 # Skip all tests in this module if Redis is not available
 pytestmark = pytest.mark.skipif(
-    not redis_available(),
+    not _redis_ok,
     reason="Redis not available for integration tests",
 )
 
