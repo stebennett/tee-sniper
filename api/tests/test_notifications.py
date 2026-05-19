@@ -13,7 +13,7 @@ def test_notifier_disabled_when_unconfigured_is_noop():
     assert notifier.enabled is False
 
 
-def test_notifier_sends_with_explicit_from(monkeypatch):
+def test_notifier_sends_with_explicit_from():
     fake_client = MagicMock()
     notifier = SmsNotifier(
         account_sid="sid", auth_token="tok", default_from="+15559999999"
@@ -25,7 +25,7 @@ def test_notifier_sends_with_explicit_from(monkeypatch):
     )
 
 
-def test_notifier_falls_back_to_default_from(monkeypatch):
+def test_notifier_falls_back_to_default_from():
     fake_client = MagicMock()
     notifier = SmsNotifier(
         account_sid="sid", auth_token="tok", default_from="+15559999999"
@@ -53,4 +53,12 @@ def test_send_noop_when_notify_is_none():
     notifier = SmsNotifier(account_sid="sid", auth_token="tok", default_from="+1")
     notifier._client = MagicMock()
     notifier.send(None, "msg")
+    notifier._client.messages.create.assert_not_called()
+
+
+def test_notifier_warns_when_no_from_number(caplog):
+    notifier = SmsNotifier(account_sid="sid", auth_token="tok", default_from=None)
+    notifier._client = MagicMock()
+    notifier.send(Notify(to="+15550001111"), "msg")
+    assert "No 'from' number" in caplog.text
     notifier._client.messages.create.assert_not_called()

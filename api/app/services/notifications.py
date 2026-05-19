@@ -1,8 +1,14 @@
 """Optional Twilio SMS notifications for the wanted-slot worker."""
 
+from __future__ import annotations
+
 import logging
+from typing import TYPE_CHECKING
 
 from app.models.wanted import Notify
+
+if TYPE_CHECKING:
+    from twilio.rest import Client
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +32,7 @@ class SmsNotifier:
         self._client = None
         self.enabled = bool(account_sid and auth_token)
 
-    def _ensure_client(self):
+    def _ensure_client(self) -> "Client":
         if self._client is None:
             from twilio.rest import Client
 
