@@ -97,6 +97,15 @@ async def get_redis() -> Redis:
     return Redis(connection_pool=pool)
 
 
+async def get_wanted_store(
+    redis: Redis = Depends(get_redis),
+) -> "WantedStore":
+    """Request-scoped WantedStore for the API router."""
+    from app.services.wanted_store import WantedStore
+
+    return WantedStore(redis)
+
+
 async def close_redis_pool() -> None:
     """Close Redis connection pool (for application shutdown)."""
     global _redis_pool
