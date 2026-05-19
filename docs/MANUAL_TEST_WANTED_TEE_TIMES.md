@@ -31,6 +31,14 @@ All commands below are run from the **repository root** unless stated.
 
 ## 1. Start the stack
 
+> **Heads-up if you run this from a git worktree.** Compose derives the
+> project name from the directory, so a worktree (`wanted-tee-times`) is a
+> *different* stack than the main repo (`tee-sniper`). Two stacks both publish
+> host port `6379`, so a redis still running from the other copy will block
+> this one (`port is already allocated`, or the API logging
+> `Error -2 connecting to redis:6379. Name or service not known`). See
+> **Troubleshooting** at the bottom before filing a bug.
+
 ```bash
 docker compose up -d
 docker compose ps
@@ -321,3 +329,46 @@ index no longer lists the deleted id.
 - [ ] Worker runs end-to-end and records an attempt
 - [ ] (Optional) live booking / idempotency / SMS
 - [ ] Delete returns 204; record gone from index
+
+---
+
+## Troubleshooting
+
+### API logs `Error -2 connecting to redis:6379. Name or service not known`, or `Bind for 0.0.0.0:6379 failed: port is already allocated`
+
+Both symptoms have the same cause: **another Compose stack's redis is using
+host port 6379.** Compose names the project after the directory, so running
+from a git worktree (`wanted-tee-times`) is a *different* project than the
+main checkout (`tee-sniper`) — two redis containers, one host port.
+Leftover/partial `up` runs can also leave a redis detached from the network.
+
+Diagnose:
+
+```bash
+# What holds host port 6379?
+docker ps -a --filter "publish=6379" \
+  --format '{{.Names}}  {{.Image}}  {{.Status}}'
+# Is THIS project's redis actually attached to its network? ([] = the bug)
+docker inspect "$(docker compose ps -q redis)" \
+  --format '{{json .NetworkSettings.Networks}}'
+```
+
+Fix — stop the conflicting stack's redis (data is in its volume, preserved),
+then cleanly recreate this one:
+
+```bash
+docker stop tee-sniper-redis-1          # the other project's redis; reversible
+docker compose down --remove-orphans
+docker compose up -d
+```
+
+Verify:
+
+```bash
+docker compose exec -T api python3 -c "import socket; print(socket.gethostbyname('redis'))"
+curl -s http://localhost:8000/health | python3 -m json.tool   # redis_connected: true
+```
+
+Restore the other stack later with `docker start tee-sniper-redis-1` (or run
+only one repo copy's Compose stack at a time). This is local Docker state, not
+an application bug — the Compose file and app config are correct.
