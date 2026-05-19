@@ -32,6 +32,9 @@ cli:
 cronjobs: []
 
 worker:
+  # The worker shares the API's Redis. When worker.enabled=true you must
+  # also have redis.enabled=true, OR supply TSA_REDIS_URL via the chart's
+  # secret/config — otherwise the worker connects to localhost and fails.
   enabled: false
   schedule: "30 6 * * *"
   suspend: false

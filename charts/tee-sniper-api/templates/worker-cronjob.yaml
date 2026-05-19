@@ -21,6 +21,7 @@ spec:
             {{- include "tee-sniper-api.selectorLabels" . | nindent 12 }}
             app.kubernetes.io/component: worker
         spec:
+          # Never: fresh pod per attempt; idempotent worker tolerates waiting for the next schedule
           restartPolicy: Never
           serviceAccountName: {{ include "tee-sniper-api.serviceAccountName" . }}
           automountServiceAccountToken: false
