@@ -31,6 +31,22 @@ cli:
 
 cronjobs: []
 
+worker:
+  enabled: false
+  schedule: "30 6 * * *"
+  suspend: false
+  resources:
+    requests:
+      memory: 128Mi
+      cpu: 100m
+    limits:
+      memory: 256Mi
+      cpu: 500m
+  # Twilio is only required when wanted-slots use SMS notify.
+  twilio:
+    enabled: false
+    existingSecret: tee-sniper-api
+
 redis:
   enabled: true
   architecture: standalone
