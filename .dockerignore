@@ -1,7 +1,0 @@
-.git
-.env
-.env.example
-*.md
-testdata/
-vendor/
-.github/
