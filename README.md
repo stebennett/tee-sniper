@@ -264,9 +264,9 @@ Register a request to auto-book a slot when it becomes available:
 
 - `POST /api/wanted?kind=one_shot|recurring` — create a request
 - `GET /api/wanted[?status=pending|booked|expired|disabled]` — list requests
-- `GET /api/wanted/{id}` — fetch one (incl. attempt history)
-- `PATCH /api/wanted/{id}` — update window/partners/notify or disable
-- `DELETE /api/wanted/{id}` — remove
+- `GET /api/wanted/{slot_id}` — fetch one (incl. attempt history)
+- `PATCH /api/wanted/{slot_id}` — update window/partners/notify or disable
+- `DELETE /api/wanted/{slot_id}` — remove
 
 A daily worker (`python -m app.cli.worker`, deployed as the opt-in
 `worker` Helm CronJob) processes due requests, books a matching slot, records

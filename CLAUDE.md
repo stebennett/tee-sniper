@@ -135,7 +135,7 @@ Plan: `docs/superpowers/plans/2026-05-16-wanted-tee-times.md`.
 - Models: `api/app/models/wanted.py`
 - Store: `api/app/services/wanted_store.py` (Redis `wanted:{id}` + `wanted:index`)
 - Scheduling predicate: `api/app/services/scheduling.py` (`is_due`, 8-day window)
-- Worker: `api/app/services/worker.py` (`run_once`), CLI `app/cli/worker.py`
+- Worker: `api/app/services/worker.py` (`run_once`), CLI `api/app/cli/worker.py`
 - Router: `api/app/routers/wanted.py` (`/api/wanted`)
 - Deploy: opt-in `worker` CronJob in `charts/tee-sniper-api`
 
