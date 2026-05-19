@@ -19,6 +19,9 @@ pydantic-settings>=2.1.0
 # Encryption
 cryptography>=42.0.0
 
+# SMS notifications
+twilio>=9.0.0
+
 # Logging
 python-json-logger>=2.0.0
 
