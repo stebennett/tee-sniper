@@ -31,6 +31,25 @@ cli:
 
 cronjobs: []
 
+worker:
+  # The worker shares the API's Redis. When worker.enabled=true you must
+  # also have redis.enabled=true, OR supply TSA_REDIS_URL via the chart's
+  # secret/config — otherwise the worker connects to localhost and fails.
+  enabled: false
+  schedule: "30 6 * * *"
+  suspend: false
+  resources:
+    requests:
+      memory: 128Mi
+      cpu: 100m
+    limits:
+      memory: 256Mi
+      cpu: 500m
+  # Twilio is only required when wanted-slots use SMS notify.
+  twilio:
+    enabled: false
+    existingSecret: tee-sniper-api
+
 redis:
   enabled: true
   architecture: standalone

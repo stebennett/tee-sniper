@@ -36,6 +36,33 @@ def get_partners_service() -> "PartnersService":
     return PartnersService(settings.partners_file)
 
 
+def make_redis_client() -> Redis:
+    """Construct a standalone Redis client (no pooling) for CLI use."""
+    from redis.asyncio import Redis as _Redis
+
+    settings = get_settings()
+    return _Redis.from_url(settings.redis_url, decode_responses=True)
+
+
+def make_wanted_store(redis: Redis) -> "WantedStore":
+    """Construct a WantedStore for the given Redis client."""
+    from app.services.wanted_store import WantedStore
+
+    return WantedStore(redis)
+
+
+def make_sms_notifier() -> "SmsNotifier":
+    """Construct an SmsNotifier from settings."""
+    from app.services.notifications import SmsNotifier
+
+    settings = get_settings()
+    return SmsNotifier(
+        account_sid=settings.twilio_account_sid,
+        auth_token=settings.twilio_auth_token,
+        default_from=settings.twilio_from_number,
+    )
+
+
 def get_settings_dependency() -> Settings:
     """Dependency for injecting settings into routes."""
     return get_settings()
@@ -68,6 +95,15 @@ async def get_redis() -> Redis:
     """
     pool = await get_redis_pool()
     return Redis(connection_pool=pool)
+
+
+async def get_wanted_store(
+    redis: Redis = Depends(get_redis),
+) -> "WantedStore":
+    """Request-scoped WantedStore for the API router."""
+    from app.services.wanted_store import WantedStore
+
+    return WantedStore(redis)
 
 
 async def close_redis_pool() -> None:

@@ -1,0 +1,74 @@
+{{- if .Values.worker.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "tee-sniper-api.fullname" . }}-worker
+  labels:
+    {{- include "tee-sniper-api.labels" . | nindent 4 }}
+    app.kubernetes.io/component: worker
+spec:
+  schedule: {{ .Values.worker.schedule | quote }}
+  suspend: {{ .Values.worker.suspend | default false }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        metadata:
+          labels:
+            {{- include "tee-sniper-api.selectorLabels" . | nindent 12 }}
+            app.kubernetes.io/component: worker
+        spec:
+          # Never: fresh pod per attempt; idempotent worker tolerates waiting for the next schedule
+          restartPolicy: Never
+          serviceAccountName: {{ include "tee-sniper-api.serviceAccountName" . }}
+          automountServiceAccountToken: false
+          containers:
+            - name: worker
+              image: {{ include "tee-sniper-api.apiImage" . | quote }}
+              imagePullPolicy: {{ .Values.api.image.pullPolicy }}
+              command: ["python", "-m", "app.cli.worker"]
+              envFrom:
+                - configMapRef:
+                    name: {{ include "tee-sniper-api.fullname" . }}-config
+              env:
+                - name: TSA_SHARED_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.api.existingSecret }}
+                      key: shared-secret
+                {{- if .Values.redis.enabled }}
+                - name: TSA_REDIS_HOST
+                  value: {{ printf "%s-redis-master" .Release.Name | quote }}
+                - name: TSA_REDIS_PORT
+                  value: "6379"
+                - name: TSA_REDIS_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.redis.auth.existingSecret }}
+                      key: {{ .Values.redis.auth.existingSecretPasswordKey }}
+                - name: TSA_REDIS_URL
+                  value: "redis://:$(TSA_REDIS_PASSWORD)@$(TSA_REDIS_HOST):$(TSA_REDIS_PORT)/0"
+                {{- end }}
+                {{- if .Values.worker.twilio.enabled }}
+                - name: TSA_TWILIO_ACCOUNT_SID
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.worker.twilio.existingSecret }}
+                      key: twilio-account-sid
+                - name: TSA_TWILIO_AUTH_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.worker.twilio.existingSecret }}
+                      key: twilio-auth-token
+                - name: TSA_TWILIO_FROM_NUMBER
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.worker.twilio.existingSecret }}
+                      key: twilio-from-number
+                {{- end }}
+              resources:
+                {{- toYaml .Values.worker.resources | nindent 16 }}
+{{- end }}

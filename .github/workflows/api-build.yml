@@ -46,6 +46,9 @@ jobs:
         env:
           TSA_REDIS_URL: redis://localhost:6379/0
           TSA_SHARED_SECRET: test-secret
+          # Fail loudly if the Redis service is unreachable instead of
+          # silently skipping the session integration tests.
+          TSA_REQUIRE_REDIS: "1"
         run: |
           cd api
           pytest --cov=app --cov-report=xml

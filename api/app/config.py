@@ -35,6 +35,11 @@ class Settings(BaseSettings):
     # Format: {"id1": "Alice Smith", "id2": "Bob Jones"}
     partners_file: str | None = None
 
+    # Twilio SMS (optional; required only when the worker sends notifications)
+    twilio_account_sid: str | None = None
+    twilio_auth_token: str | None = None
+    twilio_from_number: str | None = None
+
     # Logging
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
     log_format: Literal["json", "text"] = "json"

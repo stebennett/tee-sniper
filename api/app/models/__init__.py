@@ -10,6 +10,18 @@ from app.models.responses import (
     LoginResponse,
     TimeSlotResponse,
 )
+from app.models.wanted import (
+    Attempt,
+    CreateOneShotRequest,
+    CreateRecurringRequest,
+    Notify,
+    Outcome,
+    PatchWantedRequest,
+    WantedKind,
+    WantedResponse,
+    WantedSlot,
+    WantedStatus,
+)
 
 __all__ = [
     "TimeSlot",
@@ -22,4 +34,14 @@ __all__ = [
     "BookResponse",
     "AddPartnersResponse",
     "HealthResponse",
+    "Attempt",
+    "CreateOneShotRequest",
+    "CreateRecurringRequest",
+    "Notify",
+    "Outcome",
+    "PatchWantedRequest",
+    "WantedKind",
+    "WantedResponse",
+    "WantedSlot",
+    "WantedStatus",
 ]

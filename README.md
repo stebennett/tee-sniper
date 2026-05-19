@@ -258,6 +258,20 @@ The `api/` directory contains a Python FastAPI service that exposes the booking 
 
 All endpoints except `/health` and `/api/login` require an `Authorization: Bearer <token>` header obtained from the login endpoint.
 
+#### Wanted tee-times
+
+Register a request to auto-book a slot when it becomes available:
+
+- `POST /api/wanted?kind=one_shot|recurring` — create a request
+- `GET /api/wanted[?status=pending|booked|expired|disabled]` — list requests
+- `GET /api/wanted/{slot_id}` — fetch one (incl. attempt history)
+- `PATCH /api/wanted/{slot_id}` — update window/partners/notify or disable
+- `DELETE /api/wanted/{slot_id}` — remove
+
+A daily worker (`python -m app.cli.worker`, deployed as the opt-in
+`worker` Helm CronJob) processes due requests, books a matching slot, records
+the outcome, and optionally sends a Twilio SMS.
+
 ### API Configuration
 
 Environment variables (prefixed with `TSA_`):
@@ -272,6 +286,7 @@ Environment variables (prefixed with `TSA_`):
 | `TSA_API_PORT` | API listen port | No | `8000` |
 | `TSA_LOG_LEVEL` | Log level (DEBUG, INFO, WARNING, ERROR) | No | `INFO` |
 | `TSA_LOG_FORMAT` | Log format (`json` or `text`) | No | `json` |
+| `TSA_REQUIRE_REDIS` | Test-only. When `1`, the session integration tests fail loudly instead of skipping if Redis is unreachable (set in CI). | No | unset |
 
 ### Running the API
 
@@ -373,6 +388,14 @@ The project includes GitHub Actions workflows:
 
 - **Build** (`.github/workflows/build.yml`): Runs on push to main and pull requests. Executes build and test steps.
 - **Release** (`.github/workflows/release.yml`): Triggers on version tags (v*.*.*). Builds Linux binary, creates GitHub release, and pushes Docker image to GitHub Container Registry.
+
+## Roadmap
+
+Planned follow-up work (see `docs/superpowers/specs/` for designs):
+
+- [x] **Wanted tee-times** — persisted booking requests (one-shot by date, or recurring by day-of-week) processed by a daily worker. Design: `docs/superpowers/specs/2026-05-16-wanted-tee-times-design.md`.
+- [ ] **Decommission the Go CLI** — replace `cmd/tee-sniper/`, `pkg/`, `run-teesniper.sh`, and the Go CI with the Python worker once it is proven at parity (separate spec to follow).
+- [ ] **MCP tools for wanted tee-times** — expose create/list/delete of wanted-slots via the MCP server (separate spec to follow).
 
 ## License
 
