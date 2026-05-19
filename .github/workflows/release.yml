@@ -24,11 +24,6 @@ jobs:
         fetch-depth: 0
         fetch-tags: true
 
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: '1.26'
-
     - name: Set up Python
       uses: actions/setup-python@v6
       with:
@@ -42,10 +37,6 @@ jobs:
       run: |
         echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
         echo "VERSION_NUMBER=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-
-    - name: Build for Linux amd64
-      run: |
-        GOOS=linux GOARCH=amd64 go build -o tee-sniper-linux-amd64 ./cmd/tee-sniper
 
     - name: Build MCP wheel + sdist
       run: |
@@ -81,16 +72,6 @@ jobs:
         release_name: Release ${{ steps.version.outputs.VERSION }}
         draft: false
         prerelease: false
-
-    - name: Upload Linux Binary
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./tee-sniper-linux-amd64
-        asset_name: tee-sniper-linux-amd64
-        asset_content_type: application/octet-stream
 
     - name: Upload MCP wheel
       uses: actions/upload-release-asset@v1
@@ -128,26 +109,6 @@ jobs:
         registry: dhi.io
         username: ${{ secrets.DOCKERHUB_USER }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-    - name: Extract metadata for Go Docker image
-      id: meta
-      uses: docker/metadata-action@v6
-      with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-        tags: |
-          type=semver,pattern={{version}}
-          type=semver,pattern={{major}}.{{minor}}
-          type=raw,value=latest
-
-    - name: Build and push Go Docker image
-      uses: docker/build-push-action@v7
-      with:
-        context: .
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
 
     - name: Extract metadata for API Docker image
       id: meta-api
