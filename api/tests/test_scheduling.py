@@ -4,7 +4,6 @@ import datetime
 
 from app.models.wanted import (
     Attempt,
-    Notify,
     Outcome,
     WantedKind,
     WantedSlot,
@@ -103,3 +102,7 @@ def test_recurring_due_again_for_a_different_occurrence():
 
 def test_recurring_past_end_date_not_due():
     assert is_due(_recurring(end_date=RELEASE - datetime.timedelta(days=1)), TODAY) is False
+
+
+def test_recurring_due_on_end_date():
+    assert is_due(_recurring(end_date=RELEASE), TODAY) is True
