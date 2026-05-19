@@ -17,6 +17,27 @@ from app.services.worker import run_once
 logger = logging.getLogger(__name__)
 
 
+def _configure_logging() -> None:
+    """Mirror app.main.setup_logging for the standalone worker (no app import)."""
+    from pythonjsonlogger import jsonlogger
+
+    settings = get_settings()
+    handler = logging.StreamHandler(sys.stdout)
+    if settings.log_format == "json":
+        formatter = jsonlogger.JsonFormatter(
+            fmt="%(asctime)s %(levelname)s %(name)s %(message)s",
+            rename_fields={"asctime": "time", "levelname": "level"},
+        )
+    else:
+        formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
+    handler.setFormatter(formatter)
+    root = logging.getLogger()
+    root.handlers = [handler]
+    root.setLevel(settings.log_level)
+
+
 async def _run() -> None:
     settings = get_settings()
     redis = make_redis_client()
@@ -34,7 +55,7 @@ async def _run() -> None:
 
 
 def main() -> None:
-    logging.basicConfig(level=get_settings().log_level)
+    _configure_logging()
     try:
         asyncio.run(_run())
     except Exception:  # noqa: BLE001

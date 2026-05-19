@@ -17,6 +17,8 @@ def test_main_wires_dependencies_and_invokes_run_once():
          patch("app.cli.worker.get_settings") as gs, \
          patch("app.cli.worker.run_once", new=AsyncMock()) as run_once_mock:
         gs.return_value.base_url = "https://golf.example.com"
+        gs.return_value.log_format = "text"
+        gs.return_value.log_level = "INFO"
         main()
 
     run_once_mock.assert_awaited_once()
@@ -25,3 +27,20 @@ def test_main_wires_dependencies_and_invokes_run_once():
     assert kwargs["base_url"] == "https://golf.example.com"
     assert "client_factory" in kwargs
     fake_redis.aclose.assert_awaited_once()
+
+
+def test_configure_logging_uses_json_formatter(monkeypatch):
+    import logging as _logging
+
+    from app.cli import worker as w
+
+    fake_settings = MagicMock()
+    fake_settings.log_format = "json"
+    fake_settings.log_level = "INFO"
+    with patch("app.cli.worker.get_settings", return_value=fake_settings):
+        w._configure_logging()
+    root = _logging.getLogger()
+    assert root.handlers
+    assert root.handlers[0].formatter.__class__.__name__ == "JsonFormatter"
+    # restore sane logging for the rest of the suite
+    _logging.getLogger().handlers = []
