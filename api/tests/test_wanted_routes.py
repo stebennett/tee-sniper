@@ -1,14 +1,12 @@
 """Endpoint tests for the /api/wanted CRUD router."""
 
-import datetime
-
 import pytest
 from fakeredis import aioredis
+from fastapi.testclient import TestClient
 
 from app.dependencies import get_current_session, get_wanted_store
 from app.main import create_app
 from app.services.wanted_store import WantedStore
-from fastapi.testclient import TestClient
 
 
 @pytest.fixture
@@ -68,7 +66,9 @@ def test_create_recurring_and_list(client):
     )
     r = client.get("/api/wanted")
     assert r.status_code == 200
-    assert len(r.json()) == 2
+    records = r.json()
+    assert len(records) == 2
+    assert {rec["kind"] for rec in records} == {"one_shot", "recurring"}
 
 
 def test_get_single_and_404(client):
@@ -108,3 +108,22 @@ def test_list_filters_by_status(client):
     client.post("/api/wanted?kind=one_shot", json=_one_shot_body())
     r = client.get("/api/wanted?status=disabled")
     assert len(r.json()) == 1
+
+
+def test_create_one_shot_missing_target_date_returns_422(client):
+    body = _one_shot_body()
+    del body["target_date"]
+    r = client.post("/api/wanted?kind=one_shot", json=body)
+    assert r.status_code == 422
+
+
+def test_create_with_no_body_returns_422(client):
+    r = client.post("/api/wanted?kind=one_shot")
+    assert r.status_code == 422
+
+
+def test_patch_into_invalid_window_returns_422(client):
+    created = client.post("/api/wanted?kind=one_shot", json=_one_shot_body()).json()
+    # stored end_time is 10:00; patch start_time past it
+    r = client.patch(f"/api/wanted/{created['id']}", json={"start_time": "11:00"})
+    assert r.status_code == 422
