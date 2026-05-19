@@ -3,7 +3,6 @@
 import datetime
 from unittest.mock import AsyncMock, MagicMock
 
-import pytest
 import pytest_asyncio
 from fakeredis import aioredis
 
@@ -187,3 +186,29 @@ async def test_second_run_same_day_is_idempotent_for_recurring(store):
     updated = await store.get("r")
     assert len(updated.attempts) == 1
     client2.book_time_slot.assert_not_awaited()
+
+
+async def test_store_update_failure_for_one_slot_does_not_block_others(store):
+    await store.create(_slot("a"))
+    await store.create(_slot("b"))
+
+    real_update = store.update
+    calls = {"n": 0}
+
+    async def flaky_update(slot):
+        # Fail the persist for whichever slot is processed first.
+        if calls["n"] == 0:
+            calls["n"] += 1
+            raise RuntimeError("redis down")
+        await real_update(slot)
+
+    store.update = flaky_update
+    client = _make_client([_bookable("09:00")])
+    await run_once(store, **_deps(client))
+
+    store.update = real_update
+    statuses = {s.id: s.status for s in await store.list_all()}
+    # Exactly one slot persisted as BOOKED; the other was attempted but its
+    # persist failed — the run did NOT abort, both were processed.
+    assert list(statuses.values()).count(WantedStatus.BOOKED) == 1
+    assert calls["n"] == 1

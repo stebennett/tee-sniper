@@ -137,7 +137,14 @@ async def run_once(
         if att.outcome is Outcome.BOOKED and slot.kind is WantedKind.ONE_SHOT:
             slot.status = WantedStatus.BOOKED
 
-        await store.update(slot)
+        try:
+            await store.update(slot)
+        except Exception as exc:  # noqa: BLE001 - one record must not abort the run
+            logger.error(
+                "Failed to persist slot after attempt; skipping notify",
+                extra={"id": slot.id, "error": str(exc)},
+            )
+            continue
 
         if slot.notify is not None:
             if att.outcome is Outcome.BOOKED:
