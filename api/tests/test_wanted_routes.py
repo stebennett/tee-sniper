@@ -116,6 +116,8 @@ def test_create_one_shot_missing_target_date_returns_422(client):
     del body["target_date"]
     r = client.post("/api/wanted?kind=one_shot", json=body)
     assert r.status_code == 422
+    # ErrorResponse.detail is a str (PR review): not a list of error dicts.
+    assert isinstance(r.json()["detail"], str)
 
 
 def test_create_with_no_body_returns_422(client):
@@ -128,3 +130,23 @@ def test_patch_into_invalid_window_returns_422(client):
     # stored end_time is 10:00; patch start_time past it
     r = client.patch(f"/api/wanted/{created['id']}", json={"start_time": "11:00"})
     assert r.status_code == 422
+
+
+@pytest.mark.parametrize(
+    "patch_body",
+    [
+        {"day_of_week": 2},
+        {"kind": "recurring"},
+        {"target_date": "2026-07-01"},
+        {"unknown_field": "x"},
+    ],
+)
+def test_patch_immutable_or_unknown_field_returns_422(client, patch_body):
+    created = client.post("/api/wanted?kind=one_shot", json=_one_shot_body()).json()
+    r = client.patch(f"/api/wanted/{created['id']}", json=patch_body)
+    assert r.status_code == 422
+    # The record must be unchanged after a rejected patch.
+    after = client.get(f"/api/wanted/{created['id']}").json()
+    assert after["kind"] == "one_shot"
+    assert after["day_of_week"] is None
+    assert after["target_date"] == created["target_date"]

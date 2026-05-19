@@ -153,3 +153,9 @@ def test_recurring_slot_missing_day_of_week_rejected():
 def test_patch_request_rejects_end_before_start_when_both_provided():
     with pytest.raises(ValidationError):
         PatchWantedRequest(start_time="10:00", end_time="08:00")
+
+
+@pytest.mark.parametrize("field", ["day_of_week", "kind", "target_date", "bogus"])
+def test_patch_request_rejects_immutable_or_unknown_fields(field):
+    with pytest.raises(ValidationError):
+        PatchWantedRequest(**{field: 2})

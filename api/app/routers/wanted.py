@@ -53,9 +53,11 @@ async def create_wanted(
             extra = dict(kind=kind, day_of_week=req.day_of_week,
                          end_date=req.end_date)
     except ValidationError as exc:
+        # ErrorResponse.detail is a str (consistent with the other routers and
+        # the PATCH path); stringify rather than leak a list of error dicts.
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=exc.errors(),
+            detail=str(exc),
         ) from exc
 
     now = _now()

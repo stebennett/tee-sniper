@@ -117,7 +117,13 @@ async def run_once(
         ):
             slot.status = WantedStatus.EXPIRED
             slot.updated_at = datetime.datetime.now(datetime.timezone.utc)
-            await store.update(slot)
+            try:
+                await store.update(slot)
+            except Exception as exc:  # noqa: BLE001 - one record must not abort the run
+                logger.error(
+                    "Failed to persist expired one-shot; continuing",
+                    extra={"id": slot.id, "error": str(exc)},
+                )
             continue
 
         if not is_due(slot, today):

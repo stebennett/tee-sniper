@@ -105,6 +105,10 @@ class CreateRecurringRequest(_CreateBase):
 
 
 class PatchWantedRequest(BaseModel):
+    # Reject unknown keys (incl. the immutable kind/target_date/day_of_week)
+    # with a 422 instead of silently ignoring them.
+    model_config = {"extra": "forbid"}
+
     start_time: str | None = Field(default=None, pattern=_HHMM)
     end_time: str | None = Field(default=None, pattern=_HHMM)
     num_slots: int | None = Field(default=None, ge=1, le=4)

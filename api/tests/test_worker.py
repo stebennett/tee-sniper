@@ -212,3 +212,26 @@ async def test_store_update_failure_for_one_slot_does_not_block_others(store):
     # persist failed — the run did NOT abort, both were processed.
     assert list(statuses.values()).count(WantedStatus.BOOKED) == 1
     assert calls["n"] == 1
+
+
+async def test_expire_path_persist_failure_does_not_block_others(store):
+    # Stale one-shot -> expire path; its store.update fails. A second, due
+    # one-shot must still be processed (run not aborted).
+    await store.create(_slot("a", target_date=TODAY - datetime.timedelta(days=1)))
+    await store.create(_slot("b", target_date=RELEASE))
+
+    real_update = store.update
+
+    async def flaky_update(slot):
+        if slot.id == "a":  # the expire-path persist
+            raise RuntimeError("redis down")
+        await real_update(slot)
+
+    store.update = flaky_update
+    client = _make_client([_bookable("09:00")])
+    await run_once(store, **_deps(client))
+    store.update = real_update
+
+    assert (await store.get("b")).status is WantedStatus.BOOKED
+    # 'a' expire persist failed, so it stays PENDING in the store (not aborted).
+    assert (await store.get("a")).status is WantedStatus.PENDING
