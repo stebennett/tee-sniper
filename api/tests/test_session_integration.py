@@ -5,6 +5,10 @@ is not available. Use docker-compose to start Redis:
 
     docker-compose up -d redis
 
+Set TSA_REQUIRE_REDIS=1 (CI does this in .github/workflows/api-build.yml) to
+make an unreachable Redis a hard collection error instead of a silent skip,
+so session-handling regressions can never go untested in CI.
+
 """
 
 import asyncio

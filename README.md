@@ -286,6 +286,7 @@ Environment variables (prefixed with `TSA_`):
 | `TSA_API_PORT` | API listen port | No | `8000` |
 | `TSA_LOG_LEVEL` | Log level (DEBUG, INFO, WARNING, ERROR) | No | `INFO` |
 | `TSA_LOG_FORMAT` | Log format (`json` or `text`) | No | `json` |
+| `TSA_REQUIRE_REDIS` | Test-only. When `1`, the session integration tests fail loudly instead of skipping if Redis is unreachable (set in CI). | No | unset |
 
 ### Running the API
 

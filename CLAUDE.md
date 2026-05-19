@@ -32,7 +32,20 @@ cd api && .venv/bin/python -m pytest tests/test_booking_routes.py -v
 
 # Run the wanted-slot worker once (needs TSA_* env, see api/app/config.py)
 cd api && .venv/bin/python -m app.cli.worker
+
+# Session integration tests need a real Redis. Without one they SKIP:
+docker run -d -p 6379:6379 redis   # then: cd api && .venv/bin/python -m pytest tests/test_session_integration.py
 ```
+
+**`TSA_REQUIRE_REDIS`**: the session integration tests
+(`tests/test_session_integration.py`) skip silently when Redis is
+unreachable — convenient locally, dangerous in CI (a broken Redis service
+would yield a green build that stopped regression-testing session handling).
+Setting `TSA_REQUIRE_REDIS=1` turns that silent skip into a hard collection
+error. It is set in `.github/workflows/api-build.yml` (which also provisions
+a `redis:8-alpine` service), so CI always runs these tests and fails loudly
+if Redis is missing. Leave it unset locally to keep the skip-when-absent
+convenience.
 
 ### Building
 ```bash
