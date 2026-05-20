@@ -8,6 +8,7 @@ from tee_sniper_mcp.dates import (
     DateParseError,
     DEFAULT_BANDS,
     parse_date,
+    parse_day_of_week,
     parse_time,
     resolve_band,
     resolve_window,
@@ -98,3 +99,28 @@ def test_resolve_window_band_used_when_no_explicit() -> None:
 
 def test_resolve_window_no_filter() -> None:
     assert resolve_window(start_time=None, end_time=None, time_of_day=None) == (None, None)
+
+
+@pytest.mark.parametrize(
+    "value,expected",
+    [
+        ("monday", 0),
+        ("Monday", 0),
+        (" MON ", 0),
+        ("sat", 5),
+        ("saturday", 5),
+        ("sunday", 6),
+        ("0", 0),
+        ("6", 6),
+        (0, 0),
+        (6, 6),
+    ],
+)
+def test_parse_day_of_week_ok(value, expected) -> None:
+    assert parse_day_of_week(value) == expected
+
+
+@pytest.mark.parametrize("value", ["funday", "", "7", "-1", 7, -1, "mondayy"])
+def test_parse_day_of_week_rejects_junk(value) -> None:
+    with pytest.raises(DateParseError):
+        parse_day_of_week(value)
