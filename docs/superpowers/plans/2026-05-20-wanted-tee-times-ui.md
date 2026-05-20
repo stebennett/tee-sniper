@@ -1,6 +1,6 @@
 # Wanted Tee-Times Web UI Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development with sonnet sub-agents (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Ship a React SPA at `web/` covering login + full CRUD over wanted tee-time requests, served behind nginx via a new Helm chart, plus the one backend endpoint that lets the browser produce encrypted credentials.
 
@@ -55,14 +55,21 @@
 
 - [ ] **Step 1: Create the worktree from main**
 
+Worktrees for this repo live under `.claude/worktrees/` (see `CLAUDE.md`).
+This step is performed by the controller before dispatching subagents; the
+controller also cherry-picks the spec + plan commits from `main` so the
+branch contains them. Subagents start from Step 2.
+
 ```bash
 cd /Users/stevebennett/Code/tee-sniper
 git fetch origin
-git worktree add -b web/wanted-ui ../tee-sniper-web-ui origin/main
-cd ../tee-sniper-web-ui
+git worktree add -b web/wanted-ui .claude/worktrees/web-wanted-ui origin/main
+cd .claude/worktrees/web-wanted-ui
+# Cherry-pick spec + plan commits (the two newest on main):
+git cherry-pick <spec-sha> <plan-sha>
 ```
 
-All subsequent tasks assume `cwd = /Users/stevebennett/Code/tee-sniper-web-ui` and branch `web/wanted-ui`.
+All subsequent tasks assume `cwd = /Users/stevebennett/Code/tee-sniper/.claude/worktrees/web-wanted-ui` and branch `web/wanted-ui`.
 
 - [ ] **Step 2: Sanity check**
 
@@ -3194,7 +3201,7 @@ Expected: all pass.
 - [ ] **Step 2: Whole-repo regression — Go tests**
 
 ```bash
-cd /Users/stevebennett/Code/tee-sniper-web-ui
+cd /Users/stevebennett/Code/tee-sniper/.claude/worktrees/web-wanted-ui
 go test ./...
 ```
 

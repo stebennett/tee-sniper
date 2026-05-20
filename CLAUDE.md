@@ -72,6 +72,21 @@ The repository includes CI workflows in `.github/workflows/`:
   (`ghcr.io/<repo>-api`), the MCP image (`ghcr.io/<repo>-mcp`), and the
   MCP wheel + sdist as release assets
 
+## Git Worktrees
+
+Create worktrees for parallel feature work under `.claude/worktrees/<branch-slug>`
+inside this repository (not as siblings of the repo root). Use the branch
+name with `/` replaced by `-` as the directory slug.
+
+```bash
+git worktree add -b feat/foo .claude/worktrees/feat-foo origin/main
+cd .claude/worktrees/feat-foo
+```
+
+`.claude/` is git-ignored, so the worktree files are not tracked. When the
+branch is merged, remove the worktree with
+`git worktree remove .claude/worktrees/<slug>`.
+
 ## API Migration Workflow
 
 When implementing the API migration plan (see `docs/API_MIGRATION_PLAN.md`):
