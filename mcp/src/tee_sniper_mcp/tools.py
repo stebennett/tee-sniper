@@ -11,6 +11,7 @@ from collections.abc import Callable
 from typing import Any
 
 from tee_sniper_mcp.api_client import ApiClient, ApiError
+from tee_sniper_mcp.auth import encrypt_credentials
 from tee_sniper_mcp.config import Config
 from tee_sniper_mcp.dates import (
     DateParseError,
@@ -21,7 +22,7 @@ from tee_sniper_mcp.dates import (
 
 
 class Tools:
-    """Bundle of the four MCP tool implementations."""
+    """Bundle of MCP tool implementations."""
 
     def __init__(
         self,
@@ -51,6 +52,49 @@ class Tools:
             "partners": slot.get("partners", []),
             "last_outcome": last_outcome,
         }
+
+    def _credentials(self) -> str:
+        return encrypt_credentials(
+            self._config.username,
+            self._config.pin,
+            self._config.shared_secret,
+        )
+
+    async def create_one_shot_wanted(
+        self,
+        target_date: str,
+        start_time: str,
+        end_time: str,
+        num_slots: int = 1,
+        partners: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Create a one-shot wanted tee-time request."""
+        try:
+            td = parse_date(target_date, today=self._today())
+            start = parse_time(start_time)
+            end = parse_time(end_time)
+        except DateParseError as exc:
+            return {"error": str(exc)}
+
+        body = {
+            "target_date": td.isoformat(),
+            "start_time": start,
+            "end_time": end,
+            "num_slots": num_slots,
+            "partners": partners or [],
+            "credentials": self._credentials(),
+        }
+        try:
+            response = await self._api.post(
+                "/api/wanted", params={"kind": "one_shot"}, json=body
+            )
+        except ApiError as exc:
+            return {"error": str(exc)}
+
+        try:
+            return self._summarize(response)
+        except (KeyError, TypeError) as exc:
+            return {"error": f"unexpected API response: {exc}"}
 
     async def find_tee_times(
         self,
