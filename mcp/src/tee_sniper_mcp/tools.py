@@ -210,6 +210,29 @@ class Tools:
         except (KeyError, TypeError) as exc:
             return {"error": f"unexpected API response: {exc}"}
 
+    async def set_wanted_enabled(
+        self, wanted_id: str, enabled: bool
+    ) -> dict[str, Any]:
+        """Pause (enabled=False) or resume (enabled=True) a wanted request."""
+        try:
+            response = await self._api.patch(
+                f"/api/wanted/{wanted_id}", json={"disabled": not enabled}
+            )
+        except ApiError as exc:
+            return {"error": str(exc)}
+        try:
+            return self._summarize(response)
+        except (KeyError, TypeError) as exc:
+            return {"error": f"unexpected API response: {exc}"}
+
+    async def delete_wanted(self, wanted_id: str) -> dict[str, Any]:
+        """Delete a wanted request."""
+        try:
+            await self._api.delete(f"/api/wanted/{wanted_id}")
+        except ApiError as exc:
+            return {"error": str(exc)}
+        return {"deleted": True, "id": wanted_id}
+
     async def find_tee_times(
         self,
         date: str,

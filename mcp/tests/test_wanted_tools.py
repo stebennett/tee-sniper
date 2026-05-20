@@ -286,3 +286,40 @@ async def test_update_wanted_404(tools: Tools) -> None:
     )
     result = await tools.update_wanted(wanted_id="missing", num_slots=2)
     assert "error" in result and "not found" in result["error"]
+
+
+@respx.mock
+async def test_set_wanted_enabled_false_sends_disabled_true(tools: Tools) -> None:
+    route = respx.patch("http://api.test/api/wanted/w-1").mock(
+        return_value=httpx.Response(200, json=_slot(status="disabled"))
+    )
+    result = await tools.set_wanted_enabled(wanted_id="w-1", enabled=False)
+    assert result == tools._summarize(_slot(status="disabled"))
+    assert json.loads(route.calls.last.request.read()) == {"disabled": True}
+
+
+@respx.mock
+async def test_set_wanted_enabled_true_sends_disabled_false(tools: Tools) -> None:
+    route = respx.patch("http://api.test/api/wanted/w-1").mock(
+        return_value=httpx.Response(200, json=_slot(status="pending"))
+    )
+    await tools.set_wanted_enabled(wanted_id="w-1", enabled=True)
+    assert json.loads(route.calls.last.request.read()) == {"disabled": False}
+
+
+@respx.mock
+async def test_delete_wanted_ok(tools: Tools) -> None:
+    respx.delete("http://api.test/api/wanted/w-1").mock(
+        return_value=httpx.Response(204)
+    )
+    result = await tools.delete_wanted(wanted_id="w-1")
+    assert result == {"deleted": True, "id": "w-1"}
+
+
+@respx.mock
+async def test_delete_wanted_404(tools: Tools) -> None:
+    respx.delete("http://api.test/api/wanted/missing").mock(
+        return_value=httpx.Response(404, json={"detail": "Wanted slot not found"})
+    )
+    result = await tools.delete_wanted(wanted_id="missing")
+    assert "error" in result and "not found" in result["error"]

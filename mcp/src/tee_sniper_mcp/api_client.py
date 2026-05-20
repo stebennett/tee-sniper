@@ -48,6 +48,9 @@ class ApiClient:
     ) -> Any:
         return await self._request("PATCH", path, params=params, json=json)
 
+    async def delete(self, path: str) -> Any:
+        return await self._request("DELETE", path)
+
     async def _request(
         self,
         method: str,
