@@ -16,11 +16,12 @@ from app.dependencies import (
     get_session_manager,
     get_settings_dependency,
 )
-from app.models.requests import AddPartnersRequest, BookRequest, LoginRequest
+from app.models.requests import AddPartnersRequest, BookRequest, EncryptRequest, LoginRequest
 from app.models.responses import (
     AddPartnersResponse,
     AvailabilityResponse,
     BookResponse,
+    EncryptResponse,
     ErrorResponse,
     LoginResponse,
     PartnerResponse,
@@ -89,6 +90,29 @@ async def login(
     expires_at = datetime.datetime.now(timezone.utc) + timedelta(seconds=session_manager.ttl)
 
     return LoginResponse(access_token=token, expires_at=expires_at)
+
+
+@router.post(
+    "/encrypt-credentials",
+    response_model=EncryptResponse,
+    status_code=status.HTTP_200_OK,
+    responses={
+        422: {"model": ErrorResponse, "description": "Invalid request body"},
+    },
+    summary="Encrypt credentials with the server's shared secret",
+)
+async def encrypt_credentials(
+    body: EncryptRequest,
+    encryption: EncryptionService = Depends(get_encryption_service),
+) -> EncryptResponse:
+    """Encrypt 'username:pin' for use in /api/login and wanted-slot storage.
+
+    Auth-free: login cannot precede this call, and the booking site itself
+    validates whether the credentials are real on the subsequent /api/login.
+    """
+    return EncryptResponse(
+        credentials=encryption.encrypt_credentials(body.username, body.pin),
+    )
 
 
 @router.get(

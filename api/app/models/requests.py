@@ -40,3 +40,10 @@ class AddPartnersRequest(BaseModel):
         default=False,
         description="If true, simulate partner addition without making changes",
     )
+
+
+class EncryptRequest(BaseModel):
+    """Plaintext credentials for server-side encryption."""
+
+    username: str = Field(..., min_length=1)
+    pin: str = Field(..., min_length=1)

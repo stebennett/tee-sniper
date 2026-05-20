@@ -779,3 +779,28 @@ class TestPartnersEndpoint:
         _app, client = app_and_client
         response = client.get("/api/partners")
         assert response.status_code == 401  # No auth header → 401 Unauthorized
+
+
+def test_encrypt_credentials_roundtrip(
+    app_and_client: tuple,
+    encryption_service: EncryptionService,
+) -> None:
+    """POST /api/encrypt-credentials returns a blob the server can decrypt."""
+    _app, client = app_and_client
+    resp = client.post(
+        "/api/encrypt-credentials",
+        json={"username": "alice", "pin": "1234"},
+    )
+    assert resp.status_code == 200
+    blob = resp.json()["credentials"]
+    assert isinstance(blob, str) and len(blob) > 0
+
+    username, pin = encryption_service.decrypt_credentials(blob)
+    assert (username, pin) == ("alice", "1234")
+
+
+def test_encrypt_credentials_validation(app_and_client: tuple) -> None:
+    """Missing fields → 422."""
+    _app, client = app_and_client
+    resp = client.post("/api/encrypt-credentials", json={"username": "x"})
+    assert resp.status_code == 422

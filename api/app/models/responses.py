@@ -85,3 +85,12 @@ class ErrorResponse(BaseModel):
     """Standard error response."""
 
     detail: str = Field(..., description="Error description")
+
+
+class EncryptResponse(BaseModel):
+    """Encrypted credentials blob produced by /api/encrypt-credentials."""
+
+    credentials: str = Field(
+        ...,
+        description="AES-256-GCM encrypted 'username:pin', base64 encoded",
+    )
