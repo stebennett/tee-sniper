@@ -141,6 +141,39 @@ class Tools:
         except (KeyError, TypeError) as exc:
             return {"error": f"unexpected API response: {exc}"}
 
+    _WANTED_STATUSES = ("pending", "booked", "expired", "disabled")
+
+    async def list_wanted(self, status: str | None = None) -> dict[str, Any]:
+        """List wanted tee-time requests, optionally filtered by status."""
+        params: dict[str, str] | None = None
+        if status is not None:
+            if status not in self._WANTED_STATUSES:
+                return {
+                    "error": (
+                        f"invalid status '{status}'; expected one of "
+                        f"{', '.join(self._WANTED_STATUSES)}"
+                    )
+                }
+            params = {"status": status}
+        try:
+            response = await self._api.get("/api/wanted", params=params)
+        except ApiError as exc:
+            return {"error": str(exc)}
+        try:
+            return {"wanted": [self._summarize(s) for s in response]}
+        except (KeyError, TypeError) as exc:
+            return {"error": f"unexpected API response: {exc}"}
+
+    async def get_wanted(self, wanted_id: str) -> dict[str, Any]:
+        """Get a single wanted request, including its full attempt history."""
+        try:
+            response = await self._api.get(f"/api/wanted/{wanted_id}")
+        except ApiError as exc:
+            return {"error": str(exc)}
+        if not isinstance(response, dict):
+            return {"error": f"unexpected API response: {response!r}"}
+        return response
+
     async def find_tee_times(
         self,
         date: str,

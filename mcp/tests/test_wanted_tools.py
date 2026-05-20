@@ -196,3 +196,53 @@ async def test_create_recurring_wanted_bad_day(tools: Tools) -> None:
         day_of_week="funday", start_time="3pm", end_time="5pm"
     )
     assert "error" in result and "funday" in result["error"]
+
+
+@respx.mock
+async def test_list_wanted_no_filter(tools: Tools) -> None:
+    route = respx.get("http://api.test/api/wanted").mock(
+        return_value=httpx.Response(200, json=[_slot(), _recurring_slot()])
+    )
+    result = await tools.list_wanted()
+    assert result == {
+        "wanted": [tools._summarize(_slot()), tools._summarize(_recurring_slot())]
+    }
+    assert "status" not in route.calls.last.request.url.params
+
+
+@respx.mock
+async def test_list_wanted_with_status_filter(tools: Tools) -> None:
+    route = respx.get("http://api.test/api/wanted", params={"status": "booked"}).mock(
+        return_value=httpx.Response(200, json=[_slot(status="booked")])
+    )
+    result = await tools.list_wanted(status="booked")
+    assert result["wanted"][0]["status"] == "booked"
+    assert route.calls.last.request.url.params["status"] == "booked"
+
+
+async def test_list_wanted_rejects_bad_status(tools: Tools) -> None:
+    result = await tools.list_wanted(status="nope")
+    assert "error" in result and "nope" in result["error"]
+    assert "pending" in result["error"]
+
+
+@respx.mock
+async def test_get_wanted_returns_full_slot(tools: Tools) -> None:
+    full = _slot(attempts=[
+        {"ts": "2026-05-19T06:00:00+00:00", "target_date": "2026-05-27",
+         "outcome": "no_slots", "booking_id": None, "error": None},
+    ])
+    respx.get("http://api.test/api/wanted/w-1").mock(
+        return_value=httpx.Response(200, json=full)
+    )
+    result = await tools.get_wanted(wanted_id="w-1")
+    assert result == full  # full passthrough, not summarized
+
+
+@respx.mock
+async def test_get_wanted_404(tools: Tools) -> None:
+    respx.get("http://api.test/api/wanted/missing").mock(
+        return_value=httpx.Response(404, json={"detail": "Wanted slot not found"})
+    )
+    result = await tools.get_wanted(wanted_id="missing")
+    assert "error" in result and "not found" in result["error"]
