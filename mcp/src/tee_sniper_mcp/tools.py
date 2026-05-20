@@ -12,7 +12,12 @@ from typing import Any
 
 from tee_sniper_mcp.api_client import ApiClient, ApiError
 from tee_sniper_mcp.config import Config
-from tee_sniper_mcp.dates import DateParseError, parse_date, parse_time, resolve_window
+from tee_sniper_mcp.dates import (
+    DateParseError,
+    parse_date,
+    parse_time,
+    resolve_window,
+)
 
 
 class Tools:
@@ -27,6 +32,25 @@ class Tools:
         self._config = config
         self._api = api
         self._today = today
+
+    @staticmethod
+    def _summarize(slot: dict[str, Any]) -> dict[str, Any]:
+        """Trim a WantedResponse to the fields callers care about."""
+        attempts = slot.get("attempts") or []
+        last_outcome = attempts[-1]["outcome"] if attempts else None
+        return {
+            "id": slot["id"],
+            "kind": slot["kind"],
+            "status": slot["status"],
+            "target_date": slot.get("target_date"),
+            "day_of_week": slot.get("day_of_week"),
+            "end_date": slot.get("end_date"),
+            "start_time": slot["start_time"],
+            "end_time": slot["end_time"],
+            "num_slots": slot["num_slots"],
+            "partners": slot.get("partners", []),
+            "last_outcome": last_outcome,
+        }
 
     async def find_tee_times(
         self,
