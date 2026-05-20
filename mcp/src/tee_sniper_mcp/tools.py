@@ -16,6 +16,7 @@ from tee_sniper_mcp.config import Config
 from tee_sniper_mcp.dates import (
     DateParseError,
     parse_date,
+    parse_day_of_week,
     parse_time,
     resolve_window,
 )
@@ -87,6 +88,50 @@ class Tools:
         try:
             response = await self._api.post(
                 "/api/wanted", params={"kind": "one_shot"}, json=body
+            )
+        except ApiError as exc:
+            return {"error": str(exc)}
+
+        try:
+            return self._summarize(response)
+        except (KeyError, TypeError) as exc:
+            return {"error": f"unexpected API response: {exc}"}
+
+    async def create_recurring_wanted(
+        self,
+        day_of_week: str | int,
+        start_time: str,
+        end_time: str,
+        num_slots: int = 1,
+        partners: list[str] | None = None,
+        end_date: str | None = None,
+    ) -> dict[str, Any]:
+        """Create a recurring wanted tee-time request (one weekday)."""
+        try:
+            dow = parse_day_of_week(day_of_week)
+            start = parse_time(start_time)
+            end = parse_time(end_time)
+            ed = (
+                parse_date(end_date, today=self._today()).isoformat()
+                if end_date
+                else None
+            )
+        except DateParseError as exc:
+            return {"error": str(exc)}
+
+        body: dict[str, Any] = {
+            "day_of_week": dow,
+            "start_time": start,
+            "end_time": end,
+            "num_slots": num_slots,
+            "partners": partners or [],
+            "credentials": self._credentials(),
+        }
+        if ed is not None:
+            body["end_date"] = ed
+        try:
+            response = await self._api.post(
+                "/api/wanted", params={"kind": "recurring"}, json=body
             )
         except ApiError as exc:
             return {"error": str(exc)}
