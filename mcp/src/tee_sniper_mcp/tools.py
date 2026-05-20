@@ -174,6 +174,42 @@ class Tools:
             return {"error": f"unexpected API response: {response!r}"}
         return response
 
+    async def update_wanted(
+        self,
+        wanted_id: str,
+        start_time: str | None = None,
+        end_time: str | None = None,
+        num_slots: int | None = None,
+        partners: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Edit mutable fields of a wanted request. Only provided fields change."""
+        body: dict[str, Any] = {}
+        try:
+            if start_time is not None:
+                body["start_time"] = parse_time(start_time)
+            if end_time is not None:
+                body["end_time"] = parse_time(end_time)
+        except DateParseError as exc:
+            return {"error": str(exc)}
+        if num_slots is not None:
+            body["num_slots"] = num_slots
+        if partners is not None:
+            body["partners"] = partners
+
+        if not body:
+            return {"error": "no fields to update"}
+
+        try:
+            response = await self._api.patch(
+                f"/api/wanted/{wanted_id}", json=body
+            )
+        except ApiError as exc:
+            return {"error": str(exc)}
+        try:
+            return self._summarize(response)
+        except (KeyError, TypeError) as exc:
+            return {"error": f"unexpected API response: {exc}"}
+
     async def find_tee_times(
         self,
         date: str,

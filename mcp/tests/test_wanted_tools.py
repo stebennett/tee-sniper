@@ -246,3 +246,43 @@ async def test_get_wanted_404(tools: Tools) -> None:
     )
     result = await tools.get_wanted(wanted_id="missing")
     assert "error" in result and "not found" in result["error"]
+
+
+@respx.mock
+async def test_update_wanted_sends_only_provided_fields(tools: Tools) -> None:
+    route = respx.patch("http://api.test/api/wanted/w-1").mock(
+        return_value=httpx.Response(200, json=_slot(num_slots=3))
+    )
+    result = await tools.update_wanted(wanted_id="w-1", num_slots=3)
+    assert result == tools._summarize(_slot(num_slots=3))
+    body = json.loads(route.calls.last.request.read())
+    assert body == {"num_slots": 3}
+
+
+@respx.mock
+async def test_update_wanted_parses_times(tools: Tools) -> None:
+    route = respx.patch("http://api.test/api/wanted/w-1").mock(
+        return_value=httpx.Response(200, json=_slot())
+    )
+    await tools.update_wanted(wanted_id="w-1", start_time="3pm", end_time="5pm")
+    body = json.loads(route.calls.last.request.read())
+    assert body == {"start_time": "15:00", "end_time": "17:00"}
+
+
+async def test_update_wanted_no_fields_is_error(tools: Tools) -> None:
+    result = await tools.update_wanted(wanted_id="w-1")
+    assert "error" in result and "no fields" in result["error"].lower()
+
+
+async def test_update_wanted_bad_time(tools: Tools) -> None:
+    result = await tools.update_wanted(wanted_id="w-1", start_time="half past noon")
+    assert "error" in result
+
+
+@respx.mock
+async def test_update_wanted_404(tools: Tools) -> None:
+    respx.patch("http://api.test/api/wanted/missing").mock(
+        return_value=httpx.Response(404, json={"detail": "Wanted slot not found"})
+    )
+    result = await tools.update_wanted(wanted_id="missing", num_slots=2)
+    assert "error" in result and "not found" in result["error"]
