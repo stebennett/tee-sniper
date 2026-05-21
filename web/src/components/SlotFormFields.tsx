@@ -1,14 +1,13 @@
-import { Controller, type Control, type UseFormRegister, type FieldErrors } from 'react-hook-form';
+import { Controller, type Control, type FieldValues, type UseFormRegister, type FieldErrors } from 'react-hook-form';
 import { PartnerPicker } from './PartnerPicker';
 import { NotifyFields } from './NotifyFields';
 
-export function SlotFormFields({
+export function SlotFormFields<T extends FieldValues>({
   register, control, errors,
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   register: UseFormRegister<any>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  control: Control<any>;
+  control: Control<T>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   errors: FieldErrors<any>;
 }) {
@@ -37,7 +36,7 @@ export function SlotFormFields({
       </label>
 
       <Controller
-        control={control}
+        control={control as Control<FieldValues>}
         name="partners"
         render={({ field }) => (
           <PartnerPicker value={field.value ?? []} onChange={field.onChange} />

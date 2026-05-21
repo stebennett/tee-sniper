@@ -9,10 +9,16 @@ export const loginSchema = z.object({
   pin:      z.string().min(1, 'PIN required'),
 });
 
-const notifySchema = z.object({
-  to:   z.string().regex(E164, 'Must be E.164, e.g. +14155551212'),
-  from: z.string().regex(E164).optional().or(z.literal('').transform(() => undefined)),
-}).optional();
+const notifySchema = z.preprocess(
+  (v) => {
+    if (v && typeof v === 'object' && (v as Record<string, unknown>).to === '') return undefined;
+    return v;
+  },
+  z.object({
+    to:   z.string().regex(E164, 'Must be E.164, e.g. +14155551212'),
+    from: z.string().regex(E164).optional().or(z.literal('').transform(() => undefined)),
+  }).optional(),
+);
 
 const commonShape = {
   start_time: z.string().regex(HHMM),
