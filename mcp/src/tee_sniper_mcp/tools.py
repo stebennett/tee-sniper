@@ -11,12 +11,19 @@ from collections.abc import Callable
 from typing import Any
 
 from tee_sniper_mcp.api_client import ApiClient, ApiError
+from tee_sniper_mcp.auth import encrypt_credentials
 from tee_sniper_mcp.config import Config
-from tee_sniper_mcp.dates import DateParseError, parse_date, parse_time, resolve_window
+from tee_sniper_mcp.dates import (
+    DateParseError,
+    parse_date,
+    parse_day_of_week,
+    parse_time,
+    resolve_window,
+)
 
 
 class Tools:
-    """Bundle of the four MCP tool implementations."""
+    """Bundle of MCP tool implementations."""
 
     def __init__(
         self,
@@ -27,6 +34,204 @@ class Tools:
         self._config = config
         self._api = api
         self._today = today
+
+    @staticmethod
+    def _summarize(slot: dict[str, Any]) -> dict[str, Any]:
+        """Trim a WantedResponse to the fields callers care about."""
+        attempts = slot.get("attempts") or []
+        last_outcome = attempts[-1]["outcome"] if attempts else None
+        return {
+            "id": slot["id"],
+            "kind": slot["kind"],
+            "status": slot["status"],
+            "target_date": slot.get("target_date"),
+            "day_of_week": slot.get("day_of_week"),
+            "end_date": slot.get("end_date"),
+            "start_time": slot["start_time"],
+            "end_time": slot["end_time"],
+            "num_slots": slot["num_slots"],
+            "partners": slot.get("partners", []),
+            "last_outcome": last_outcome,
+        }
+
+    def _credentials(self) -> str:
+        return encrypt_credentials(
+            self._config.username,
+            self._config.pin,
+            self._config.shared_secret,
+        )
+
+    async def create_one_shot_wanted(
+        self,
+        target_date: str,
+        start_time: str,
+        end_time: str,
+        num_slots: int = 1,
+        partners: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Create a one-shot wanted tee-time request."""
+        try:
+            td = parse_date(target_date, today=self._today())
+            start = parse_time(start_time)
+            end = parse_time(end_time)
+        except DateParseError as exc:
+            return {"error": str(exc)}
+
+        body = {
+            "target_date": td.isoformat(),
+            "start_time": start,
+            "end_time": end,
+            "num_slots": num_slots,
+            "partners": partners or [],
+            "credentials": self._credentials(),
+        }
+        try:
+            response = await self._api.post(
+                "/api/wanted", params={"kind": "one_shot"}, json=body
+            )
+        except ApiError as exc:
+            return {"error": str(exc)}
+
+        try:
+            return self._summarize(response)
+        except (KeyError, TypeError) as exc:
+            return {"error": f"unexpected API response: {exc}"}
+
+    async def create_recurring_wanted(
+        self,
+        day_of_week: str | int,
+        start_time: str,
+        end_time: str,
+        num_slots: int = 1,
+        partners: list[str] | None = None,
+        end_date: str | None = None,
+    ) -> dict[str, Any]:
+        """Create a recurring wanted tee-time request (one weekday)."""
+        try:
+            dow = parse_day_of_week(day_of_week)
+            start = parse_time(start_time)
+            end = parse_time(end_time)
+            ed = (
+                parse_date(end_date, today=self._today()).isoformat()
+                if end_date
+                else None
+            )
+        except DateParseError as exc:
+            return {"error": str(exc)}
+
+        body: dict[str, Any] = {
+            "day_of_week": dow,
+            "start_time": start,
+            "end_time": end,
+            "num_slots": num_slots,
+            "partners": partners or [],
+            "credentials": self._credentials(),
+        }
+        if ed is not None:
+            body["end_date"] = ed
+        try:
+            response = await self._api.post(
+                "/api/wanted", params={"kind": "recurring"}, json=body
+            )
+        except ApiError as exc:
+            return {"error": str(exc)}
+
+        try:
+            return self._summarize(response)
+        except (KeyError, TypeError) as exc:
+            return {"error": f"unexpected API response: {exc}"}
+
+    _WANTED_STATUSES = ("pending", "booked", "expired", "disabled")
+
+    async def list_wanted(self, status: str | None = None) -> dict[str, Any]:
+        """List wanted tee-time requests, optionally filtered by status."""
+        params: dict[str, str] | None = None
+        if status is not None:
+            if status not in self._WANTED_STATUSES:
+                return {
+                    "error": (
+                        f"invalid status '{status}'; expected one of "
+                        f"{', '.join(self._WANTED_STATUSES)}"
+                    )
+                }
+            params = {"status": status}
+        try:
+            response = await self._api.get("/api/wanted", params=params)
+        except ApiError as exc:
+            return {"error": str(exc)}
+        try:
+            return {"wanted": [self._summarize(s) for s in response]}
+        except (KeyError, TypeError) as exc:
+            return {"error": f"unexpected API response: {exc}"}
+
+    async def get_wanted(self, wanted_id: str) -> dict[str, Any]:
+        """Get a single wanted request, including its full attempt history."""
+        try:
+            response = await self._api.get(f"/api/wanted/{wanted_id}")
+        except ApiError as exc:
+            return {"error": str(exc)}
+        if not isinstance(response, dict):
+            return {"error": f"unexpected API response: {response!r}"}
+        return response
+
+    async def update_wanted(
+        self,
+        wanted_id: str,
+        start_time: str | None = None,
+        end_time: str | None = None,
+        num_slots: int | None = None,
+        partners: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Edit mutable fields of a wanted request. Only provided fields change."""
+        body: dict[str, Any] = {}
+        try:
+            if start_time is not None:
+                body["start_time"] = parse_time(start_time)
+            if end_time is not None:
+                body["end_time"] = parse_time(end_time)
+        except DateParseError as exc:
+            return {"error": str(exc)}
+        if num_slots is not None:
+            body["num_slots"] = num_slots
+        if partners is not None:
+            body["partners"] = partners
+
+        if not body:
+            return {"error": "no fields to update"}
+
+        try:
+            response = await self._api.patch(
+                f"/api/wanted/{wanted_id}", json=body
+            )
+        except ApiError as exc:
+            return {"error": str(exc)}
+        try:
+            return self._summarize(response)
+        except (KeyError, TypeError) as exc:
+            return {"error": f"unexpected API response: {exc}"}
+
+    async def set_wanted_enabled(
+        self, wanted_id: str, enabled: bool
+    ) -> dict[str, Any]:
+        """Pause (enabled=False) or resume (enabled=True) a wanted request."""
+        try:
+            response = await self._api.patch(
+                f"/api/wanted/{wanted_id}", json={"disabled": not enabled}
+            )
+        except ApiError as exc:
+            return {"error": str(exc)}
+        try:
+            return self._summarize(response)
+        except (KeyError, TypeError) as exc:
+            return {"error": f"unexpected API response: {exc}"}
+
+    async def delete_wanted(self, wanted_id: str) -> dict[str, Any]:
+        """Delete a wanted request."""
+        try:
+            await self._api.delete(f"/api/wanted/{wanted_id}")
+        except ApiError as exc:
+            return {"error": str(exc)}
+        return {"deleted": True, "id": wanted_id}
 
     async def find_tee_times(
         self,

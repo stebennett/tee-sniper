@@ -207,7 +207,7 @@ async def test_add_partners_handles_malformed_api_response(tools: Tools) -> None
     assert "unexpected API response" in result["error"]
 
 
-async def test_server_registers_all_four_tools() -> None:
+async def test_server_registers_all_tools() -> None:
     from tee_sniper_mcp.server import build_server
 
     # Build with stub config (no env mutation needed because we pass it directly).
@@ -223,4 +223,16 @@ async def test_server_registers_all_four_tools() -> None:
         registered = await mcp.list_tools()
 
     names = {t.name for t in registered}
-    assert names == {"find_tee_times", "book_tee_time", "list_partners", "add_partners"}
+    assert names == {
+        "find_tee_times",
+        "book_tee_time",
+        "list_partners",
+        "add_partners",
+        "create_one_shot_wanted",
+        "create_recurring_wanted",
+        "list_wanted",
+        "get_wanted",
+        "update_wanted",
+        "set_wanted_enabled",
+        "delete_wanted",
+    }

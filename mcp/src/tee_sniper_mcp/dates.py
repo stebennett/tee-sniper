@@ -73,6 +73,33 @@ def parse_date(value: str, *, today: dt.date | None = None) -> dt.date:
     return parsed.date()
 
 
+_WEEKDAY_ABBR = {name[:3]: idx for name, idx in _WEEKDAYS.items()}
+
+
+def parse_day_of_week(value: str | int) -> int:
+    """Normalize a weekday to int 0-6 (0=Monday … 6=Sunday)."""
+    if isinstance(value, bool):  # bool is an int subclass; reject explicitly
+        raise DateParseError(f"invalid day_of_week: {value!r}")
+    if isinstance(value, int):
+        if 0 <= value <= 6:
+            return value
+        raise DateParseError(f"day_of_week out of range (0-6): {value}")
+
+    s = value.strip().lower()
+    if not s:
+        raise DateParseError("empty day_of_week")
+    if s in _WEEKDAYS:
+        return _WEEKDAYS[s]
+    if s in _WEEKDAY_ABBR:
+        return _WEEKDAY_ABBR[s]
+    if s.lstrip("-").isdigit():
+        n = int(s)
+        if 0 <= n <= 6:
+            return n
+        raise DateParseError(f"day_of_week out of range (0-6): {s}")
+    raise DateParseError(f"unknown day_of_week '{value}'")
+
+
 def parse_time(value: str) -> str:
     """Parse a time string into 'HH:MM' 24-hour format."""
     s = value.strip()

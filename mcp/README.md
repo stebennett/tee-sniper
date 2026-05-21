@@ -30,6 +30,28 @@ so a typical booking flow performs exactly one login.
 | `list_partners()` | Configured playing partners (id → name). |
 | `add_partners(booking_id, partner_ids, [dry_run])` | Add 1–3 partners to an existing booking. |
 
+### Wanted tee-times
+
+Persisted auto-booking requests. The worker checks each request and books a
+slot when the target date (or next occurrence) enters the 8-day booking window
+and a matching slot is available. Credentials for the booking call are taken
+from the server's own config (`TSA_USERNAME`, `TSA_PIN`, `TSA_SHARED_SECRET`)
+— no credential arguments are needed on these tools.
+
+**Day-of-week convention:** integers 0–6 where **0 = Monday … 6 = Sunday**.
+Weekday names (`'saturday'`, `'sat'`) are also accepted and converted
+automatically.
+
+| Tool | Purpose |
+|---|---|
+| `create_one_shot_wanted(target_date, start_time, end_time, [num_slots], [partners])` | Create a one-shot request that auto-books a single target date when it enters the booking window. `target_date` accepts the same formats as `find_tee_times` (`'next saturday'`, `'in 8 days'`, `'YYYY-MM-DD'`). `start_time`/`end_time` define the acceptable booking window (e.g. `'15:00'` or `'3pm'`). `num_slots` 1–4 (default 1). `partners` is an optional list of partner ids. |
+| `create_recurring_wanted(day_of_week, start_time, end_time, [num_slots], [partners], [end_date])` | Create a recurring request that auto-books the given weekday each time it enters the booking window. `day_of_week` is a weekday name (`'saturday'`/`'sat'`) or int 0–6 (0=Monday … 6=Sunday). `end_date` is an optional last date (`'YYYY-MM-DD'` or natural language); omit for open-ended. |
+| `list_wanted([status])` | List wanted requests (trimmed summaries). Optional `status` filter: `pending`, `booked`, `expired`, `disabled`. |
+| `get_wanted(wanted_id)` | Get one wanted request by id, including its full attempt history. |
+| `update_wanted(wanted_id, [start_time], [end_time], [num_slots], [partners])` | Edit a wanted request. Provide only the fields to change. Cannot change `kind`, `target_date`, or `day_of_week` — recreate instead. Use `set_wanted_enabled` to pause/resume. |
+| `set_wanted_enabled(wanted_id, enabled)` | Pause (`enabled=false`) or resume (`enabled=true`) a wanted request. |
+| `delete_wanted(wanted_id)` | Permanently delete a wanted request. |
+
 ## Time-of-day bands
 
 Defaults: `early_morning` 06–09, `morning` 09–12, `midday` 11–14,

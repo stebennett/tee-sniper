@@ -30,11 +30,26 @@ class ApiClient:
     async def get(self, path: str, *, params: dict[str, Any] | None = None) -> Any:
         return await self._request("GET", path, params=params)
 
-    async def post(self, path: str, *, json: dict[str, Any] | None = None) -> Any:
-        return await self._request("POST", path, json=json)
+    async def post(
+        self,
+        path: str,
+        *,
+        params: dict[str, Any] | None = None,
+        json: dict[str, Any] | None = None,
+    ) -> Any:
+        return await self._request("POST", path, params=params, json=json)
 
-    async def patch(self, path: str, *, json: dict[str, Any] | None = None) -> Any:
-        return await self._request("PATCH", path, json=json)
+    async def patch(
+        self,
+        path: str,
+        *,
+        params: dict[str, Any] | None = None,
+        json: dict[str, Any] | None = None,
+    ) -> Any:
+        return await self._request("PATCH", path, params=params, json=json)
+
+    async def delete(self, path: str) -> Any:
+        return await self._request("DELETE", path)
 
     async def _request(
         self,
