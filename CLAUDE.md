@@ -186,10 +186,12 @@ cd mcp && uv run tee-sniper-mcp
 The MCP server is a stdio-only client of the REST API. It encrypts credentials
 locally with the same AES-256-GCM scheme as `api/app/services/encryption.py`,
 calls `/api/login` lazily, caches the bearer token in memory, and proxies four
-tools (`find_tee_times`, `book_tee_time`, `list_partners`, `add_partners`) to
-the existing endpoints. See `mcp/README.md` for the full tool reference,
-configuration env vars, time-of-day bands, and Claude Desktop / MetaMCP config
-snippets.
+booking tools (`find_tee_times`, `book_tee_time`, `list_partners`,
+`add_partners`) plus seven wanted-tee-time tools (`create_one_shot_wanted`,
+`create_recurring_wanted`, `list_wanted`, `get_wanted`, `update_wanted`,
+`set_wanted_enabled`, `delete_wanted`) to the existing endpoints. See
+`mcp/README.md` for the full tool reference, configuration env vars,
+time-of-day bands, and Claude Desktop / MetaMCP config snippets.
 
 **Key design choices (rationale in `docs/superpowers/specs/2026-05-03-local-mcp-server-design.md`):**
 
@@ -227,3 +229,4 @@ snippets.
 - Plan: `docs/superpowers/plans/2026-05-04-local-mcp-server.md`
 - Shipped via PR #71 (single PR covering all 5 phases — A: API endpoint,
   B: scaffold, C: tools, D: Docker+CI, E: docs).
+- Wanted tee-time MCP tools spec: `docs/superpowers/specs/2026-05-19-wanted-tee-times-mcp-tools-design.md`; plan: `docs/superpowers/plans/2026-05-19-wanted-tee-times-mcp-tools.md`.
