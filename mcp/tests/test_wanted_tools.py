@@ -133,6 +133,17 @@ async def test_create_one_shot_wanted_surfaces_422(tools: Tools) -> None:
     assert "error" in result and "end_time must be after start_time" in result["error"]
 
 
+@respx.mock
+async def test_create_one_shot_wanted_handles_malformed_response(tools: Tools) -> None:
+    respx.post("http://api.test/api/wanted", params={"kind": "one_shot"}).mock(
+        return_value=httpx.Response(201, json={})
+    )
+    result = await tools.create_one_shot_wanted(
+        target_date="tomorrow", start_time="3pm", end_time="5pm"
+    )
+    assert "error" in result and "unexpected API response" in result["error"]
+
+
 def _recurring_slot(**over) -> dict:
     defaults = dict(
         kind="recurring",
@@ -177,6 +188,17 @@ async def test_create_recurring_wanted_surfaces_422(tools: Tools) -> None:
         day_of_week="sat", start_time="5pm", end_time="3pm"
     )
     assert "error" in result and "end_time must be after start_time" in result["error"]
+
+
+@respx.mock
+async def test_create_recurring_wanted_handles_malformed_response(tools: Tools) -> None:
+    respx.post("http://api.test/api/wanted", params={"kind": "recurring"}).mock(
+        return_value=httpx.Response(201, json={})
+    )
+    result = await tools.create_recurring_wanted(
+        day_of_week="sat", start_time="3pm", end_time="5pm"
+    )
+    assert "error" in result and "unexpected API response" in result["error"]
 
 
 @respx.mock
