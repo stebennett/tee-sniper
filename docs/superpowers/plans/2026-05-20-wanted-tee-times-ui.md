@@ -2021,8 +2021,13 @@ export function LoginPage() {
   });
 
   const onSubmit = handleSubmit(async (values) => {
-    await m.mutateAsync(values);
-    navigate('/wanted');
+    try {
+      await m.mutateAsync(values);
+      navigate('/wanted');
+    } catch {
+      // Error is surfaced via m.error; swallow the rejection so it
+      // doesn't escape as an unhandled promise rejection (fails CI).
+    }
   });
 
   const errorMsg =
