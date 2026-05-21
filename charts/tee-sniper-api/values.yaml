@@ -24,7 +24,7 @@ api:
 
 cli:
   image:
-    repository: ghcr.io/stebennett/tee-sniper-cli
+    repository: ghcr.io/stebennett/tee-sniper
     tag: ""
     pullPolicy: IfNotPresent
   existingSecret: tee-sniper-cli
