@@ -6,24 +6,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Running the Application
 ```bash
-# Run with command line arguments
-go run cmd/tee-sniper/main.go -h
+# Run the API (FastAPI)
+cd api && .venv/bin/python -m uvicorn app.main:app --reload
 
-# Run using the convenience script (sources .env file)
-./run-teesniper.sh
+# Or the full stack via Docker Compose
+docker compose up
 
-# Example with all parameters
-go run cmd/tee-sniper/main.go -u username -p pin -b https://example.com/ -d 7 -t 15:00 -e 17:00 -n toNumber -f fromNumber -s "partner1,partner2"
+# Run the wanted-slot worker once
+cd api && .venv/bin/python -m app.cli.worker
 ```
 
 ### Testing
 ```bash
-# Run Go tests
-go test ./...
-
-# Run Go tests for specific package
-go test ./pkg/teetimes/
-
 # Run Python API tests
 cd api && .venv/bin/python -m pytest tests/ -v
 
@@ -47,22 +41,9 @@ a `redis:8-alpine` service), so CI always runs these tests and fails loudly
 if Redis is missing. Leave it unset locally to keep the skip-when-absent
 convenience.
 
-### Building
-```bash
-# Build the application
-go build -o tee-sniper cmd/tee-sniper/main.go
-```
-
 ## Code Architecture
 
 ### Project Structure
-
-**Go CLI:**
-- `cmd/tee-sniper/main.go` - Main application entry point
-- `pkg/config/` - Configuration handling using go-flags
-- `pkg/models/` - Data models (TimeSlot, etc.)
-- `pkg/clients/` - External service clients (Twilio, booking site)
-- `pkg/teetimes/` - Core business logic for filtering and selecting tee times
 
 **Python API** (`api/`):
 - `api/app/main.py` - FastAPI application entry point with health endpoint
@@ -75,54 +56,21 @@ go build -o tee-sniper cmd/tee-sniper/main.go
 - `api/app/models/` - Pydantic request/response/domain models
 - `api/app/utils/` - HTML parser, user agent rotation
 
-### Core Components
-
-**Main Application Flow** (cmd/tee-sniper/main.go):
-1. Parses command line configuration
-2. Creates booking and Twilio clients
-3. Logs into booking site
-4. Searches for available tee times within specified date/time range
-5. Filters, sorts, and randomly selects from available slots
-6. Books the selected time slot with retry logic
-7. Sends SMS confirmation via Twilio
-
-**Configuration** (pkg/config/config.go):
-Uses jessevdk/go-flags for command line argument parsing. All required parameters must be provided via CLI flags or the application will exit with help text. The optional `-s/--partners` flag accepts a comma-separated list of playing partner IDs to book additional slots.
-
-**Tee Time Logic** (pkg/teetimes/teetimes.go):
-- `FilterByBookable()` - Filters to only bookable slots
-- `SortTimesAscending()` - Sorts times chronologically
-- `FilterBetweenTimes()` - Filters by time range
-- `PickRandomTime()` - Randomly selects from available options
-
-**External Dependencies**:
-- Twilio Go SDK for SMS notifications
-- PuerkitoBio/goquery for HTML parsing/scraping
-- jessevdk/go-flags for CLI argument parsing
-
 ### Environment Variables
-The application expects Twilio credentials as environment variables:
-- `TWILIO_ACCOUNT_SID`
-- `TWILIO_AUTH_TOKEN`
+All configuration is `TSA_`-prefixed and read by `api/app/config.py`
+(pydantic-settings). See `.env.example` for the common variables and
+`api/app/config.py` for the full set, including optional
+`TSA_TWILIO_ACCOUNT_SID` / `TSA_TWILIO_AUTH_TOKEN` /
+`TSA_TWILIO_FROM_NUMBER` for SMS notifications.
 
 ### GitHub Actions Integration
 The repository includes CI workflows in `.github/workflows/`:
-- `build.yml` - Runs build and tests on push/PR to main
-- `release.yml` - Handles release automation
-
-## Testing Workflow
-
-When implementing the comprehensive testing plan (see `TESTING_PLAN.md`):
-
-1. **Each phase must be completed in a separate PR**
-2. Follow this workflow per phase:
-   - Create feature branch from `main` (e.g., `test/phase1-interfaces-mocks`)
-   - Implement tests for that phase only
-   - Run `go test ./...` to verify all tests pass
-   - Commit changes with descriptive message
-   - Push branch and create PR
-   - Merge PR to `main` before starting next phase
-3. Respect phase dependencies - Phase 1 (interfaces/mocks) must be merged before phases that require mocking
+- `api-build.yml` - API build/test (provisions Redis, sets `TSA_REQUIRE_REDIS=1`)
+- `mcp-build.yml` - MCP build/test
+- `helm-chart.yml` - Helm chart lint/package
+- `release.yml` - on `v*.*.*` tags, builds and pushes the API image
+  (`ghcr.io/<repo>-api`), the MCP image (`ghcr.io/<repo>-mcp`), and the
+  MCP wheel + sdist as release assets
 
 ## API Migration Workflow
 
@@ -151,25 +99,6 @@ Plan: `docs/superpowers/plans/2026-05-16-wanted-tee-times.md`.
 - Worker: `api/app/services/worker.py` (`run_once`), CLI `api/app/cli/worker.py`
 - Router: `api/app/routers/wanted.py` (`/api/wanted`)
 - Deploy: opt-in `worker` CronJob in `charts/tee-sniper-api`
-
-## Docker Migration Workflow
-
-When implementing the Docker migration plan (see `docs/DOCKER_PLAN.md`):
-
-1. **Each phase must be completed in a separate PR**
-2. Follow this workflow per phase:
-   - Create feature branch from `main` (e.g., `docker/phase2-config-refactor`)
-   - Implement the phase tasks
-   - Run `go test ./...` to verify all tests pass
-   - Test Docker builds locally where applicable
-   - Update `docs/DOCKER_PLAN.md` to mark completed tasks
-   - Update `README.md` with any new usage instructions
-   - Commit changes with descriptive message
-   - Push branch and create PR for review
-   - Wait for PR to be reviewed and merged before starting next phase
-3. Phase dependencies:
-   - Phase 1 (Docker) must be complete before Phase 3 (CI/CD)
-   - Phase 2 (Config refactor) can run in parallel with Phase 3
 
 ### MCP Server (Local)
 
