@@ -6,3 +6,5 @@ coverage
 vite.config.js
 vite.config.d.ts
 src/**/*.js
+test/**/*.js
+test/**/*.d.ts
