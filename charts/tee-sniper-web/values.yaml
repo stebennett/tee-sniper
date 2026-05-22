@@ -1,0 +1,36 @@
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  repository: ghcr.io/stebennett/tee-sniper-web
+  tag: ""              # defaults to .Chart.AppVersion
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 80
+
+# Empty string → browser uses relative /api/* (same-host ingress).
+apiBaseUrl: ""
+
+ingress:
+  enabled: true
+  className: ""
+  annotations: {}
+  host: tee-sniper.example.com
+  tls:
+    enabled: false
+    secretName: ""
+  # Path-based split: /api/* → API service, /* → this service.
+  apiServiceName: tee-sniper-api
+  apiServicePort: 80
+
+resources:
+  limits:   { cpu: 100m, memory: 64Mi }
+  requests: { cpu: 10m,  memory: 32Mi }
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

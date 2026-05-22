@@ -1,6 +1,8 @@
 .env
 
 .worktrees/
+.claude/
+.superpowers/
 
 # Helm: don't commit pulled subcharts (Chart.lock pins them)
 charts/*/charts/

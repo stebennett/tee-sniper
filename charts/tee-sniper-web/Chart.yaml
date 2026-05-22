@@ -1,0 +1,12 @@
+apiVersion: v2
+name: tee-sniper-web
+description: nginx-served React UI for tee-sniper wanted tee-times
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+kubeVersion: ">=1.27.0"
+home: https://github.com/stebennett/tee-sniper
+sources:
+  - https://github.com/stebennett/tee-sniper
+maintainers:
+  - name: Steve Bennett

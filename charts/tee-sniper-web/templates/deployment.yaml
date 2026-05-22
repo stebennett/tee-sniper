@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "tee-sniper-web.fullname" . }}
+  labels: {{- include "tee-sniper-web.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels: {{- include "tee-sniper-web.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels: {{- include "tee-sniper-web.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: web
+          image: {{ include "tee-sniper-web.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 80
+          env:
+            - name: API_BASE_URL
+              value: {{ .Values.apiBaseUrl | quote }}
+          readinessProbe:
+            httpGet: { path: /, port: 80 }
+          livenessProbe:
+            httpGet: { path: /, port: 80 }
+          resources: {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity: {{- toYaml . | nindent 8 }}
+      {{- end }}

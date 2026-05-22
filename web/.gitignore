@@ -1,0 +1,10 @@
+node_modules
+dist
+coverage
+.env.local
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
+src/**/*.js
+test/**/*.js
+test/**/*.d.ts
