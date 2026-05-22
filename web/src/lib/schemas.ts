@@ -46,14 +46,6 @@ export const recurringSchema = refineWindow(
   }),
 );
 
-export const patchSchema = z.object({
-  start_time: z.string().regex(HHMM).optional(),
-  end_time:   z.string().regex(HHMM).optional(),
-  num_slots:  z.number().int().min(1).max(4).optional(),
-  partners:   z.array(z.string()).max(3).optional(),
-  notify:     notifySchema,
-});
-
 export type LoginForm     = z.infer<typeof loginSchema>;
 export type OneShotForm   = z.infer<typeof oneShotSchema>;
 export type RecurringForm = z.infer<typeof recurringSchema>;
