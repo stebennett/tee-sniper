@@ -174,3 +174,25 @@ time-of-day bands, and Claude Desktop / MetaMCP config snippets.
 - Shipped via PR #71 (single PR covering all 5 phases — A: API endpoint,
   B: scaffold, C: tools, D: Docker+CI, E: docs).
 - Wanted tee-time MCP tools spec: `docs/superpowers/specs/2026-05-19-wanted-tee-times-mcp-tools-design.md`; plan: `docs/superpowers/plans/2026-05-19-wanted-tee-times-mcp-tools.md`.
+
+## Web UI (`web/`)
+
+React SPA for the wanted tee-times workflow. Login + full CRUD over
+`/api/wanted`. Stack: Vite + React + TypeScript + Tailwind + TanStack
+Query + React Router + Zod + react-hook-form + Vitest + MSW. Deployed via
+`charts/tee-sniper-web` (nginx serving the `dist/` baked into the image).
+
+```bash
+cd web
+npm install
+npm run dev    # :5173, proxies /api to http://localhost:8000
+npm test
+npm run build
+```
+
+The browser never sees the AES shared secret. It calls
+`POST /api/encrypt-credentials` (added in this iteration) to get an
+encrypted blob used by `/api/login` and by wanted-slot create.
+
+- Spec: `docs/superpowers/specs/2026-05-20-wanted-tee-times-ui-design.md`
+- Plan: `docs/superpowers/plans/2026-05-20-wanted-tee-times-ui.md`
