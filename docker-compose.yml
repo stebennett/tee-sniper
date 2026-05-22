@@ -20,6 +20,28 @@ services:
       start_period: 10s
     restart: unless-stopped
 
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    environment:
+      # The browser runs on the host, so it reaches the API via the published
+      # host port — not the internal `api` hostname. This is cross-origin, so it
+      # relies on the API's debug-mode CORS (enabled by docker-compose.override.yml).
+      - API_BASE_URL=http://localhost:8000
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+
   redis:
     image: redis:8-alpine
     ports:
