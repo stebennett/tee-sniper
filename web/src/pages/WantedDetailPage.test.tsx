@@ -40,4 +40,45 @@ describe('WantedDetailPage', () => {
     await userEvent.click(screen.getByRole('button', { name: /^confirm$/i }));
     await waitFor(() => expect(screen.getByText('LIST')).toBeInTheDocument());
   });
+
+  it('has a back link to the list', async () => {
+    server.use(http.get(`${baseUrl}/api/wanted/abc`, () => HttpResponse.json(slot)));
+    renderWithProviders(
+      <Routes>
+        <Route path="/wanted/:id" element={<WantedDetailPage />} />
+        <Route path="/wanted" element={<div>LIST</div>} />
+      </Routes>,
+      { route: '/wanted/abc', initialAuth: { token: 'tok' } },
+    );
+    await userEvent.click(await screen.findByRole('link', { name: /back to wanted/i }));
+    expect(screen.getByText('LIST')).toBeInTheDocument();
+  });
+
+  it('edits partners and includes them in the save patch', async () => {
+    let patchBody: { partners?: string[] } | null = null;
+    server.use(
+      http.get(`${baseUrl}/api/wanted/abc`, () => HttpResponse.json(slot)),
+      http.get(`${baseUrl}/api/partners`, () =>
+        HttpResponse.json({ partners: [
+          { id: 'p1', name: 'Alice' },
+          { id: 'p2', name: 'Bob' },
+        ]}),
+      ),
+      http.patch(`${baseUrl}/api/wanted/abc`, async ({ request }) => {
+        patchBody = (await request.json()) as { partners?: string[] };
+        return HttpResponse.json({ ...slot, partners: patchBody.partners ?? [] });
+      }),
+    );
+    renderWithProviders(
+      <Routes>
+        <Route path="/wanted/:id" element={<WantedDetailPage />} />
+        <Route path="/wanted" element={<div>LIST</div>} />
+      </Routes>,
+      { route: '/wanted/abc', initialAuth: { token: 'tok' } },
+    );
+    await userEvent.click(await screen.findByLabelText('Alice'));
+    await userEvent.click(screen.getByRole('button', { name: /^save$/i }));
+    await waitFor(() => expect(patchBody).not.toBeNull());
+    expect(patchBody!.partners).toEqual(['p1']);
+  });
 });
