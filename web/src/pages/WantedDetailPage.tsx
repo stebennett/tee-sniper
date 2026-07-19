@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { ApiError } from '../api/client';
@@ -22,16 +22,22 @@ export function WantedDetailPage() {
     partners: string[];
   }>({ start_time: '', end_time: '', num_slots: 1, partners: [] });
 
-  useEffect(() => {
-    if (slot) {
-      setForm({
-        start_time: slot.start_time,
-        end_time: slot.end_time,
-        num_slots: slot.num_slots,
-        partners: slot.partners,
-      });
-    }
-  }, [slot]);
+  // Sync the editable form from the fetched slot without an effect: adjust
+  // state during render, guarded by a previous-value check. This is React's
+  // recommended pattern for deriving-and-then-editing state from props/data
+  // (https://react.dev/learn/you-might-not-need-an-effect) and satisfies
+  // eslint-plugin-react-hooks v7's `set-state-in-effect` rule, which flags
+  // the previous `useEffect(() => setForm(...), [slot])` sync.
+  const [syncedSlot, setSyncedSlot] = useState<typeof slot>(undefined);
+  if (slot && slot !== syncedSlot) {
+    setSyncedSlot(slot);
+    setForm({
+      start_time: slot.start_time,
+      end_time: slot.end_time,
+      num_slots: slot.num_slots,
+      partners: slot.partners,
+    });
+  }
 
   if (isLoading || !slot) return <main className="p-6 text-slate-400">Loading…</main>;
 
