@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { SlotFormFields } from './SlotFormFields';
 import { oneShotSchema, type OneShotForm as OneShotValues } from '../lib/schemas';
 
-export interface OneShotSubmit extends OneShotValues {}
+export type OneShotSubmit = OneShotValues;
 
 const today = new Date().toISOString().slice(0, 10);
 const plus7 = new Date(Date.now() + 7 * 86400_000).toISOString().slice(0, 10);
