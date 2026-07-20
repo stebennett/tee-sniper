@@ -1,17 +1,18 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { SlotFormFields } from './SlotFormFields';
-import { recurringSchema, type RecurringForm as RecurringValues } from '../lib/schemas';
+import { recurringSchema, type RecurringForm as RecurringValues, type RecurringFormInput } from '../lib/schemas';
 
 const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
 export function RecurringForm({ onSubmit, busy }: {
   onSubmit: (v: RecurringValues) => void; busy: boolean;
 }) {
-  const { register, handleSubmit, control, formState: { errors } } = useForm<RecurringValues>({
-    resolver: zodResolver(recurringSchema),
-    defaultValues: { num_slots: 1, partners: [], day_of_week: 0 },
-  });
+  const { register, handleSubmit, control, formState: { errors } } =
+    useForm<RecurringFormInput, unknown, RecurringValues>({
+      resolver: zodResolver(recurringSchema),
+      defaultValues: { num_slots: 1, partners: [], day_of_week: 0 },
+    });
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
       <label className="text-sm block">Day of week

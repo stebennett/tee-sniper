@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { SlotFormFields } from './SlotFormFields';
-import { oneShotSchema, type OneShotForm as OneShotValues } from '../lib/schemas';
+import { oneShotSchema, type OneShotForm as OneShotValues, type OneShotFormInput } from '../lib/schemas';
 
 export type OneShotSubmit = OneShotValues;
 
@@ -11,10 +11,11 @@ const plus7 = new Date(Date.now() + 7 * 86400_000).toISOString().slice(0, 10);
 export function OneShotForm({ onSubmit, busy }: {
   onSubmit: (v: OneShotSubmit) => void; busy: boolean;
 }) {
-  const { register, handleSubmit, control, formState: { errors } } = useForm<OneShotValues>({
-    resolver: zodResolver(oneShotSchema),
-    defaultValues: { num_slots: 1, partners: [] },
-  });
+  const { register, handleSubmit, control, formState: { errors } } =
+    useForm<OneShotFormInput, unknown, OneShotValues>({
+      resolver: zodResolver(oneShotSchema),
+      defaultValues: { num_slots: 1, partners: [] },
+    });
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
       <label className="text-sm block">Target date

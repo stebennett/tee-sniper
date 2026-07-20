@@ -28,7 +28,7 @@ const commonShape = {
   notify:     notifySchema,
 };
 
-function refineWindow<T extends { start_time: string; end_time: string }>(s: z.ZodType<T>) {
+function refineWindow<S extends z.ZodType<{ start_time: string; end_time: string }>>(s: S) {
   return s.refine((v) => v.end_time > v.start_time, {
     message: 'End time must be after start time', path: ['end_time'],
   });
@@ -49,3 +49,10 @@ export const recurringSchema = refineWindow(
 export type LoginForm     = z.infer<typeof loginSchema>;
 export type OneShotForm   = z.infer<typeof oneShotSchema>;
 export type RecurringForm = z.infer<typeof recurringSchema>;
+
+// Zod v4 distinguishes a schema's input (pre-parse form values) from its
+// output (post-transform). `notify`'s z.preprocess makes the input `unknown`,
+// so react-hook-form needs the input type for its field values and the output
+// type for the validated submit payload.
+export type OneShotFormInput   = z.input<typeof oneShotSchema>;
+export type RecurringFormInput = z.input<typeof recurringSchema>;
