@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.24
+# syntax=docker/dockerfile:1.25
 
 # Build context: repository root.
 # Build with: docker build -f mcp/Dockerfile --build-arg VERSION=<x.y.z> .
