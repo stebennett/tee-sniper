@@ -1,0 +1,10 @@
+engineering_standards:
+  schema_version: 1
+  framework_version: "1.4"
+  type: service
+  status: active
+  deployment_target: kubernetes
+  database: none
+  lightweight: false
+  optional_categories: []
+  exemptions: []
