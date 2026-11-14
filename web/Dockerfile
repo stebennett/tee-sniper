@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.28
+# syntax=docker/dockerfile:1.29
 FROM node:22-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json* ./
