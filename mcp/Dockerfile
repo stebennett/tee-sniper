@@ -6,7 +6,7 @@
 # VERSION is forwarded to hatch-vcs via SETUPTOOLS_SCM_PRETEND_VERSION so the
 # image does not need .git/ available at build time.
 
-FROM python:3.14-slim AS builder
+FROM python:3.15-slim AS builder
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -24,7 +24,7 @@ COPY mcp/src ./src
 RUN pip install build \
     && python -m build --wheel --outdir /wheels .
 
-FROM python:3.14-slim AS runtime
+FROM python:3.15-slim AS runtime
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
